@@ -5,6 +5,9 @@ import musicArrangement from "./Assets/music-arrangement.jpg";
 import paradeEvents from "./Assets/paradeEvents.jpg";
 import musicWorkshop from "./Assets/musicWorkshop.jpg";
 import instrumentRentals from "./Assets/instrumentRentals.jpg";
+import Login from './login'
+import Signup from './signup'
+import Dashboard from './dashboard'
 
 
 const Home = () => {
@@ -883,6 +886,9 @@ const Home = () => {
   // Services data
   const [modalService, setModalService] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [user, setUser] = useState(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [currentView, setCurrentView] = useState('home');
   const aboutImages = [bandGigs, paradeEvents, musicWorkshop, musicArrangement, instrumentRentals];
 
   const goPrev = () => {
@@ -932,502 +938,677 @@ const Home = () => {
     }
   ];
 
-  return (
-    <div style={containerStyle}>
-      <nav style={navStyle}>
-        {/* Logo Section */}
-        <div style={logoStyle}>
-          <h1 style={logoMainStyle}>DAVAO</h1>
-          <p style={logoSubStyle}>BLUE EAGLES</p>
-        </div>
+  useEffect(() => {
+  const savedUser = localStorage.getItem('davaoBlueEaglesUser');
+  if (savedUser) {
+    try {
+      setUser(JSON.parse(savedUser));
+    } catch (error) {
+      localStorage.removeItem('davaoBlueEaglesUser');
+    }
+  }
+}, []);
 
-        {/* Navigation Links */}
-        <ul style={ulStyle}>
-          <li>
-            <a 
-              href="#home" 
-              style={linkStyle}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              Home
-            </a>
-          </li>
-          <li>
-            <a 
-              href="#services" 
-              style={linkStyle}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              Services
-            </a>
-          </li>
-          <li>
-            <a 
-              href="#about" 
-              style={linkStyle}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              About Us
-            </a>
-          </li>
-          <li>
-            <a 
-              href="#contact" 
-              style={linkStyle}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              Contact
-            </a>
-          </li>
-        </ul>
+const handleLogin = (userData) => {
+  setUser(userData);
+  localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(userData));
+  setCurrentView('dashboard');
+};
 
-        {/* Buttons Section */}
-        <div style={buttonContainerStyle}>
-          <a 
-            href="#login" 
-            style={loginButtonStyle}
-            onMouseEnter={handleButtonHover}
-            onMouseLeave={handleButtonLeave}
-          >
-            Login
-          </a>
-          <a 
-            href="#signup" 
-            style={signUpButtonStyle}
-            onMouseEnter={handleButtonHover}
-            onMouseLeave={handleButtonLeave}
-          >
-            Sign Up
-          </a>
-        </div>
-      </nav>
+const handleLogout = () => {
+  setUser(null);
+  localStorage.removeItem('davaoBlueEaglesUser');
+  setShowUserMenu(false);
+};
 
-      {/* Hero Section */}
-      <section id="home" style={heroSectionStyle}>
-        <div style={heroContentStyle}>
-          <h2 style={taglineStyle}>CIRVA A LA GENTE POR LA MUSICA</h2>
-          <p style={subTaglineStyle}>Serve the People through Music.</p>
-          <a 
-            href="#signup" 
-            style={signUpButtonStyle}
-            onMouseEnter={handleButtonHover}
-            onMouseLeave={handleButtonLeave}
-          >
-            Register Now!
-          </a>
-        </div>
-      </section>
+const handleShowLogin = () => {
+  setCurrentView('login');
+};
 
-      {/* Services Section */}
-      <section id="services" style={servicesSectionStyle}>
-        <div style={servicesContainerStyle}>
-          <div style={servicesHeaderWrapStyle}>
-            <div>
-              <div style={sectionEyebrowStyle}>What we offer</div>
-              <h3 style={servicesHeaderStyle}>Our Services</h3>
-            </div>
-            <p style={servicesSubTextStyle}>From parades and corporate shows to workshops and rentals—we tailor each service to your event with professional coordination and musical excellence.</p>
+const handleBackToHome = () => {
+  setCurrentView('home');
+};
+
+const handleShowSignup = () => {
+  setCurrentView('signup');
+};
+
+const handleSignup = (userData) => {
+  setUser(userData);
+  localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(userData));
+  setCurrentView('dashboard');
+};
+
+const handleSwitchToLogin = () => {
+  setCurrentView('login');
+};
+
+const handleSwitchToSignup = () => {
+  setCurrentView('signup');
+};
+
+return (
+  <>
+    {/* Login view */}
+    {currentView === 'login' && (
+      <Login onBack={handleBackToHome} onLogin={handleLogin} onSwitchToSignup={handleSwitchToSignup} />
+    )}
+
+    {/* Add this after the login view */}
+{currentView === 'signup' && (
+  <Signup 
+    onBack={handleBackToHome} 
+    onSignup={handleSignup}
+    onSwitchToLogin={handleSwitchToLogin}
+  />
+)}
+
+{currentView === 'dashboard' && (
+  <Dashboard 
+    user={user} 
+    onBackToHome={() => setCurrentView('home')} 
+  />
+)}
+
+
+    
+    {/* Home view */}
+    {currentView === 'home' && (
+      <div style={containerStyle}>
+        <nav style={navStyle}>
+          {/* Logo Section */}
+          <div style={logoStyle}>
+            <h1 style={logoMainStyle}>DAVAO</h1>
+            <p style={logoSubStyle}>BLUE EAGLES</p>
           </div>
 
-          {/* Two-row layout: 3 on top, 2 centered below */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '20px' }}>
-            {services.slice(0, 3).map((service) => (
-              <div
-                key={service.title}
-                style={cardStyle}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-6px)';
-                  e.currentTarget.style.boxShadow = '0 14px 30px rgba(0,0,0,0.35)';
-                  e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.5)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.2)';
-                }}
+          {/* Navigation Links */}
+          <ul style={ulStyle}>
+            <li>
+              <a 
+                href="#home" 
+                style={linkStyle}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
               >
-                <div
-                  style={{
-                    ...cardImageStyle,
-                    backgroundImage: `url(${service.img})`
-                  }}
-                />
-                <div style={cardBodyStyle}>
-                  <h4 style={cardTitleStyle}>{service.title}</h4>
-                  <a
-                    href="#services"
-                    style={readMoreStyle}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setModalService(service);
-                    }}
-                  >
-                    Read more →
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '20px', maxWidth: '800px', margin: '20px auto 0' }}>
-            {services.slice(3).map((service) => (
-              <div
-                key={service.title}
-                style={cardStyle}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-6px)';
-                  e.currentTarget.style.boxShadow = '0 14px 30px rgba(0,0,0,0.35)';
-                  e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.5)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.2)';
-                }}
+                Home
+              </a>
+            </li>
+            <li>
+              <a 
+                href="#services" 
+                style={linkStyle}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
               >
-                <div
+                Services
+              </a>
+            </li>
+            <li>
+              <a 
+                href="#about" 
+                style={linkStyle}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
+                About Us
+              </a>
+            </li>
+            <li>
+              <a 
+                href="#contact" 
+                style={linkStyle}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
+                Contact
+              </a>
+            </li>
+          </ul>
+
+          {/* Updated Buttons Section with Authentication */}
+          <div style={buttonContainerStyle}>
+            {user ? (
+              // Logged in state
+              <div style={{ position: 'relative' }}>
+                <button 
                   style={{
-                    ...cardImageStyle,
-                    backgroundImage: `url(${service.img})`
+                    backgroundColor: 'transparent',
+                    border: '1px solid rgba(100, 255, 218, 0.3)',
+                    color: '#e5e7eb',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'all 0.3s ease'
                   }}
-                />
-                <div style={cardBodyStyle}>
-                  <h4 style={cardTitleStyle}>{service.title}</h4>
-                  <a
-                    href="#services"
-                    style={readMoreStyle}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setModalService(service);
-                    }}
-                  >
-                    Read more →
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* About Section */}
-      <section id="about" style={aboutSectionStyle}>
-        <div style={servicesContainerStyle}>
-          <div style={servicesHeaderWrapStyle}>
-            <div>
-              <div style={sectionEyebrowStyle}>Who we are</div>
-              <h3 style={aboutHeaderStyle}>About Us</h3>
-            </div>
-          </div>
-          <div style={aboutWrapStyle}>
-            <div style={aboutTextCardStyle}>
-              <div>
-                <p style={aboutStoryParagraphStyle}>
-                  The Davao Blue Eagles Marching Band (DBEMB) was founded in 2012, with November 24, 2012, as its official anniversary date. This marks the band's first-ever competition in Bohol, where it made history by sweeping all four major awards and breaking the 15-year championship streak of Bohol Island State University (BISU).
-                </p>
-                <p style={aboutStoryParagraphStyle}>
-                  Since then, DBEMB has expanded its reach, competing across the Visayas (Bohol), Mindanao (Davao, Tagum, Kidapawan), and Luzon (Pasay, Pasig, Bacoor).
-                </p>
-                <p style={aboutStoryParagraphStyle}>
-                  The band has secured five major championship titles—two from the Alturas Drum and Bugle competition in Tagbilaran City, Bohol, and three in Davao City.
-                </p>
-                <p style={aboutStoryParagraphStyle}>
-                  However, the band's strength has gradually declined after the pandemic lockdown, particularly from early 2022 onward. Challenges such as reduced membership, financial struggles, and operational difficulties have affected its performance and stability. Despite these setbacks, DBEMB remains committed to its legacy of excellence, striving to rebuild and continue serving the people through music.
-                </p>
-              </div>
-            </div>
-
-            {/* Carousel */}
-            <div style={carouselWrapperStyle}>
-              <div
-                style={{
-                  ...carouselImageStyle,
-                  backgroundImage: `url(${aboutImages[currentSlide]})`
-                }}
-              />
-              <div style={carouselControlsStyle}>
-                <button style={navButtonStyle} onClick={goPrev} aria-label="Previous slide">‹</button>
-                <button style={navButtonStyle} onClick={goNext} aria-label="Next slide">›</button>
-              </div>
-              <div style={dotsStyle}>
-                {aboutImages.map((_, idx) => (
-                  <span key={idx} style={dotStyle(idx === currentSlide)} />
-                ))}
-              </div>
-            </div>
-          </div>
-
-
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section id="contact" style={contactSectionStyle}>
-        <div style={servicesContainerStyle}>
-          <div style={servicesHeaderWrapStyle}>
-            <div>
-              <div style={sectionEyebrowStyle}>Get in touch</div>
-              <h3 style={servicesHeaderStyle}>Contact Us</h3>
-            </div>
-            <p style={servicesSubTextStyle}>
-              Ready to bring the Davao Blue Eagles Marching Band to your event? Get in touch with us for bookings, inquiries, or collaborations.
-            </p>
-          </div>
-
-          <div style={contactGridStyle}>
-            {/* Contact Information */}
-            <div style={contactInfoCardStyle}>
-              <h4 style={contactCardTitleStyle}>Get In Touch</h4>
-              <div style={contactInfoListStyle}>
-                <div style={contactInfoItemStyle}>
-                  <div style={contactIconStyle}>📧</div>
-                  <div>
-                    <h5 style={contactLabelStyle}>Email</h5>
-                    <p style={contactValueStyle}>dbe.official@example.com</p>
-                  </div>
-                </div>
-                <div style={contactInfoItemStyle}>
-                  <div style={contactIconStyle}>📱</div>
-                  <div>
-                    <h5 style={contactLabelStyle}>Phone</h5>
-                    <p style={contactValueStyle}>+63 900 000 0000</p>
-                  </div>
-                </div>
-                <div style={contactInfoItemStyle}>
-                  <div style={contactIconStyle}>📍</div>
-                  <div>
-                    <h5 style={contactLabelStyle}>Location</h5>
-                    <p style={contactValueStyle}>Davao City, Philippines</p>
-                  </div>
-                </div>
-                <div style={contactInfoItemStyle}>
-                  <div style={contactIconStyle}>⏰</div>
-                  <div>
-                    <h5 style={contactLabelStyle}>Response Time</h5>
-                    <p style={contactValueStyle}>Within 24 hours</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Form */}
-            <div style={contactFormCardStyle}>
-              <h4 style={contactCardTitleStyle}>Send Us a Message</h4>
-              <form style={contactFormStyle}>
-                <div style={formRowStyle}>
-                  <div style={formFieldStyle}>
-                    <label style={formLabelStyle}>First Name *</label>
-                    <input 
-                      type="text" 
-                      style={formInputStyle}
-                      placeholder="Enter your first name"
-                      required
-                    />
-                  </div>
-                  <div style={formFieldStyle}>
-                    <label style={formLabelStyle}>Last Name *</label>
-                    <input 
-                      type="text" 
-                      style={formInputStyle}
-                      placeholder="Enter your last name"
-                      required
-                    />
-                  </div>
-                </div>
-                <div style={formFieldStyle}>
-                  <label style={formLabelStyle}>Email Address *</label>
-                  <input 
-                    type="email" 
-                    style={formInputStyle}
-                    placeholder="Enter your email address"
-                    required
-                  />
-                </div>
-                <div style={formFieldStyle}>
-                  <label style={formLabelStyle}>Phone Number</label>
-                  <input 
-                    type="tel" 
-                    style={formInputStyle}
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-                <div style={formFieldStyle}>
-                  <label style={formLabelStyle}>Event Type *</label>
-                  <select style={formInputStyle} required>
-                    <option value="">Select an event type</option>
-                    <option value="corporate">Corporate Event</option>
-                    <option value="festival">Festival</option>
-                    <option value="parade">Parade</option>
-                    <option value="ceremony">Ceremony</option>
-                    <option value="workshop">Music Workshop</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div style={formFieldStyle}>
-                  <label style={formLabelStyle}>Event Date</label>
-                  <input 
-                    type="date" 
-                    style={formInputStyle}
-                  />
-                </div>
-                <div style={formFieldStyle}>
-                  <label style={formLabelStyle}>Message *</label>
-                  <textarea 
-                    style={formTextareaStyle}
-                    placeholder="Tell us about your event and requirements..."
-                    rows="4"
-                    required
-                  ></textarea>
-                </div>
-                <button type="submit" style={submitButtonStyle}>
-                  Send Message
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)';
+                    e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
+                  }}
+                >
+                  👤 {user.firstName || user.email.split('@')[0]} ▼
                 </button>
-              </form>
+                
+                {showUserMenu && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    backgroundColor: 'rgba(10, 25, 47, 0.95)',
+                    border: '1px solid rgba(100, 255, 218, 0.2)',
+                    borderRadius: '8px',
+                    padding: '8px 0',
+                    minWidth: '180px',
+                    marginTop: '4px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                    backdropFilter: 'blur(10px)'
+                  }}>
+                    <a href="#profile" style={{ 
+                      display: 'block', 
+                      padding: '12px 16px', 
+                      color: '#e5e7eb', 
+                      textDecoration: 'none',
+                      fontSize: '14px',
+                      transition: 'background-color 0.2s',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                    >My Profile</a>
+                    <a href="#bookings" style={{ 
+                      display: 'block', 
+                      padding: '12px 16px', 
+                      color: '#e5e7eb', 
+                      textDecoration: 'none',
+                      fontSize: '14px',
+                      transition: 'background-color 0.2s',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                    >My Bookings</a>
+                    <hr style={{ 
+                      margin: '8px 0', 
+                      border: 'none', 
+                      borderTop: '1px solid rgba(100, 255, 218, 0.2)' 
+                    }} />
+                    <button 
+                      onClick={handleLogout}
+                      style={{ 
+                        display: 'block', 
+                        width: '100%', 
+                        padding: '12px 16px', 
+                        color: '#e5e7eb', 
+                        background: 'none', 
+                        border: 'none', 
+                        textAlign: 'left', 
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 99, 99, 0.1)'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Not logged in state
+              <>
+                <button 
+                  onClick={handleShowLogin}
+                  style={loginButtonStyle}
+                  onMouseEnter={handleButtonHover}
+                  onMouseLeave={handleButtonLeave}
+                >
+                  Login
+                </button>
+                <button 
+                  onClick={handleShowSignup}
+                  style={signUpButtonStyle}
+                  onMouseEnter={handleButtonHover}
+                  onMouseLeave={handleButtonLeave}
+                >
+                  Sign Up
+                </button>
+              </>
+            )}
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <section id="home" style={heroSectionStyle}>
+          <div style={heroContentStyle}>
+            <h2 style={taglineStyle}>CIRVA A LA GENTE POR LA MUSICA</h2>
+            <p style={subTaglineStyle}>Serve the People through Music.</p>
+            <button 
+              onClick={handleShowSignup}
+              style={signUpButtonStyle}
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonLeave}
+            >
+              Register Now!
+            </button>
+          </div>
+        </section>
+
+        {/* Services Section */}
+        <section id="services" style={servicesSectionStyle}>
+          <div style={servicesContainerStyle}>
+            <div style={servicesHeaderWrapStyle}>
+              <div>
+                <div style={sectionEyebrowStyle}>What we offer</div>
+                <h3 style={servicesHeaderStyle}>Our Services</h3>
+              </div>
+              <p style={servicesSubTextStyle}>From parades and corporate shows to workshops and rentals—we tailor each service to your event with professional coordination and musical excellence.</p>
+            </div>
+
+            {/* Two-row layout: 3 on top, 2 centered below */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '20px' }}>
+              {services.slice(0, 3).map((service) => (
+                <div
+                  key={service.title}
+                  style={cardStyle}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-6px)';
+                    e.currentTarget.style.boxShadow = '0 14px 30px rgba(0,0,0,0.35)';
+                    e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.2)';
+                  }}
+                >
+                  <div
+                    style={{
+                      ...cardImageStyle,
+                      backgroundImage: `url(${service.img})`
+                    }}
+                  />
+                  <div style={cardBodyStyle}>
+                    <h4 style={cardTitleStyle}>{service.title}</h4>
+                    <a
+                      href="#services"
+                      style={readMoreStyle}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setModalService(service);
+                      }}
+                    >
+                      Read more →
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '20px', maxWidth: '800px', margin: '20px auto 0' }}>
+              {services.slice(3).map((service) => (
+                <div
+                  key={service.title}
+                  style={cardStyle}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-6px)';
+                    e.currentTarget.style.boxShadow = '0 14px 30px rgba(0,0,0,0.35)';
+                    e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.2)';
+                  }}
+                >
+                  <div
+                    style={{
+                      ...cardImageStyle,
+                      backgroundImage: `url(${service.img})`
+                    }}
+                  />
+                  <div style={cardBodyStyle}>
+                    <h4 style={cardTitleStyle}>{service.title}</h4>
+                    <a
+                      href="#services"
+                      style={readMoreStyle}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setModalService(service);
+                      }}
+                    >
+                      Read more →
+                    </a>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+        </section>
 
-          {/* Additional Info */}
-          <div style={additionalInfoStyle}>
-            <div style={infoCardStyle}>
-              <h5 style={infoCardTitleStyle}>Booking Process</h5>
-              <p style={infoCardTextStyle}>
-                We'll review your request and get back to you within 24 hours with availability and pricing details.
-              </p>
+        {/* About Section */}
+        <section id="about" style={aboutSectionStyle}>
+          <div style={servicesContainerStyle}>
+            <div style={servicesHeaderWrapStyle}>
+              <div>
+                <div style={sectionEyebrowStyle}>Who we are</div>
+                <h3 style={aboutHeaderStyle}>About Us</h3>
+              </div>
             </div>
-            <div style={infoCardStyle}>
-              <h5 style={infoCardTitleStyle}>Service Areas</h5>
-              <p style={infoCardTextStyle}>
-                We serve Davao City and surrounding areas. For events outside our immediate area, please contact us for special arrangements.
-              </p>
-            </div>
-            <div style={infoCardStyle}>
-              <h5 style={infoCardTitleStyle}>Payment Terms</h5>
-              <p style={infoCardTextStyle}>
-                We require a 50% deposit upon booking confirmation, with the remaining balance due on the event date.
-              </p>
+            <div style={aboutWrapStyle}>
+              <div style={aboutTextCardStyle}>
+                <div>
+                  <p style={aboutStoryParagraphStyle}>
+                    The Davao Blue Eagles Marching Band (DBEMB) was founded in 2012, with November 24, 2012, as its official anniversary date. This marks the band's first-ever competition in Bohol, where it made history by sweeping all four major awards and breaking the 15-year championship streak of Bohol Island State University (BISU).
+                  </p>
+                  <p style={aboutStoryParagraphStyle}>
+                    Since then, DBEMB has expanded its reach, competing across the Visayas (Bohol), Mindanao (Davao, Tagum, Kidapawan), and Luzon (Pasay, Pasig, Bacoor).
+                  </p>
+                  <p style={aboutStoryParagraphStyle}>
+                    The band has secured five major championship titles—two from the Alturas Drum and Bugle competition in Tagbilaran City, Bohol, and three in Davao City.
+                  </p>
+                  <p style={aboutStoryParagraphStyle}>
+                    However, the band's strength has gradually declined after the pandemic lockdown, particularly from early 2022 onward. Challenges such as reduced membership, financial struggles, and operational difficulties have affected its performance and stability. Despite these setbacks, DBEMB remains committed to its legacy of excellence, striving to rebuild and continue serving the people through music.
+                  </p>
+                </div>
+              </div>
+
+              {/* Carousel */}
+              <div style={carouselWrapperStyle}>
+                <div
+                  style={{
+                    ...carouselImageStyle,
+                    backgroundImage: `url(${aboutImages[currentSlide]})`
+                  }}
+                />
+                <div style={carouselControlsStyle}>
+                  <button style={navButtonStyle} onClick={goPrev} aria-label="Previous slide">‹</button>
+                  <button style={navButtonStyle} onClick={goNext} aria-label="Next slide">›</button>
+                </div>
+                <div style={dotsStyle}>
+                  {aboutImages.map((_, idx) => (
+                    <span key={idx} style={dotStyle(idx === currentSlide)} />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-             {/* Modal */}
-       {modalService && (
-         <div style={modalOverlayStyle} onClick={() => setModalService(null)}>
-           <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-             <div style={modalHeaderStyle}>
-               <h4 style={modalTitleStyle}>{modalService.title}</h4>
-               <button style={closeButtonStyle} onClick={() => setModalService(null)}>Close</button>
-             </div>
-             <div style={modalBodyStyle}>
-               <p style={readMoreTextStyle}>{modalService.description}</p>
-             </div>
-             <div style={modalActionsStyle}>
-               <a href="#contact" style={bookButtonStyle}>Book Now</a>
-             </div>
-           </div>
-         </div>
-       )}
+        {/* Contact Section */}
+        <section id="contact" style={contactSectionStyle}>
+          <div style={servicesContainerStyle}>
+            <div style={servicesHeaderWrapStyle}>
+              <div>
+                <div style={sectionEyebrowStyle}>Get in touch</div>
+                <h3 style={servicesHeaderStyle}>Contact Us</h3>
+              </div>
+              <p style={servicesSubTextStyle}>
+                Ready to bring the Davao Blue Eagles Marching Band to your event? Get in touch with us for bookings, inquiries, or collaborations.
+              </p>
+            </div>
 
-       {/* Footer */}
-       <footer style={footerStyle}>
-         <div style={footerContainerStyle}>
-           {/* Main Footer Content */}
-           <div style={footerMainStyle}>
-             {/* Brand Section */}
-             <div style={footerBrandStyle}>
-               <div style={footerLogoStyle}>
-                 <h3 style={footerLogoTitleStyle}>DAVAO</h3>
-                 <p style={footerLogoSubtitleStyle}>BLUE EAGLES</p>
-               </div>
-               <p style={footerDescriptionStyle}>
-                 Serving the people through music since 2012. We bring excellence, passion, and unforgettable performances to every event.
-               </p>
-               <div style={footerSocialStyle}>
-                 <a href="#" style={socialLinkStyle} aria-label="Facebook">
-                   <span style={socialIconStyle}>📘</span>
-                 </a>
-                 <a href="#" style={socialLinkStyle} aria-label="Instagram">
-                   <span style={socialIconStyle}>📷</span>
-                 </a>
-                 <a href="#" style={socialLinkStyle} aria-label="YouTube">
-                   <span style={socialIconStyle}>📺</span>
-                 </a>
-                 <a href="#" style={socialLinkStyle} aria-label="Email">
-                   <span style={socialIconStyle}>📧</span>
-                 </a>
-               </div>
-             </div>
+            <div style={contactGridStyle}>
+              {/* Contact Information */}
+              <div style={contactInfoCardStyle}>
+                <h4 style={contactCardTitleStyle}>Get In Touch</h4>
+                <div style={contactInfoListStyle}>
+                  <div style={contactInfoItemStyle}>
+                    <div style={contactIconStyle}>📧</div>
+                    <div>
+                      <h5 style={contactLabelStyle}>Email</h5>
+                      <p style={contactValueStyle}>dbe.official@example.com</p>
+                    </div>
+                  </div>
+                  <div style={contactInfoItemStyle}>
+                    <div style={contactIconStyle}>📱</div>
+                    <div>
+                      <h5 style={contactLabelStyle}>Phone</h5>
+                      <p style={contactValueStyle}>+63 900 000 0000</p>
+                    </div>
+                  </div>
+                  <div style={contactInfoItemStyle}>
+                    <div style={contactIconStyle}>📍</div>
+                    <div>
+                      <h5 style={contactLabelStyle}>Location</h5>
+                      <p style={contactValueStyle}>Davao City, Philippines</p>
+                    </div>
+                  </div>
+                  <div style={contactInfoItemStyle}>
+                    <div style={contactIconStyle}>⏰</div>
+                    <div>
+                      <h5 style={contactLabelStyle}>Response Time</h5>
+                      <p style={contactValueStyle}>Within 24 hours</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-             {/* Quick Links */}
-             <div style={footerSectionStyle}>
-               <h4 style={footerSectionTitleStyle}>Quick Links</h4>
-               <ul style={footerLinkListStyle}>
-                 <li><a href="#home" style={footerLinkStyle}>Home</a></li>
-                 <li><a href="#services" style={footerLinkStyle}>Services</a></li>
-                 <li><a href="#about" style={footerLinkStyle}>About Us</a></li>
-                 <li><a href="#contact" style={footerLinkStyle}>Contact</a></li>
-                 <li><a href="#" style={footerLinkStyle}>Gallery</a></li>
-                 <li><a href="#" style={footerLinkStyle}>News & Events</a></li>
-               </ul>
-             </div>
+              {/* Contact Form */}
+              <div style={contactFormCardStyle}>
+                <h4 style={contactCardTitleStyle}>Send Us a Message</h4>
+                <form style={contactFormStyle}>
+                  <div style={formRowStyle}>
+                    <div style={formFieldStyle}>
+                      <label style={formLabelStyle}>First Name *</label>
+                      <input 
+                        type="text" 
+                        style={formInputStyle}
+                        placeholder="Enter your first name"
+                        required
+                      />
+                    </div>
+                    <div style={formFieldStyle}>
+                      <label style={formLabelStyle}>Last Name *</label>
+                      <input 
+                        type="text" 
+                        style={formInputStyle}
+                        placeholder="Enter your last name"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div style={formFieldStyle}>
+                    <label style={formLabelStyle}>Email Address *</label>
+                    <input 
+                      type="email" 
+                      style={formInputStyle}
+                      placeholder="Enter your email address"
+                      required
+                    />
+                  </div>
+                  <div style={formFieldStyle}>
+                    <label style={formLabelStyle}>Phone Number</label>
+                    <input 
+                      type="tel" 
+                      style={formInputStyle}
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+                  <div style={formFieldStyle}>
+                    <label style={formLabelStyle}>Event Type *</label>
+                    <select style={formInputStyle} required>
+                      <option value="">Select an event type</option>
+                      <option value="corporate">Corporate Event</option>
+                      <option value="festival">Festival</option>
+                      <option value="parade">Parade</option>
+                      <option value="ceremony">Ceremony</option>
+                      <option value="workshop">Music Workshop</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div style={formFieldStyle}>
+                    <label style={formLabelStyle}>Event Date</label>
+                    <input 
+                      type="date" 
+                      style={formInputStyle}
+                    />
+                  </div>
+                  <div style={formFieldStyle}>
+                    <label style={formLabelStyle}>Message *</label>
+                    <textarea 
+                      style={formTextareaStyle}
+                      placeholder="Tell us about your event and requirements..."
+                      rows="4"
+                      required
+                    ></textarea>
+                  </div>
+                  <button type="submit" style={submitButtonStyle}>
+                    Send Message
+                  </button>
+                </form>
+              </div>
+            </div>
 
-             {/* Services */}
-             <div style={footerSectionStyle}>
-               <h4 style={footerSectionTitleStyle}>Our Services</h4>
-               <ul style={footerLinkListStyle}>
-                 <li><a href="#" style={footerLinkStyle}>Band Gigs</a></li>
-                 <li><a href="#" style={footerLinkStyle}>Music Arrangement</a></li>
-                 <li><a href="#" style={footerLinkStyle}>Parade Events</a></li>
-                 <li><a href="#" style={footerLinkStyle}>Music Workshops</a></li>
-                 <li><a href="#" style={footerLinkStyle}>Instrument Rentals</a></li>
-                 <li><a href="#" style={footerLinkStyle}>Custom Performances</a></li>
-               </ul>
-             </div>
+            {/* Additional Info */}
+            <div style={additionalInfoStyle}>
+              <div style={infoCardStyle}>
+                <h5 style={infoCardTitleStyle}>Booking Process</h5>
+                <p style={infoCardTextStyle}>
+                  We'll review your request and get back to you within 24 hours with availability and pricing details.
+                </p>
+              </div>
+              <div style={infoCardStyle}>
+                <h5 style={infoCardTitleStyle}>Service Areas</h5>
+                <p style={infoCardTextStyle}>
+                  We serve Davao City and surrounding areas. For events outside our immediate area, please contact us for special arrangements.
+                </p>
+              </div>
+              <div style={infoCardStyle}>
+                <h5 style={infoCardTitleStyle}>Payment Terms</h5>
+                <p style={infoCardTextStyle}>
+                  We require a 50% deposit upon booking confirmation, with the remaining balance due on the event date.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-             {/* Contact Info */}
-             <div style={footerSectionStyle}>
-               <h4 style={footerSectionTitleStyle}>Contact Info</h4>
-               <div style={footerContactListStyle}>
-                 <div style={footerContactItemStyle}>
-                   <span style={footerContactIconStyle}>📍</span>
-                   <span style={footerContactTextStyle}>Davao City, Philippines</span>
-                 </div>
-                 <div style={footerContactItemStyle}>
-                   <span style={footerContactIconStyle}>📧</span>
-                   <span style={footerContactTextStyle}>dbe.official@example.com</span>
-                 </div>
-                 <div style={footerContactItemStyle}>
-                   <span style={footerContactIconStyle}>📱</span>
-                   <span style={footerContactTextStyle}>+63 900 000 0000</span>
-                 </div>
-                 <div style={footerContactItemStyle}>
-                   <span style={footerContactIconStyle}>⏰</span>
-                   <span style={footerContactTextStyle}>Mon-Fri: 9AM-6PM</span>
-                 </div>
-               </div>
-             </div>
-           </div>
+        {/* Modal */}
+        {modalService && (
+          <div style={modalOverlayStyle} onClick={() => setModalService(null)}>
+            <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+              <div style={modalHeaderStyle}>
+                <h4 style={modalTitleStyle}>{modalService.title}</h4>
+                <button style={closeButtonStyle} onClick={() => setModalService(null)}>Close</button>
+              </div>
+              <div style={modalBodyStyle}>
+                <p style={readMoreTextStyle}>{modalService.description}</p>
+              </div>
+              <div style={modalActionsStyle}>
+                <a href="#contact" style={bookButtonStyle}>Book Now</a>
+              </div>
+            </div>
+          </div>
+        )}
 
-           {/* Footer Bottom */}
-           <div style={footerBottomStyle}>
-             <div style={footerBottomContentStyle}>
-               <p style={footerCopyrightStyle}>
-                 © 2024 Davao Blue Eagles Marching Band. All rights reserved.
-               </p>
-               <div style={footerBottomLinksStyle}>
-                 <a href="#" style={footerBottomLinkStyle}>Privacy Policy</a>
-                 <a href="#" style={footerBottomLinkStyle}>Terms of Service</a>
-                 <a href="#" style={footerBottomLinkStyle}>Cookie Policy</a>
-               </div>
-             </div>
-           </div>
-         </div>
-       </footer>
-     </div>
-   );
- };
+        {/* Footer */}
+        <footer style={footerStyle}>
+          <div style={footerContainerStyle}>
+            {/* Main Footer Content */}
+            <div style={footerMainStyle}>
+              {/* Brand Section */}
+              <div style={footerBrandStyle}>
+                <div style={footerLogoStyle}>
+                  <h3 style={footerLogoTitleStyle}>DAVAO</h3>
+                  <p style={footerLogoSubtitleStyle}>BLUE EAGLES</p>
+                </div>
+                <p style={footerDescriptionStyle}>
+                  Serving the people through music since 2012. We bring excellence, passion, and unforgettable performances to every event.
+                </p>
+                <div style={footerSocialStyle}>
+                  <a href="#" style={socialLinkStyle} aria-label="Facebook">
+                    <span style={socialIconStyle}>📘</span>
+                  </a>
+                  <a href="#" style={socialLinkStyle} aria-label="Instagram">
+                    <span style={socialIconStyle}>📷</span>
+                  </a>
+                  <a href="#" style={socialLinkStyle} aria-label="YouTube">
+                    <span style={socialIconStyle}>📺</span>
+                  </a>
+                  <a href="#" style={socialLinkStyle} aria-label="Email">
+                    <span style={socialIconStyle}>📧</span>
+                  </a>
+                </div>
+              </div>
 
+              {/* Quick Links */}
+              <div style={footerSectionStyle}>
+                <h4 style={footerSectionTitleStyle}>Quick Links</h4>
+                <ul style={footerLinkListStyle}>
+                  <li><a href="#home" style={footerLinkStyle}>Home</a></li>
+                  <li><a href="#services" style={footerLinkStyle}>Services</a></li>
+                  <li><a href="#about" style={footerLinkStyle}>About Us</a></li>
+                  <li><a href="#contact" style={footerLinkStyle}>Contact</a></li>
+                  <li><a href="#" style={footerLinkStyle}>Gallery</a></li>
+                  <li><a href="#" style={footerLinkStyle}>News & Events</a></li>
+                </ul>
+              </div>
+
+              {/* Services */}
+              <div style={footerSectionStyle}>
+                <h4 style={footerSectionTitleStyle}>Our Services</h4>
+                <ul style={footerLinkListStyle}>
+                  <li><a href="#" style={footerLinkStyle}>Band Gigs</a></li>
+                  <li><a href="#" style={footerLinkStyle}>Music Arrangement</a></li>
+                  <li><a href="#" style={footerLinkStyle}>Parade Events</a></li>
+                  <li><a href="#" style={footerLinkStyle}>Music Workshops</a></li>
+                  <li><a href="#" style={footerLinkStyle}>Instrument Rentals</a></li>
+                  <li><a href="#" style={footerLinkStyle}>Custom Performances</a></li>
+                </ul>
+              </div>
+
+              {/* Contact Info */}
+              <div style={footerSectionStyle}>
+                <h4 style={footerSectionTitleStyle}>Contact Info</h4>
+                <div style={footerContactListStyle}>
+                  <div style={footerContactItemStyle}>
+                    <span style={footerContactIconStyle}>📍</span>
+                    <span style={footerContactTextStyle}>Davao City, Philippines</span>
+                  </div>
+                  <div style={footerContactItemStyle}>
+                    <span style={footerContactIconStyle}>📧</span>
+                    <span style={footerContactTextStyle}>dbe.official@example.com</span>
+                  </div>
+                  <div style={footerContactItemStyle}>
+                    <span style={footerContactIconStyle}>📱</span>
+                    <span style={footerContactTextStyle}>+63 900 000 0000</span>
+                  </div>
+                  <div style={footerContactItemStyle}>
+                    <span style={footerContactIconStyle}>⏰</span>
+                    <span style={footerContactTextStyle}>Mon-Fri: 9AM-6PM</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Bottom */}
+            <div style={footerBottomStyle}>
+              <div style={footerBottomContentStyle}>
+                <p style={footerCopyrightStyle}>
+                  © 2024 Davao Blue Eagles Marching Band. All rights reserved.
+                </p>
+                <div style={footerBottomLinksStyle}>
+                  <a href="#" style={footerBottomLinkStyle}>Privacy Policy</a>
+                  <a href="#" style={footerBottomLinkStyle}>Terms of Service</a>
+                  <a href="#" style={footerBottomLinkStyle}>Cookie Policy</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    )}
+  </>
+);
+}
 export default Home;
