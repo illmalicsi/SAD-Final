@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
 
+
+const ADMIN_CREDENTIALS = {
+  email: 'admin@blueeagles.com',
+  password: 'Admin123!' 
+};
+
 const sharedStyles = {
   container: {
     minHeight: '100vh',
@@ -114,6 +120,21 @@ const sharedStyles = {
     alignItems: 'center',
     gap: '8px',
     transition: 'all 0.3s ease'
+  },
+  adminHint: {
+    marginTop: '15px', 
+    padding: '10px', 
+    backgroundColor: 'rgba(100, 255, 218, 0.1)', 
+    borderRadius: '8px',
+    fontSize: '12px',
+    color: '#64ffda',
+    textAlign: 'center'
+  },
+  errorMessage: {
+    color: '#ef4444',
+    fontSize: '14px',
+    margin: '-10px 0 10px 0',
+    textAlign: 'center'
   }
 };
 
@@ -122,6 +143,7 @@ const Login = ({ onBack, onLogin, onSwitchToSignup }) => {
     email: '',
     password: ''
   });
+  const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -129,20 +151,61 @@ const Login = ({ onBack, onLogin, onSwitchToSignup }) => {
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    console.log('Logging in...', formData);
-    
-    if (onLogin) {
+    // Check if it's the predefined admin
+    if (formData.email === ADMIN_CREDENTIALS.email && 
+        formData.password === ADMIN_CREDENTIALS.password) {
+      // Login as admin
       onLogin({
-        email: formData.email,
-        firstName: formData.email.split('@')[0],
-        isLoggedIn: true
+        email: ADMIN_CREDENTIALS.email,
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'admin',
+        isLoggedIn: true,
+        isBlocked: false
       });
+      return;
     }
+    
+    // Check against stored users
+    const storedUsers = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
+    const user = storedUsers.find(u => u.email === formData.email);
+    
+    if (!user) {
+      setError('User not found. Please check your email or sign up for a new account.');
+      return;
+    }
+    
+    // In a real app, you would hash and compare passwords properly
+    // For demo purposes, we're doing a simple comparison
+    if (user.password !== formData.password) {
+      setError('Invalid password. Please try again.');
+      return;
+    }
+    
+    if (user.isBlocked) {
+      setError('Your account has been blocked. Please contact administrator.');
+      return;
+    }
+    
+    console.log('Logging in...', user);
+    
+    // Login successful
+    onLogin({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      role: user.role || 'user',
+      isLoggedIn: true,
+      isBlocked: user.isBlocked || false
+    });
   };
 
   const handleInputFocus = (e) => {
@@ -193,6 +256,8 @@ const Login = ({ onBack, onLogin, onSwitchToSignup }) => {
           <h2 style={sharedStyles.title}>Welcome Back!</h2>
           <p style={sharedStyles.subtitle}>Sign in to your account</p>
         </div>
+
+        {error && <p style={sharedStyles.errorMessage}>{error}</p>}
 
         <form style={sharedStyles.form} onSubmit={handleSubmit}>
           <div style={sharedStyles.formField}>

@@ -9,6 +9,10 @@ import Login from './login'
 import Signup from './signup'
 import Dashboard from './dashboard'
 
+const ADMIN_CREDENTIALS = {
+  email: 'admin@blueeagles.com',
+  password: 'Admin123!'
+};
 
 const Home = () => {
   const containerStyle = {
@@ -950,8 +954,31 @@ const Home = () => {
 }, []);
 
 const handleLogin = (userData) => {
-  setUser(userData);
-  localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(userData));
+  // For the predefined admin, we don't need to check localStorage
+  if (userData.email === ADMIN_CREDENTIALS.email) {
+    setUser(userData);
+    localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(userData));
+    setCurrentView('dashboard');
+    return;
+  }
+  
+  // For regular users, check if they're blocked
+  const storedUsers = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
+  const userFromStorage = storedUsers.find(user => user.email === userData.email);
+  
+  if (userFromStorage && userFromStorage.isBlocked) {
+    alert('Your account has been blocked. Please contact administrator.');
+    return;
+  }
+  
+  const userWithRole = {
+    ...userData,
+    role: userFromStorage?.role || 'user',
+    isBlocked: userFromStorage?.isBlocked || false
+  };
+  
+  setUser(userWithRole);
+  localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(userWithRole));
   setCurrentView('dashboard');
 };
 
@@ -974,8 +1001,21 @@ const handleShowSignup = () => {
 };
 
 const handleSignup = (userData) => {
-  setUser(userData);
-  localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(userData));
+  // Add new user to users list
+  const storedUsers = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
+  const newUser = {
+    ...userData,
+    id: Date.now(),
+    role: 'user', // Default role
+    isBlocked: false, // Default not blocked
+    createdAt: new Date().toISOString().split('T')[0]
+  };
+  
+  const updatedUsers = [...storedUsers, newUser];
+  localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
+  
+  setUser(newUser);
+  localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(newUser));
   setCurrentView('dashboard');
 };
 
@@ -1009,6 +1049,8 @@ return (
     onBackToHome={() => setCurrentView('home')} 
   />
 )}
+
+
 
 
     
@@ -1099,6 +1141,7 @@ return (
                   👤 {user.firstName || user.email.split('@')[0]} ▼
                 </button>
                 
+                
                 {showUserMenu && (
                   <div style={{
                     position: 'absolute',
@@ -1137,6 +1180,23 @@ return (
                     onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
                     onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                     >My Bookings</a>
+                    
+                    {/* Only show User Management for admins */}
+                    {user.role === 'admin' && (
+                      <a href="#user-management" style={{ 
+                        display: 'block', 
+                        padding: '12px 16px', 
+                        color: '#e5e7eb', 
+                        textDecoration: 'none',
+                        fontSize: '14px',
+                        transition: 'background-color 0.2s',
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                      >User Management</a>
+                    )}
+                    
                     <hr style={{ 
                       margin: '8px 0', 
                       border: 'none', 
