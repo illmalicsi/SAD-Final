@@ -188,7 +188,7 @@ const Dashboard = ({ user, onBackToHome }) => {
           onMouseEnter={handleButtonHover}
           onMouseLeave={handleButtonLeave}
         >
-          ← Back to Home
+          Home
         </button>
       </div>
 
