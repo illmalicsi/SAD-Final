@@ -17,7 +17,26 @@ const sharedStyles = {
     width: '100%',
     maxWidth: '450px',
     backdropFilter: 'blur(10px)',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
+    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+    position: 'relative'
+  },
+  closeButton: {
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
+    backgroundColor: 'transparent',
+    border: '1px solid rgba(100, 255, 218, 0.3)',
+    color: '#e5e7eb',
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    cursor: 'pointer',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.3s ease'
   },
   header: {
     textAlign: 'center',
@@ -104,21 +123,11 @@ const sharedStyles = {
     textDecoration: 'none',
     fontWeight: '500'
   },
-  backButton: {
-    position: 'absolute',
-    top: '20px',
-    left: '20px',
-    backgroundColor: 'transparent',
-    border: '1px solid rgba(100, 255, 218, 0.3)',
-    color: '#e5e7eb',
-    padding: '8px 16px',
-    borderRadius: '6px',
-    cursor: 'pointer',
+  errorMessage: {
+    color: '#ef4444',
     fontSize: '14px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    transition: 'all 0.3s ease'
+    margin: '-10px 0 10px 0',
+    textAlign: 'center'
   }
 };
 
@@ -131,6 +140,7 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
     lastName: '',
     phone: ''
   });
+  const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -138,25 +148,32 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
       ...prev,
       [name]: value
     }));
+    if (error) setError('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
+      setError('Please fill in all required fields');
       return;
     }
-
-    console.log('Registering...', formData);
-    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
     if (onSignup) {
       onSignup({
         email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
-        isLoggedIn: true
+        role: 'user',
+        isLoggedIn: true,
+        isBlocked: false
       });
     }
   };
@@ -185,30 +202,41 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
     e.target.style.boxShadow = 'none';
   };
 
+  const handleCloseButtonHover = (e) => {
+    e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+    e.target.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+    e.target.style.color = '#ef4444';
+    e.target.style.transform = 'scale(1.1)';
+  };
+
+  const handleCloseButtonLeave = (e) => {
+    e.target.style.backgroundColor = 'transparent';
+    e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
+    e.target.style.color = '#e5e7eb';
+    e.target.style.transform = 'scale(1)';
+  };
+
   return (
     <div style={sharedStyles.container}>
-      <button 
-        style={sharedStyles.backButton}
-        onClick={onBack}
-        onMouseEnter={(e) => {
-          e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)';
-          e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.backgroundColor = 'transparent';
-          e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
-        }}
-      >
-        ← Back to Home
-      </button>
-
       <div style={sharedStyles.formCard}>
+        <button
+          style={sharedStyles.closeButton}
+          onClick={onBack}
+          onMouseEnter={handleCloseButtonHover}
+          onMouseLeave={handleCloseButtonLeave}
+          title="Close"
+        >
+          ×
+        </button>
+
         <div style={sharedStyles.header}>
           <h1 style={sharedStyles.logo}>DAVAO</h1>
           <p style={sharedStyles.logoSub}>BLUE EAGLES</p>
           <h2 style={sharedStyles.title}>Join Our Band</h2>
           <p style={sharedStyles.subtitle}>Create your account to get started</p>
         </div>
+
+        {error && <p style={sharedStyles.errorMessage}>{error}</p>}
 
         <form style={sharedStyles.form} onSubmit={handleSubmit}>
           <div style={sharedStyles.formRow}>

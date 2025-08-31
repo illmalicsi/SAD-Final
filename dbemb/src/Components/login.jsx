@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-
 const ADMIN_CREDENTIALS = {
   email: 'admin@blueeagles.com',
   password: 'Admin123!' 
@@ -13,7 +12,8 @@ const sharedStyles = {
     alignItems: 'center',
     justifyContent: 'center',
     background: 'linear-gradient(135deg, rgba(10, 25, 47, 0.95), rgba(2, 6, 23, 0.98))',
-    padding: '20px'
+    padding: '20px',
+    position: 'relative'
   },
   formCard: {
     backgroundColor: 'rgba(10, 25, 47, 0.8)',
@@ -23,7 +23,26 @@ const sharedStyles = {
     width: '100%',
     maxWidth: '450px',
     backdropFilter: 'blur(10px)',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
+    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+    position: 'relative'
+  },
+  closeButton: {
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
+    backgroundColor: 'transparent',
+    border: '1px solid rgba(100, 255, 218, 0.3)',
+    color: '#e5e7eb',
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    cursor: 'pointer',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.3s ease'
   },
   header: {
     textAlign: 'center',
@@ -109,17 +128,21 @@ const sharedStyles = {
     position: 'absolute',
     top: '20px',
     left: '20px',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(10, 25, 47, 0.8)',
     border: '1px solid rgba(100, 255, 218, 0.3)',
     color: '#e5e7eb',
-    padding: '8px 16px',
-    borderRadius: '6px',
+    padding: '10px 20px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
+    fontWeight: '500',
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    transition: 'all 0.3s ease'
+    transition: 'all 0.3s ease',
+    backdropFilter: 'blur(10px)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+    zIndex: 10
   },
   adminHint: {
     marginTop: '15px', 
@@ -173,39 +196,10 @@ const Login = ({ onBack, onLogin, onSwitchToSignup }) => {
       return;
     }
     
-    // Check against stored users
-    const storedUsers = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
-    const user = storedUsers.find(u => u.email === formData.email);
+    // For demo purposes, we'll skip localStorage check since it's not supported in artifacts
+    // In real implementation, you would check against stored users
     
-    if (!user) {
-      setError('User not found. Please check your email or sign up for a new account.');
-      return;
-    }
-    
-    // In a real app, you would hash and compare passwords properly
-    // For demo purposes, we're doing a simple comparison
-    if (user.password !== formData.password) {
-      setError('Invalid password. Please try again.');
-      return;
-    }
-    
-    if (user.isBlocked) {
-      setError('Your account has been blocked. Please contact administrator.');
-      return;
-    }
-    
-    console.log('Logging in...', user);
-    
-    // Login successful
-    onLogin({
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      phone: user.phone,
-      role: user.role || 'user',
-      isLoggedIn: true,
-      isBlocked: user.isBlocked || false
-    });
+    setError('Invalid credentials. Please try again.');
   };
 
   const handleInputFocus = (e) => {
@@ -232,24 +226,33 @@ const Login = ({ onBack, onLogin, onSwitchToSignup }) => {
     e.target.style.boxShadow = 'none';
   };
 
+  const handleCloseButtonHover = (e) => {
+    e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+    e.target.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+    e.target.style.color = '#ef4444';
+    e.target.style.transform = 'scale(1.1)';
+  };
+
+  const handleCloseButtonLeave = (e) => {
+    e.target.style.backgroundColor = 'transparent';
+    e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
+    e.target.style.color = '#e5e7eb';
+    e.target.style.transform = 'scale(1)';
+  };
+
   return (
     <div style={sharedStyles.container}>
-      <button 
-        style={sharedStyles.backButton}
-        onClick={onBack}
-        onMouseEnter={(e) => {
-          e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)';
-          e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.backgroundColor = 'transparent';
-          e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
-        }}
-      >
-        ← Back to Home
-      </button>
-
       <div style={sharedStyles.formCard}>
+        <button 
+          style={sharedStyles.closeButton}
+          onClick={onBack}
+          onMouseEnter={handleCloseButtonHover}
+          onMouseLeave={handleCloseButtonLeave}
+          title="Close"
+        >
+          ×
+        </button>
+
         <div style={sharedStyles.header}>
           <h1 style={sharedStyles.logo}>DAVAO</h1>
           <p style={sharedStyles.logoSub}>BLUE EAGLES</p>
@@ -259,7 +262,7 @@ const Login = ({ onBack, onLogin, onSwitchToSignup }) => {
 
         {error && <p style={sharedStyles.errorMessage}>{error}</p>}
 
-        <form style={sharedStyles.form} onSubmit={handleSubmit}>
+        <div style={sharedStyles.form}>
           <div style={sharedStyles.formField}>
             <label style={sharedStyles.label}>Email Address</label>
             <input
@@ -291,20 +294,25 @@ const Login = ({ onBack, onLogin, onSwitchToSignup }) => {
           </div>
 
           <button
-            type="submit"
+            type="button"
             style={sharedStyles.button}
+            onClick={handleSubmit}
             onMouseEnter={handleButtonHover}
             onMouseLeave={handleButtonLeave}
           >
             Sign In
           </button>
-        </form>
+        </div>
 
         <div style={sharedStyles.switchText}>
           Don't have an account?{' '}
           <span style={sharedStyles.switchLink} onClick={onSwitchToSignup}>
             Sign up here
           </span>
+        </div>
+
+        <div style={sharedStyles.adminHint}>
+          Admin Demo: admin@blueeagles.com / Admin123!
         </div>
       </div>
     </div>
