@@ -1,4 +1,4 @@
-# To git push in condespacee, do the following:
+# To git push in codespace, do the following:
 
 1. git status
 2. git add .
