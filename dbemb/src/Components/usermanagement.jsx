@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const UserManagement = ({ user, onBackToHome }) => {
+const UserManagement = ({ user, onBackToHome, onLogout }) => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,7 +17,7 @@ const UserManagement = ({ user, onBackToHome }) => {
     isBlocked: false
   });
 
-  // Sample user data - in a real app, this would come from an API
+  // Sample user data - fallback if no users exist in localStorage
   const sampleUsers = [
     { id: 1, firstName: 'John', lastName: 'Doe', email: 'john@example.com', role: 'admin', isBlocked: false, createdAt: '2023-01-15' },
     { id: 2, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', role: 'user', isBlocked: false, createdAt: '2023-02-20' },
@@ -26,9 +26,24 @@ const UserManagement = ({ user, onBackToHome }) => {
   ];
 
   useEffect(() => {
-    // Initialize with sample data for this demo (avoiding localStorage as per artifact guidelines)
-    setUsers(sampleUsers);
-    setFilteredUsers(sampleUsers);
+    // Load users from localStorage, fallback to sample data if none exist
+    const storedUsers = localStorage.getItem('davaoBlueEaglesUsers');
+    if (storedUsers) {
+      try {
+        const parsedUsers = JSON.parse(storedUsers);
+        setUsers(parsedUsers);
+        setFilteredUsers(parsedUsers);
+      } catch (error) {
+        console.error('Error parsing stored users:', error);
+        setUsers(sampleUsers);
+        setFilteredUsers(sampleUsers);
+      }
+    } else {
+      // Initialize with sample data and save to localStorage
+      setUsers(sampleUsers);
+      setFilteredUsers(sampleUsers);
+      localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(sampleUsers));
+    }
   }, []);
 
   useEffect(() => {
@@ -64,6 +79,7 @@ const UserManagement = ({ user, onBackToHome }) => {
     );
     
     setUsers(updatedUsers);
+    localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
   };
 
   const handleCreateUser = () => {
@@ -75,6 +91,7 @@ const UserManagement = ({ user, onBackToHome }) => {
     
     const updatedUsers = [...users, newUserWithId];
     setUsers(updatedUsers);
+    localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
     
     setShowCreateModal(false);
     setNewUser({
@@ -98,6 +115,7 @@ const UserManagement = ({ user, onBackToHome }) => {
     );
     
     setUsers(updatedUsers);
+    localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
     setShowEditModal(false);
     setEditingUser(null);
   };
@@ -106,6 +124,7 @@ const UserManagement = ({ user, onBackToHome }) => {
     if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       const updatedUsers = users.filter(user => user.id !== userId);
       setUsers(updatedUsers);
+      localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
     }
   };
 
@@ -159,6 +178,21 @@ const UserManagement = ({ user, onBackToHome }) => {
       cursor: 'pointer',
       fontSize: '14px',
       transition: 'all 0.3s ease'
+    },
+    logoutButton: {
+      backgroundColor: 'transparent',
+      border: '1px solid rgba(239, 68, 68, 0.3)',
+      color: '#ef4444',
+      padding: '10px 20px',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontSize: '14px',
+      transition: 'all 0.3s ease',
+      marginLeft: '10px'
+    },
+    buttonContainer: {
+      display: 'flex',
+      alignItems: 'center'
     },
     statsContainer: {
       display: 'grid',
@@ -480,6 +514,18 @@ const UserManagement = ({ user, onBackToHome }) => {
     e.target.style.transform = 'translateY(0)';
   };
 
+  const handleLogoutButtonHover = (e) => {
+    e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+    e.target.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+    e.target.style.transform = 'translateY(-2px)';
+  };
+
+  const handleLogoutButtonLeave = (e) => {
+    e.target.style.backgroundColor = 'transparent';
+    e.target.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+    e.target.style.transform = 'translateY(0)';
+  };
+
   const handleCreateButtonHover = (e) => {
     e.target.style.backgroundColor = 'transparent';
     e.target.style.color = '#64ffda';
@@ -520,14 +566,24 @@ const UserManagement = ({ user, onBackToHome }) => {
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.title}>User Management</h1>
-        <button 
-          style={styles.backButton}
-          onClick={onBackToHome}
-          onMouseEnter={handleButtonHover}
-          onMouseLeave={handleButtonLeave}
-        >
-          Dashboard
-        </button>
+        <div style={styles.buttonContainer}>
+          <button 
+            style={styles.backButton}
+            onClick={onBackToHome}
+            onMouseEnter={handleButtonHover}
+            onMouseLeave={handleButtonLeave}
+          >
+            Dashboard
+          </button>
+          <button 
+            style={styles.logoutButton}
+            onClick={onLogout}
+            onMouseEnter={handleLogoutButtonHover}
+            onMouseLeave={handleLogoutButtonLeave}
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -854,8 +910,9 @@ const UserManagement = ({ user, onBackToHome }) => {
               </div>
               
               <button
-                type="submit"
+                type="button"
                 style={styles.submitButton}
+                onClick={handleCreateUser}
                 onMouseEnter={handleCreateButtonHover}
                 onMouseLeave={handleCreateButtonLeave}
               >

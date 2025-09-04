@@ -161,12 +161,11 @@ const sharedStyles = {
   }
 };
 
-const Login = ({ onBack, onLogin, onSwitchToSignup }) => {
+const Login = ({ onBack, onLogin, onSwitchToSignup, error, onClearError }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -175,31 +174,17 @@ const Login = ({ onBack, onLogin, onSwitchToSignup }) => {
       [name]: value
     }));
     // Clear error when user starts typing
-    if (error) setError('');
+    if (error && onClearError) onClearError();
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Check if it's the predefined admin
-    if (formData.email === ADMIN_CREDENTIALS.email && 
-        formData.password === ADMIN_CREDENTIALS.password) {
-      // Login as admin
-      onLogin({
-        email: ADMIN_CREDENTIALS.email,
-        firstName: 'Admin',
-        lastName: 'User',
-        role: 'admin',
-        isLoggedIn: true,
-        isBlocked: false
-      });
-      return;
-    }
-    
-    // For demo purposes, we'll skip localStorage check since it's not supported in artifacts
-    // In real implementation, you would check against stored users
-    
-    setError('Invalid credentials. Please try again.');
+    // Pass the form data to the parent component for authentication
+    onLogin({
+      email: formData.email,
+      password: formData.password
+    });
   };
 
   const handleInputFocus = (e) => {

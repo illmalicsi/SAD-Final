@@ -894,6 +894,7 @@ const Home = () => {
   const [user, setUser] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [currentView, setCurrentView] = useState('home');
+  const [loginError, setLoginError] = useState('');
   const aboutImages = [bandGigs, paradeEvents, musicWorkshop, musicArrangement, instrumentRentals];
 
   const goPrev = () => {
@@ -955,32 +956,61 @@ const Home = () => {
 }, []);
 
 const handleLogin = (userData) => {
-  // For the predefined admin, we don't need to check localStorage
-  if (userData.email === ADMIN_CREDENTIALS.email) {
-    setUser(userData);
-    localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(userData));
+  // For the predefined admin, check credentials
+  if (userData.email === ADMIN_CREDENTIALS.email && userData.password === ADMIN_CREDENTIALS.password) {
+    const adminUser = {
+      email: ADMIN_CREDENTIALS.email,
+      firstName: 'Admin',
+      lastName: 'User',
+      role: 'admin',
+      isLoggedIn: true,
+      isBlocked: false
+    };
+    setUser(adminUser);
+    localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(adminUser));
+    setLoginError(''); // Clear any previous errors
     setCurrentView('dashboard');
     return;
   }
   
-  // For regular users, check if they're blocked
+  // Check users created in User Management
   const storedUsers = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
   const userFromStorage = storedUsers.find(user => user.email === userData.email);
   
-  if (userFromStorage && userFromStorage.isBlocked) {
+  if (!userFromStorage) {
+    setLoginError('Invalid credentials. Please check your email and password.');
+    setCurrentView('login');
+    return;
+  }
+  
+  // Check password for users created in User Management
+  if (userFromStorage.password !== userData.password) {
+    setLoginError('Invalid credentials. Please check your email and password.');
+    setCurrentView('login');
+    return;
+  }
+  
+  // Check if user is blocked
+  if (userFromStorage.isBlocked) {
     alert('Your account has been blocked. Please contact administrator.');
     return;
   }
   
   const userWithRole = {
-    ...userData,
-    role: userFromStorage?.role || 'user',
-    isBlocked: userFromStorage?.isBlocked || false
+    ...userFromStorage,
+    isLoggedIn: true
   };
   
   setUser(userWithRole);
   localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(userWithRole));
-  setCurrentView('dashboard');
+  setLoginError(''); // Clear any previous errors
+  
+  // Only admin users go to dashboard, regular users stay on home
+  if (userWithRole.role === 'admin') {
+    setCurrentView('dashboard');
+  } else {
+    setCurrentView('home');
+  }
 };
 
 const handleLogout = () => {
@@ -1017,7 +1047,13 @@ const handleSignup = (userData) => {
   
   setUser(newUser);
   localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(newUser));
-  setCurrentView('dashboard');
+  
+  // Only admin users go to dashboard, regular users stay on home
+  if (newUser.role === 'admin') {
+    setCurrentView('dashboard');
+  } else {
+    setCurrentView('home');
+  }
 };
 
 const handleSwitchToLogin = () => {
@@ -1028,11 +1064,15 @@ const handleSwitchToSignup = () => {
   setCurrentView('signup');
 };
 
+const handleClearLoginError = () => {
+  setLoginError('');
+};
+
 return (
   <>
     {/* Login view */}
     {currentView === 'login' && (
-      <Login onBack={handleBackToHome} onLogin={handleLogin} onSwitchToSignup={handleSwitchToSignup} />
+      <Login onBack={handleBackToHome} onLogin={handleLogin} onSwitchToSignup={handleSwitchToSignup} error={loginError} onClearError={handleClearLoginError} />
     )}
 
     {/* Add this after the login view */}
@@ -1048,6 +1088,7 @@ return (
   <Dashboard 
     user={user} 
     onBackToHome={() => setCurrentView('home')} 
+    onLogout={handleLogout}
   />
 )}
 

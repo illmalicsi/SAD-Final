@@ -3,7 +3,7 @@ import React, { useState, Suspense } from 'react';
 // Import UserManagement component
 const UserManagement = React.lazy(() => import('./usermanagement'));
 
-const Dashboard = ({ user, onBackToHome }) => {
+const Dashboard = ({ user, onBackToHome, onLogout }) => {
   const [currentView, setCurrentView] = useState('main');
   
   const styles = {
@@ -39,6 +39,21 @@ const Dashboard = ({ user, onBackToHome }) => {
       cursor: 'pointer',
       fontSize: '14px',
       transition: 'all 0.3s ease'
+    },
+    logoutButton: {
+      backgroundColor: 'transparent',
+      border: '1px solid rgba(239, 68, 68, 0.3)',
+      color: '#ef4444',
+      padding: '10px 20px',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontSize: '14px',
+      transition: 'all 0.3s ease',
+      marginLeft: '10px'
+    },
+    buttonContainer: {
+      display: 'flex',
+      alignItems: 'center'
     },
     cardGrid: {
       display: 'grid',
@@ -117,6 +132,18 @@ const Dashboard = ({ user, onBackToHome }) => {
     e.target.style.transform = 'translateY(0)';
   };
 
+  const handleLogoutButtonHover = (e) => {
+    e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+    e.target.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+    e.target.style.transform = 'translateY(-2px)';
+  };
+
+  const handleLogoutButtonLeave = (e) => {
+    e.target.style.backgroundColor = 'transparent';
+    e.target.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+    e.target.style.transform = 'translateY(0)';
+  };
+
   const handleCardHover = (e) => {
     e.currentTarget.style.transform = 'translateY(-4px)';
     e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
@@ -172,6 +199,7 @@ const Dashboard = ({ user, onBackToHome }) => {
         <UserManagement 
           user={user} 
           onBackToHome={() => setCurrentView('main')} 
+          onLogout={onLogout}
         />
       </Suspense>
     );
@@ -182,14 +210,24 @@ const Dashboard = ({ user, onBackToHome }) => {
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.title}>Dashboard</h1>
-        <button 
-          style={styles.backButton}
-          onClick={onBackToHome}
-          onMouseEnter={handleButtonHover}
-          onMouseLeave={handleButtonLeave}
-        >
-          Home
-        </button>
+        <div style={styles.buttonContainer}>
+          <button 
+            style={styles.backButton}
+            onClick={onBackToHome}
+            onMouseEnter={handleButtonHover}
+            onMouseLeave={handleButtonLeave}
+          >
+            Home
+          </button>
+          <button 
+            style={styles.logoutButton}
+            onClick={onLogout}
+            onMouseEnter={handleLogoutButtonHover}
+            onMouseLeave={handleLogoutButtonLeave}
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       <div style={styles.userInfo}>
