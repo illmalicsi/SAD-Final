@@ -99,6 +99,16 @@ const sharedStyles = {
     outline: 'none',
     transition: 'all 0.3s ease'
   },
+  inputError: {
+    backgroundColor: 'rgba(2, 6, 23, 0.6)',
+    border: '1px solid rgba(239, 68, 68, 0.5)',
+    borderRadius: '8px',
+    padding: '12px 16px',
+    color: '#e5e7eb',
+    fontSize: '16px',
+    outline: 'none',
+    transition: 'all 0.3s ease'
+  },
   button: {
     backgroundColor: '#64ffda',
     border: '2px solid #64ffda',
@@ -128,6 +138,16 @@ const sharedStyles = {
     fontSize: '14px',
     margin: '-10px 0 10px 0',
     textAlign: 'center'
+  },
+  fieldError: {
+    color: '#ef4444',
+    fontSize: '12px',
+    margin: '2px 0 0 0'
+  },
+  helpText: {
+    color: '#94a3b8',
+    fontSize: '12px',
+    margin: '2px 0 0 0'
   }
 };
 
@@ -140,31 +160,138 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
     lastName: '',
     phone: ''
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  // Phone number validation function
+  const validatePhoneNumber = (phone) => {
+    if (!phone) return 'Phone number is required'; // Phone is optional
+    
+    // Remove all non-digit characters
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    // Check if it's exactly 11 digits and starts with 09
+    if (cleanPhone.length !== 11) {
+      return 'Phone number must be exactly 11 digits';
+    }
+    
+    if (!cleanPhone.startsWith('09')) {
+      return 'Phone number must start with 09';
+    }
+    
+    return null;
+  };
+
+  // Email validation function
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) return 'Email is required';
+    if (!emailRegex.test(email)) return 'Please enter a valid email address';
+    return null;
+  };
+
+  // Password validation function
+  const validatePassword = (password) => {
+    if (!password) return 'Password is required';
+    if (password.length < 6) return 'Password must be at least 6 characters long';
+    return null;
+  };
+
+  // Validate form field
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'firstName':
+        return !value ? 'First name is required' : null;
+      case 'lastName':
+        return !value ? 'Last name is required' : null;
+      case 'email':
+        return validateEmail(value);
+      case 'phone':
+        return validatePhoneNumber(value);
+      case 'password':
+        return validatePassword(value);
+      case 'confirmPassword':
+        return !value ? 'Please confirm your password' : 
+               value !== formData.password ? 'Passwords do not match' : null;
+      default:
+        return null;
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // For phone number, only allow digits and limit to 11 characters
+    let processedValue = value;
+    if (name === 'phone') {
+      // Remove all non-digit characters
+      processedValue = value.replace(/\D/g, '');
+      // Limit to 11 digits
+      if (processedValue.length > 11) {
+        processedValue = processedValue.slice(0, 11);
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: processedValue
     }));
-    if (error) setError('');
+
+    // Clear field error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: null
+      }));
+    }
+
+    // Real-time validation for confirm password
+    if (name === 'confirmPassword' || (name === 'password' && formData.confirmPassword)) {
+      const confirmPasswordError = name === 'confirmPassword' 
+        ? (processedValue !== formData.password ? 'Passwords do not match' : null)
+        : (formData.confirmPassword !== processedValue ? 'Passwords do not match' : null);
+      
+      setErrors(prev => ({
+        ...prev,
+        confirmPassword: confirmPasswordError
+      }));
+    }
+  };
+
+  const handleInputBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    
+    const fieldError = validateField(name, value);
+    setErrors(prev => ({
+      ...prev,
+      [name]: fieldError
+    }));
+
+    // Reset border style
+    e.target.style.borderColor = fieldError ? 'rgba(239, 68, 68, 0.5)' : 'rgba(100, 255, 218, 0.2)';
+    e.target.style.boxShadow = 'none';
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in all required fields');
+    
+    // Validate all fields
+    const newErrors = {};
+    Object.keys(formData).forEach(field => {
+      const error = validateField(field, formData[field]);
+      if (error) newErrors[field] = error;
+    });
+
+    setErrors(newErrors);
+    setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+
+    // If there are errors, don't submit
+    if (Object.values(newErrors).some(error => error !== null)) {
       return;
     }
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
+
+    // Submit the form
     if (onSignup) {
       onSignup({
         email: formData.email,
@@ -179,13 +306,10 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
   };
 
   const handleInputFocus = (e) => {
-    e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
-    e.target.style.boxShadow = '0 0 0 3px rgba(100, 255, 218, 0.1)';
-  };
-
-  const handleInputBlur = (e) => {
-    e.target.style.borderColor = 'rgba(100, 255, 218, 0.2)';
-    e.target.style.boxShadow = 'none';
+    if (!errors[e.target.name]) {
+      e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
+      e.target.style.boxShadow = '0 0 0 3px rgba(100, 255, 218, 0.1)';
+    }
   };
 
   const handleButtonHover = (e) => {
@@ -236,16 +360,14 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
           <p style={sharedStyles.subtitle}>Create your account to get started</p>
         </div>
 
-        {error && <p style={sharedStyles.errorMessage}>{error}</p>}
-
-        <form style={sharedStyles.form} onSubmit={handleSubmit}>
+        <div style={sharedStyles.form}>
           <div style={sharedStyles.formRow}>
             <div style={sharedStyles.formField}>
               <label style={sharedStyles.label}>First Name</label>
               <input
                 type="text"
                 name="firstName"
-                style={sharedStyles.input}
+                style={errors.firstName ? sharedStyles.inputError : sharedStyles.input}
                 value={formData.firstName}
                 onChange={handleInputChange}
                 onFocus={handleInputFocus}
@@ -253,13 +375,16 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
                 placeholder="Enter your first name"
                 required
               />
+              {errors.firstName && touched.firstName && (
+                <div style={sharedStyles.fieldError}>{errors.firstName}</div>
+              )}
             </div>
             <div style={sharedStyles.formField}>
               <label style={sharedStyles.label}>Last Name</label>
               <input
                 type="text"
                 name="lastName"
-                style={sharedStyles.input}
+                style={errors.lastName ? sharedStyles.inputError : sharedStyles.input}
                 value={formData.lastName}
                 onChange={handleInputChange}
                 onFocus={handleInputFocus}
@@ -267,6 +392,9 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
                 placeholder="Enter your last name"
                 required
               />
+              {errors.lastName && touched.lastName && (
+                <div style={sharedStyles.fieldError}>{errors.lastName}</div>
+              )}
             </div>
           </div>
 
@@ -275,7 +403,7 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
             <input
               type="email"
               name="email"
-              style={sharedStyles.input}
+              style={errors.email ? sharedStyles.inputError : sharedStyles.input}
               value={formData.email}
               onChange={handleInputChange}
               onFocus={handleInputFocus}
@@ -283,6 +411,9 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
               placeholder="Enter your email"
               required
             />
+            {errors.email && touched.email && (
+              <div style={sharedStyles.fieldError}>{errors.email}</div>
+            )}
           </div>
 
           <div style={sharedStyles.formField}>
@@ -290,13 +421,21 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
             <input
               type="tel"
               name="phone"
-              style={sharedStyles.input}
+              style={errors.phone ? sharedStyles.inputError : sharedStyles.input}
               value={formData.phone}
               onChange={handleInputChange}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
-              placeholder="Enter your phone number"
+              placeholder="Enter phone number"
+              maxLength="11"
+              required
             />
+            {!errors.phone && (
+              <div style={sharedStyles.helpText}></div>
+            )}
+            {errors.phone && touched.phone && (
+              <div style={sharedStyles.fieldError}>{errors.phone}</div>
+            )}
           </div>
 
           <div style={sharedStyles.formField}>
@@ -304,7 +443,7 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
             <input
               type="password"
               name="password"
-              style={sharedStyles.input}
+              style={errors.password ? sharedStyles.inputError : sharedStyles.input}
               value={formData.password}
               onChange={handleInputChange}
               onFocus={handleInputFocus}
@@ -312,6 +451,9 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
               placeholder="Enter your password"
               required
             />
+            {errors.password && touched.password && (
+              <div style={sharedStyles.fieldError}>{errors.password}</div>
+            )}
           </div>
 
           <div style={sharedStyles.formField}>
@@ -319,7 +461,7 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
             <input
               type="password"
               name="confirmPassword"
-              style={sharedStyles.input}
+              style={errors.confirmPassword ? sharedStyles.inputError : sharedStyles.input}
               value={formData.confirmPassword}
               onChange={handleInputChange}
               onFocus={handleInputFocus}
@@ -327,6 +469,9 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
               placeholder="Confirm your password"
               required
             />
+            {errors.confirmPassword && touched.confirmPassword && (
+              <div style={sharedStyles.fieldError}>{errors.confirmPassword}</div>
+            )}
           </div>
 
           <button
@@ -334,10 +479,11 @@ const Signup = ({ onBack, onSignup, onSwitchToLogin }) => {
             style={sharedStyles.button}
             onMouseEnter={handleButtonHover}
             onMouseLeave={handleButtonLeave}
+            onClick={handleSubmit}
           >
             Create Account
           </button>
-        </form>
+        </div>
 
         <div style={sharedStyles.switchText}>
           Already have an account?{' '}
