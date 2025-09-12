@@ -4,10 +4,30 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+// Simple hash routing for /#/booking
+const BookStandalone = React.lazy(() => import('./Components/Booking'));
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
+const HashRouter = () => {
+  const [route, setRoute] = React.useState(window.location.hash);
+  React.useEffect(() => {
+    const onHash = () => setRoute(window.location.hash);
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  if (route === '#/booking') {
+    return (
+      <React.Suspense fallback={<div />}> 
+        <BookStandalone />
+      </React.Suspense>
+    );
+  }
+  return <App />;
+};
+
 root.render(
   <React.StrictMode>
-    <App />
+    <HashRouter />
   </React.StrictMode>
 );
 

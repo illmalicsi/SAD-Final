@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock } from 'react-icons/fa';
 import bg2 from "./Assets/bg2.jpg";
 import bandGigs from "./Assets/bandGigs.jpg";
 import musicArrangement from "./Assets/music-arrangement.jpg";
@@ -402,7 +403,8 @@ const Home = () => {
     justifyContent: 'center',
     backgroundColor: 'rgba(100, 255, 218, 0.1)',
     borderRadius: '8px',
-    flexShrink: 0
+    flexShrink: 0,
+    color: '#e5e7eb'
   };
 
   const contactLabelStyle = {
@@ -625,7 +627,8 @@ const Home = () => {
    };
 
    const socialIconStyle = {
-     fontSize: '20px'
+     fontSize: '20px',
+     color: '#60a5fa'
    };
 
    const footerSectionStyle = {
@@ -678,7 +681,8 @@ const Home = () => {
    const footerContactIconStyle = {
      fontSize: '18px',
      width: '20px',
-     flexShrink: 0
+     flexShrink: 0,
+     color: '#e5e7eb'
    };
 
    const footerContactTextStyle = {
@@ -735,10 +739,10 @@ const Home = () => {
   };
 
   const servicesHeaderWrapStyle = {
-    display: 'flex',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    gap: '16px',
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0,1.2fr) minmax(0,1fr)',
+    gap: '24px',
+    alignItems: 'end',
     marginBottom: '28px'
   };
 
@@ -752,10 +756,34 @@ const Home = () => {
   const servicesHeaderStyle = {
     color: '#e5e7eb',
     fontFamily: 'Marcellus, serif',
-    fontWeight: 600,
-    fontSize: '30px',
+    fontWeight: 700,
+    fontSize: '56px',
+    lineHeight: 1.05,
     margin: 0,
-    letterSpacing: '0.04em'
+    letterSpacing: '0.01em'
+  };
+
+  const servicesHeaderRightStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    justifySelf: 'end',
+    textAlign: 'left'
+  };
+
+  const servicesHeaderActionsStyle = {
+    display: 'flex',
+    gap: '16px',
+    flexWrap: 'wrap'
+  };
+
+  const linkButtonStyle = {
+    color: '#e11d48',
+    textDecoration: 'none',
+    fontWeight: 700,
+    fontSize: '14px',
+    letterSpacing: '0.02em',
+    cursor: 'pointer'
   };
 
   const servicesGridStyle = {
@@ -779,26 +807,55 @@ const Home = () => {
   };
 
   const cardImageStyle = {
-    height: '68%', // was 52%
+    height: '100%',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    filter: 'saturate(0.9) contrast(1.05)'
+    filter: 'grayscale(0.3) contrast(1.05)'
   };
 
   const cardBodyStyle = {
-    padding: '18px',
+    position: 'absolute',
+    inset: 0,
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
-    flex: 1
+    justifyContent: 'flex-end',
+    padding: '12px'
   };
 
   const cardTitleStyle = {
     fontFamily: 'Marcellus, serif',
-    fontSize: '19px',
-    fontWeight: 400, // was 600
-    letterSpacing: '0.04em',
+    fontSize: '14px',
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#e5e7eb',
     margin: 0
+  };
+
+  const cardBottomPillStyle = {
+    alignSelf: 'flex-start',
+    marginTop: '10px',
+    background: 'rgba(2,6,23,0.85)',
+    border: '1px solid rgba(100,255,218,0.25)',
+    color: '#e5e7eb',
+    padding: '8px 12px',
+    borderRadius: '16px',
+    fontSize: '12px'
+  };
+
+  const cardArrowButtonStyle = {
+    position: 'absolute',
+    right: '10px',
+    bottom: '10px',
+    width: '36px',
+    height: '36px',
+    borderRadius: '999px',
+    background: 'rgba(2,6,23,0.85)',
+    color: '#64ffda',
+    border: '1px solid rgba(100,255,218,0.35)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   };
 
   const readMoreStyle = {
@@ -888,6 +945,170 @@ const Home = () => {
     textDecoration: 'none'
   };
 
+  // Booking UI helpers
+  const sectionTitleStyle = {
+    color: '#e5e7eb',
+    fontFamily: 'Marcellus, serif',
+    fontSize: '18px',
+    fontWeight: 600,
+    margin: '8px 0 6px 0',
+    letterSpacing: '0.02em'
+  };
+
+  const helperTextStyle = {
+    color: '#94a3b8',
+    fontSize: '13px',
+    margin: '2px 0 8px 0'
+  };
+
+  const labelSmallStyle = {
+    color: '#a8b2d1',
+    fontSize: '13px',
+    display: 'block',
+    marginBottom: '6px'
+  };
+
+  const statusBadgeStyle = (status) => {
+    const palette = {
+      pending: { bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.35)', color: '#f59e0b' },
+      confirmed: { bg: 'rgba(34, 197, 94, 0.15)', border: 'rgba(34, 197, 94, 0.35)', color: '#22c55e' },
+      cancelled: { bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.35)', color: '#ef4444' }
+    };
+    const p = palette[status] || palette.pending;
+    return {
+      display: 'inline-block',
+      padding: '4px 10px',
+      borderRadius: '999px',
+      backgroundColor: p.bg,
+      border: `1px solid ${p.border}`,
+      color: p.color,
+      fontSize: '12px',
+      fontWeight: 600,
+      letterSpacing: '0.04em',
+      textTransform: 'uppercase'
+    };
+  };
+
+  const timeChipStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 10px',
+    borderRadius: '999px',
+    border: '1px solid rgba(100,255,218,0.25)',
+    backgroundColor: 'rgba(10,25,47,0.4)',
+    color: '#e5e7eb',
+    fontSize: '13px'
+  };
+
+  // Dark theme booking modal (matching site theme)
+  const darkLabelStyle = {
+    color: '#e5e7eb',
+    fontSize: '14px',
+    fontWeight: 600,
+    marginBottom: '6px',
+    display: 'block'
+  };
+
+  const darkInputStyle = {
+    width: '100%',
+    backgroundColor: '#0f2238',
+    border: '1px solid rgba(100, 255, 218, 0.4)',
+    borderRadius: '8px',
+    padding: '12px 14px',
+    color: '#e5e7eb',
+    fontSize: '15px',
+    outline: 'none'
+  };
+
+  const darkTextareaStyle = {
+    width: '100%',
+    backgroundColor: '#0f2238',
+    border: '1px solid rgba(100, 255, 218, 0.4)',
+    borderRadius: '8px',
+    padding: '12px 14px',
+    color: '#e5e7eb',
+    fontSize: '15px',
+    outline: 'none',
+    minHeight: '120px',
+    resize: 'vertical'
+  };
+
+  const bookingModalContentStyle = {
+    backgroundColor: '#0b1a2c',
+    border: '1px solid rgba(100,255,218,0.2)',
+    borderRadius: '16px',
+    width: 'min(1100px, 94vw)',
+    maxHeight: '92vh',
+    overflowY: 'auto',
+    color: '#e5e7eb',
+    boxShadow: '0 20px 50px rgba(0,0,0,0.6)'
+  };
+
+  const bookingHeaderStyle = {
+    padding: '18px 22px',
+    borderBottom: '1px solid rgba(100,255,218,0.15)',
+    backgroundColor: 'rgba(10, 25, 47, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    position: 'sticky',
+    top: 0,
+    zIndex: 1
+  };
+
+  const bookingTitleStyle = {
+    margin: 0,
+    fontSize: '22px',
+    fontFamily: 'Marcellus, serif',
+    letterSpacing: '0.04em',
+    color: '#e5e7eb'
+  };
+
+  const bookingBodyStyle = {
+    padding: '22px',
+    display: 'grid',
+    gap: '18px'
+  };
+
+  const bookingSectionStyle = {
+    backgroundColor: 'rgba(10, 25, 47, 0.6)',
+    border: '1px solid rgba(100, 255, 218, 0.15)',
+    borderRadius: '12px',
+    padding: '16px 16px'
+  };
+
+  const bookingSectionTitleStyle = {
+    margin: 0,
+    fontSize: '16px',
+    fontWeight: 700,
+    color: '#e5e7eb',
+    marginBottom: '12px'
+  };
+
+  const gridTwoStyle = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '14px'
+  };
+
+  const gridThreeStyle = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr',
+    gap: '14px'
+  };
+
+  const primaryButtonDarkStyle = {
+    backgroundColor: '#64ffda',
+    border: '1px solid #64ffda',
+    color: '#0b1a2c',
+    padding: '12px 18px',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: 700,
+    fontSize: '15px'
+  };
+
   // Services data
   const [modalService, setModalService] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -895,6 +1116,26 @@ const Home = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [currentView, setCurrentView] = useState('home');
   const [loginError, setLoginError] = useState('');
+  const [bookings, setBookings] = useState([]);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingService, setBookingService] = useState(null);
+  const [showMyBookings, setShowMyBookings] = useState(false);
+  const [bookingForm, setBookingForm] = useState({
+    service: '',
+    name: '',
+    email: '',
+    phone: '',
+    date: '',
+    startTime: '',
+    endTime: '',
+    notes: ''
+  });
+  const [toast, setToast] = useState(null);
+  const today = new Date();
+  const [calendarYear, setCalendarYear] = useState(today.getFullYear());
+  const [calendarMonth, setCalendarMonth] = useState(today.getMonth()); // 0-11
+  const [serviceCols, setServiceCols] = useState(5);
+  const [serviceCardH, setServiceCardH] = useState(240);
   const aboutImages = [bandGigs, paradeEvents, musicWorkshop, musicArrangement, instrumentRentals];
 
   const goPrev = () => {
@@ -911,6 +1152,140 @@ const Home = () => {
     }, 5000);
     return () => clearInterval(id);
   }, []);
+  
+  // Load bookings from localStorage
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('dbeBookings') || '[]');
+      setBookings(Array.isArray(saved) ? saved : []);
+    } catch (e) {
+      setBookings([]);
+    }
+    // If opened in a new tab with a requested service, auto-open booking
+    const svc = localStorage.getItem('dbeOpenBookingForService');
+    if (svc) {
+      setTimeout(() => {
+        openBooking(svc);
+        localStorage.removeItem('dbeOpenBookingForService');
+      }, 200);
+    }
+    // Responsive services grid
+    const setResponsive = () => {
+      const w = window.innerWidth;
+      if (w >= 1280) { setServiceCols(5); setServiceCardH(240); }
+      else if (w >= 1100) { setServiceCols(4); setServiceCardH(220); }
+      else if (w >= 860) { setServiceCols(3); setServiceCardH(210); }
+      else if (w >= 560) { setServiceCols(2); setServiceCardH(200); }
+      else { setServiceCols(1); setServiceCardH(200); }
+    };
+    setResponsive();
+    window.addEventListener('resize', setResponsive);
+    return () => window.removeEventListener('resize', setResponsive);
+  }, []);
+
+  const saveBookings = (next) => {
+    setBookings(next);
+    localStorage.setItem('dbeBookings', JSON.stringify(next));
+  };
+
+  const openBooking = (serviceTitle) => {
+    const svc = serviceTitle || (modalService?.title || '');
+    setBookingService(svc);
+    setBookingForm((f) => ({
+      ...f,
+      service: svc,
+      name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '',
+      email: user?.email || '',
+      phone: user?.phone || ''
+    }));
+    setShowBookingModal(true);
+  };
+
+  const closeBooking = () => {
+    setShowBookingModal(false);
+    setBookingService(null);
+  };
+
+  const overlap = (aStart, aEnd, bStart, bEnd) => {
+    return aStart < bEnd && bStart < aEnd; // strict overlap
+  };
+
+  const hasConflict = (service, date, startTime, endTime) => {
+    if (!service || !date || !startTime || !endTime) return false;
+    const start = `${date}T${startTime}`;
+    const end = `${date}T${endTime}`;
+    return bookings.some(b => b.service === service && b.date === date && b.status !== 'cancelled' && overlap(start, end, `${b.date}T${b.startTime}`, `${b.date}T${b.endTime}`));
+  };
+
+  const confirmBooking = (e) => {
+    e.preventDefault();
+    const { service, name, email, phone, date, startTime, endTime, notes } = bookingForm;
+    if (!service || !name || !email || !date || !startTime || !endTime) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+    if (endTime <= startTime) {
+      alert('End time must be after start time.');
+      return;
+    }
+    if (hasConflict(service, date, startTime, endTime)) {
+      alert('Selected time conflicts with an existing booking. Please choose a different time.');
+      return;
+    }
+    const newBooking = {
+      id: Date.now(),
+      service,
+      name,
+      email,
+      phone,
+      date,
+      startTime,
+      endTime,
+      notes,
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    };
+    const next = [...bookings, newBooking];
+    saveBookings(next);
+    setToast({ type: 'success', message: 'Booking submitted! We will confirm via email.' });
+    setShowBookingModal(false);
+  };
+
+  const cancelBooking = (id) => {
+    const next = bookings.map(b => b.id === id ? { ...b, status: 'cancelled' } : b);
+    saveBookings(next);
+    setToast({ type: 'info', message: 'Booking cancelled.' });
+  };
+
+  // Auto-hide toasts
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  // Calendar helpers
+  const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
+  const ymd = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
+  const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
+  const firstWeekday = (y, m) => new Date(y, m, 1).getDay(); // 0 Sun - 6 Sat
+  const isDayTaken = (service, y, m, d) => {
+    if (!service) return false;
+    const dateStr = ymd(y, m, d);
+    return bookings.some(b => b.service === service && b.date === dateStr && b.status !== 'cancelled');
+  };
+  const handlePrevMonth = () => {
+    setCalendarMonth((prev) => {
+      if (prev === 0) { setCalendarYear((y) => y - 1); return 11; }
+      return prev - 1;
+    });
+  };
+  const handleNextMonth = () => {
+    setCalendarMonth((prev) => {
+      if (prev === 11) { setCalendarYear((y) => y + 1); return 0; }
+      return prev + 1;
+    });
+  };
   const services = [
     {
       title: 'Band Gigs',
@@ -1221,6 +1596,7 @@ return (
                     }}
                     onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
                     onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                    onClick={(e) => { e.preventDefault(); setShowMyBookings(true); setShowUserMenu(false); }}
                     >My Bookings</a>
                     
                     {/* Only show User Management for admins */}
@@ -1314,86 +1690,42 @@ return (
                 <div style={sectionEyebrowStyle}>What we offer</div>
                 <h3 style={servicesHeaderStyle}>Our Services</h3>
               </div>
-              <p style={servicesSubTextStyle}>From parades and corporate shows to workshops and rentals—we tailor each service to your event with professional coordination and musical excellence.</p>
+              <div style={servicesHeaderRightStyle}>
+                <p style={servicesSubTextStyle}>From parades and corporate shows to workshops and rentals—we tailor each service to your event with professional coordination and musical excellence.</p>
+                <div style={{ color: '#e5e7eb', fontFamily: 'Marcellus, serif', fontSize: '20px', fontWeight: 600 }}>Certified Excellence</div>
+              </div>
             </div>
 
-            {/* Two-row layout: 3 on top, 2 centered below */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '20px' }}>
-              {services.slice(0, 3).map((service) => (
-                <div
-                  key={service.title}
-                  style={cardStyle}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-6px)';
-                    e.currentTarget.style.boxShadow = '0 14px 30px rgba(0,0,0,0.35)';
-                    e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.5)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.2)';
-                  }}
-                >
-                  <div
-                    style={{
-                      ...cardImageStyle,
-                      backgroundImage: `url(${service.img})`
-                    }}
-                  />
-                  <div style={cardBodyStyle}>
-                    <h4 style={cardTitleStyle}>{service.title}</h4>
-                    <a
-                      href="#services"
-                      style={readMoreStyle}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setModalService(service);
-                      }}
-                    >
-                      Read more →
-                    </a>
+            {/* New card layout: 3 on top, 2 centered below */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', marginBottom: '16px' }}>
+              {services.slice(0,3).map((service) => (
+                <div key={service.title} style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(100,255,218,0.2)', backgroundColor: 'rgba(10,25,47,0.6)' }}>
+                  <div style={{ position: 'relative', height: `${serviceCardH}px` }}>
+                    <div style={{ ...cardImageStyle, backgroundImage: `url(${service.img})` }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(2,6,23,0.92), rgba(2,6,23,0.2) 60%)' }} />
+                    <div style={cardBodyStyle}>
+                      <div style={cardBottomPillStyle}>{service.title}</div>
+                      <button aria-label="Open" style={cardArrowButtonStyle} onClick={() => setModalService(service)}>↗</button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '20px', maxWidth: '800px', margin: '20px auto 0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px', maxWidth: '860px', margin: '16px auto 0' }}>
               {services.slice(3).map((service) => (
-                <div
-                  key={service.title}
-                  style={cardStyle}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-6px)';
-                    e.currentTarget.style.boxShadow = '0 14px 30px rgba(0,0,0,0.35)';
-                    e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.5)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.2)';
-                  }}
-                >
-                  <div
-                    style={{
-                      ...cardImageStyle,
-                      backgroundImage: `url(${service.img})`
-                    }}
-                  />
-                  <div style={cardBodyStyle}>
-                    <h4 style={cardTitleStyle}>{service.title}</h4>
-                    <a
-                      href="#services"
-                      style={readMoreStyle}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setModalService(service);
-                      }}
-                    >
-                      Read more →
-                    </a>
+                <div key={service.title} style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(100,255,218,0.2)', backgroundColor: 'rgba(10,25,47,0.6)' }}>
+                  <div style={{ position: 'relative', height: `${serviceCardH}px` }}>
+                    <div style={{ ...cardImageStyle, backgroundImage: `url(${service.img})` }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(2,6,23,0.92), rgba(2,6,23,0.2) 60%)' }} />
+                    <div style={cardBodyStyle}>
+                      <div style={cardBottomPillStyle}>{service.title}</div>
+                      <button aria-label="Open" style={cardArrowButtonStyle} onClick={() => setModalService(service)}>↗</button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
+            
           </div>
         </section>
 
@@ -1465,28 +1797,28 @@ return (
                 <h4 style={contactCardTitleStyle}>Get In Touch</h4>
                 <div style={contactInfoListStyle}>
                   <div style={contactInfoItemStyle}>
-                    <div style={contactIconStyle}>📧</div>
+                    <div style={contactIconStyle}><FaEnvelope /></div>
                     <div>
                       <h5 style={contactLabelStyle}>Email</h5>
                       <p style={contactValueStyle}>dbe.official@example.com</p>
                     </div>
                   </div>
                   <div style={contactInfoItemStyle}>
-                    <div style={contactIconStyle}>📱</div>
+                    <div style={contactIconStyle}><FaPhoneAlt /></div>
                     <div>
                       <h5 style={contactLabelStyle}>Phone</h5>
                       <p style={contactValueStyle}>+63 900 000 0000</p>
                     </div>
                   </div>
                   <div style={contactInfoItemStyle}>
-                    <div style={contactIconStyle}>📍</div>
+                    <div style={contactIconStyle}><FaMapMarkerAlt /></div>
                     <div>
                       <h5 style={contactLabelStyle}>Location</h5>
                       <p style={contactValueStyle}>Davao City, Philippines</p>
                     </div>
                   </div>
                   <div style={contactInfoItemStyle}>
-                    <div style={contactIconStyle}>⏰</div>
+                    <div style={contactIconStyle}><FaClock /></div>
                     <div>
                       <h5 style={contactLabelStyle}>Response Time</h5>
                       <p style={contactValueStyle}>Within 24 hours</p>
@@ -1595,24 +1927,266 @@ return (
           </div>
         </section>
 
-        {/* Modal */}
+        {/* Modal - redesigned service info */}
         {modalService && (
           <div style={modalOverlayStyle} onClick={() => setModalService(null)}>
             <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
               <div style={modalHeaderStyle}>
                 <h4 style={modalTitleStyle}>{modalService.title}</h4>
-                <button style={closeButtonStyle} onClick={() => setModalService(null)}>Close</button>
+                <button style={closeButtonStyle} onClick={() => setModalService(null)}>×</button>
               </div>
-              <div style={modalBodyStyle}>
-                <p style={readMoreTextStyle}>{modalService.description}</p>
+              <div style={{ ...modalBodyStyle, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <div style={{ height: '220px', borderRadius: '10px', backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${modalService.img})`, border: '1px solid rgba(100,255,218,0.2)' }} />
+                </div>
+                <div>
+                  <p style={readMoreTextStyle}>{modalService.description}</p>
+                  <ul style={{ color: '#a8b2d1', fontSize: '14px', lineHeight: 1.7, paddingLeft: '18px' }}>
+                    <li>Professional coordination and stage management</li>
+                    <li>Flexible ensemble size tailored to your event</li>
+                    <li>Repertoire planning and arrangement support</li>
+                    <li>Equipment and logistics assistance</li>
+                  </ul>
+                </div>
               </div>
-              <div style={modalActionsStyle}>
-                <a href="#contact" style={bookButtonStyle}>Book Now</a>
+              <div style={{ ...modalActionsStyle, justifyContent: 'space-between' }}>
+                <div style={{ color: '#94a3b8', fontSize: '14px' }}>Ready to proceed? Reserve a date to get started.</div>
+                <a href="#book" style={bookButtonStyle} onClick={(e) => { e.preventDefault(); localStorage.setItem('dbeOpenBookingForService', modalService?.title || ''); const url = window.location.origin + window.location.pathname + '#/booking'; window.open(url, '_blank'); }}>Book Now</a>
               </div>
             </div>
           </div>
         )}
 
+        {/* Booking Modal */}
+        {showBookingModal && (
+          <div style={modalOverlayStyle} onClick={closeBooking}>
+            <div style={bookingModalContentStyle} onClick={(e) => e.stopPropagation()}>
+              <div style={bookingHeaderStyle}>
+                <h4 style={bookingTitleStyle}>Book: {bookingService || bookingForm.service || 'Select Service'}</h4>
+                <button style={{
+                  background: '#ffffff',
+                  border: '1px solid #e5e7eb',
+                  color: '#111827',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  fontWeight: 700
+                }} onClick={closeBooking}>×</button>
+              </div>
+              <div style={bookingBodyStyle}>
+                <div style={bookingSectionStyle}>
+                  <h5 style={bookingSectionTitleStyle}>Contact Information</h5>
+                  <div style={gridTwoStyle}>
+                    <div>
+                      <label style={darkLabelStyle}>Full Name *</label>
+                      <input style={darkInputStyle} value={bookingForm.name} onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })} required />
+                    </div>
+                    <div>
+                      <label style={darkLabelStyle}>Email *</label>
+                      <input type="email" style={darkInputStyle} value={bookingForm.email} onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })} required />
+                    </div>
+                  </div>
+                  <div style={{ marginTop: '12px', ...gridTwoStyle }}>
+                    <div>
+                      <label style={darkLabelStyle}>Phone</label>
+                      <input style={darkInputStyle} value={bookingForm.phone} onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })} />
+                    </div>
+                    <div>
+                      <label style={darkLabelStyle}>Service *</label>
+                      <select style={darkInputStyle} value={bookingForm.service} onChange={(e) => setBookingForm({ ...bookingForm, service: e.target.value })} required>
+                        <option value="">Select service</option>
+                        {services.map(s => (
+                          <option key={s.title} value={s.title}>{s.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div style={bookingSectionStyle}>
+                  <h5 style={bookingSectionTitleStyle}>Schedule</h5>
+                  <div style={gridThreeStyle}>
+                    <div>
+                      <label style={darkLabelStyle}>Date *</label>
+                      <input type="date" style={darkInputStyle} value={bookingForm.date} onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })} required />
+                    </div>
+                    <div>
+                      <label style={darkLabelStyle}>Start Time *</label>
+                      <input type="time" style={darkInputStyle} value={bookingForm.startTime} onChange={(e) => setBookingForm({ ...bookingForm, startTime: e.target.value })} required />
+                    </div>
+                    <div>
+                      <label style={darkLabelStyle}>End Time *</label>
+                      <input type="time" style={darkInputStyle} value={bookingForm.endTime} onChange={(e) => setBookingForm({ ...bookingForm, endTime: e.target.value })} required />
+                    </div>
+                  </div>
+                  {/* Monthly Calendar */}
+                  <div style={{ marginTop: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <button style={{...closeButtonStyle, width: '36px'}} onClick={handlePrevMonth}>‹</button>
+                      <div style={{ color: '#e5e7eb', fontWeight: 600 }}>{new Date(calendarYear, calendarMonth, 1).toLocaleString('default', { month: 'long', year: 'numeric' })}</div>
+                      <button style={{...closeButtonStyle, width: '36px'}} onClick={handleNextMonth}>›</button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+                      {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+                        <div key={d} style={{ color: '#94a3b8', textAlign: 'center', fontSize: '12px' }}>{d}</div>
+                      ))}
+                      {Array.from({ length: firstWeekday(calendarYear, calendarMonth) }).map((_, i) => (
+                        <div key={`empty-${i}`} />
+                      ))}
+                      {Array.from({ length: daysInMonth(calendarYear, calendarMonth) }).map((_, i) => {
+                        const day = i + 1;
+                        const taken = isDayTaken(bookingForm.service, calendarYear, calendarMonth, day);
+                        const dateStr = ymd(calendarYear, calendarMonth, day);
+                        const isSelected = bookingForm.date === dateStr;
+                        return (
+                          <button
+                            key={day}
+                            onClick={() => !taken && setBookingForm({ ...bookingForm, date: dateStr })}
+                            style={{
+                              padding: '10px 0',
+                              borderRadius: '8px',
+                              border: '1px solid ' + (taken ? 'rgba(239,68,68,0.6)' : isSelected ? 'rgba(100,255,218,0.6)' : 'rgba(100,255,218,0.2)'),
+                              backgroundColor: taken ? 'rgba(239,68,68,0.15)' : isSelected ? 'rgba(100,255,218,0.12)' : 'rgba(10,25,47,0.4)',
+                              color: taken ? '#ef4444' : '#e5e7eb',
+                              cursor: taken ? 'not-allowed' : 'pointer'
+                            }}
+                            disabled={taken}
+                            title={taken ? 'Fully booked' : 'Available'}
+                          >
+                            {day}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {bookingForm.service && bookingForm.date && (
+                    <div style={{ marginTop: '14px' }}>
+                      <div style={{ marginBottom: '8px', color: '#374151', fontSize: '14px', fontWeight: 600 }}>Existing bookings for {bookingForm.service} on {bookingForm.date}:</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {bookings.filter(b => b.service === bookingForm.service && b.date === bookingForm.date && b.status !== 'cancelled').length === 0 && (
+                          <div style={{ color: '#059669', fontWeight: 600 }}>No bookings yet for this date.</div>
+                        )}
+                        {bookings.filter(b => b.service === bookingForm.service && b.date === bookingForm.date && b.status !== 'cancelled').map(b => (
+                          <div key={b.id} style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 10px',
+                            borderRadius: '999px',
+                            border: '1px solid #e5e7eb',
+                            backgroundColor: '#ffffff',
+                            color: '#111827',
+                            fontSize: '13px'
+                          }}>
+                            <span>🕒 {b.startTime} - {b.endTime}</span>
+                            <span style={{ marginLeft: '4px', ...statusBadgeStyle(b.status) }}>{b.status}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {hasConflict(bookingForm.service, bookingForm.date, bookingForm.startTime, bookingForm.endTime) && (
+                        <div style={{ color: '#dc2626', marginTop: '8px', fontWeight: 600 }}>Conflict detected with an existing booking.</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div style={bookingSectionStyle}>
+                  <h5 style={bookingSectionTitleStyle}>Additional Details</h5>
+                  <div>
+                    <label style={darkLabelStyle}>Notes</label>
+                    <textarea style={darkTextareaStyle} value={bookingForm.notes} onChange={(e) => setBookingForm({ ...bookingForm, notes: e.target.value })} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  <button
+                    type="button"
+                    onClick={closeBooking}
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(100,255,218,0.35)',
+                      color: '#e5e7eb',
+                      padding: '12px 18px',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmBooking}
+                    style={{
+                      ...primaryButtonDarkStyle,
+                      opacity: (!bookingForm.service || !bookingForm.name || !bookingForm.email || !bookingForm.date || !bookingForm.startTime || !bookingForm.endTime || hasConflict(bookingForm.service, bookingForm.date, bookingForm.startTime, bookingForm.endTime)) ? 0.6 : 1,
+                      cursor: (!bookingForm.service || !bookingForm.name || !bookingForm.email || !bookingForm.date || !bookingForm.startTime || !bookingForm.endTime || hasConflict(bookingForm.service, bookingForm.date, bookingForm.startTime, bookingForm.endTime)) ? 'not-allowed' : 'pointer'
+                    }}
+                    disabled={!bookingForm.service || !bookingForm.name || !bookingForm.email || !bookingForm.date || !bookingForm.startTime || !bookingForm.endTime || hasConflict(bookingForm.service, bookingForm.date, bookingForm.startTime, bookingForm.endTime)}
+                  >
+                    Submit Booking
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* My Bookings Modal */}
+        {showMyBookings && (
+          <div style={modalOverlayStyle} onClick={() => setShowMyBookings(false)}>
+            <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+              <div style={modalHeaderStyle}>
+                <h4 style={modalTitleStyle}>My Bookings</h4>
+                <button style={closeButtonStyle} onClick={() => setShowMyBookings(false)}>Close</button>
+              </div>
+              <div style={modalBodyStyle}>
+                {bookings.filter(b => !user || b.email === user.email).length === 0 ? (
+                  <div style={{ color: '#a8b2d1' }}>No bookings found.</div>
+                ) : (
+                  <div style={{ display: 'grid', gap: '12px' }}>
+                    {bookings
+                      .filter(b => !user || b.email === user.email)
+                      .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime))
+                      .map(b => (
+                        <div key={b.id} style={{ border: '1px solid rgba(100,255,218,0.2)', borderRadius: '12px', padding: '14px', backgroundColor: 'rgba(10,25,47,0.4)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                            <div>
+                              <div style={{ color: '#e5e7eb', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <strong>{b.service}</strong>
+                                <span style={statusBadgeStyle(b.status)}>{b.status}</span>
+                              </div>
+                              <div style={{ color: '#a8b2d1', marginTop: '4px' }}>📅 {b.date} • 🕒 {b.startTime} - {b.endTime}</div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              {b.status !== 'cancelled' && (
+                                <button style={closeButtonStyle} onClick={() => cancelBooking(b.id)}>Cancel</button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Toast */}
+        {toast && (
+          <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 3000 }}>
+            <div style={{
+              backgroundColor: toast.type === 'success' ? 'rgba(34,197,94,0.1)' : 'rgba(96,165,250,0.1)',
+              border: `1px solid ${toast.type === 'success' ? 'rgba(34,197,94,0.4)' : 'rgba(96,165,250,0.4)'}`,
+              color: toast.type === 'success' ? '#22c55e' : '#60a5fa',
+              padding: '12px 16px',
+              borderRadius: '10px',
+              backdropFilter: 'blur(8px)'
+            }}>
+              {toast.message}
+            </div>
+          </div>
+        )}
         {/* Footer */}
         <footer style={footerStyle}>
           <div style={footerContainerStyle}>
@@ -1629,16 +2203,16 @@ return (
                 </p>
                 <div style={footerSocialStyle}>
                   <a href="#" style={socialLinkStyle} aria-label="Facebook">
-                    <span style={socialIconStyle}>📘</span>
+                    <FaFacebookF />
                   </a>
                   <a href="#" style={socialLinkStyle} aria-label="Instagram">
-                    <span style={socialIconStyle}>📷</span>
+                    <FaInstagram />
                   </a>
                   <a href="#" style={socialLinkStyle} aria-label="YouTube">
-                    <span style={socialIconStyle}>📺</span>
+                    <FaYoutube />
                   </a>
                   <a href="#" style={socialLinkStyle} aria-label="Email">
-                    <span style={socialIconStyle}>📧</span>
+                    <FaEnvelope />
                   </a>
                 </div>
               </div>
@@ -1674,19 +2248,19 @@ return (
                 <h4 style={footerSectionTitleStyle}>Contact Info</h4>
                 <div style={footerContactListStyle}>
                   <div style={footerContactItemStyle}>
-                    <span style={footerContactIconStyle}>📍</span>
+                    <span style={footerContactIconStyle}><FaMapMarkerAlt /></span>
                     <span style={footerContactTextStyle}>Davao City, Philippines</span>
                   </div>
                   <div style={footerContactItemStyle}>
-                    <span style={footerContactIconStyle}>📧</span>
+                    <span style={footerContactIconStyle}><FaEnvelope /></span>
                     <span style={footerContactTextStyle}>dbe.official@example.com</span>
                   </div>
                   <div style={footerContactItemStyle}>
-                    <span style={footerContactIconStyle}>📱</span>
+                    <span style={footerContactIconStyle}><FaPhoneAlt /></span>
                     <span style={footerContactTextStyle}>+63 900 000 0000</span>
                   </div>
                   <div style={footerContactItemStyle}>
-                    <span style={footerContactIconStyle}>⏰</span>
+                    <span style={footerContactIconStyle}><FaClock /></span>
                     <span style={footerContactTextStyle}>Mon-Fri: 9AM-6PM</span>
                   </div>
                 </div>

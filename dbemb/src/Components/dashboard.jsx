@@ -258,7 +258,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
           onMouseEnter={handleCardHover}
           onMouseLeave={handleCardLeave}
         >
-          <h3 style={styles.cardTitle}>Booking Management</h3>
+          <h3 style={styles.cardTitle}>Customer Management</h3>
           <p style={styles.cardText}>View and manage all band booking requests and schedules.</p>
         </div>
         
