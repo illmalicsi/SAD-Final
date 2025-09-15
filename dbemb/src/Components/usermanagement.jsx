@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const UserManagement = ({ user, onBackToHome, onLogout }) => {
+const UserManagement = ({ user }) => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,10 +19,10 @@ const UserManagement = ({ user, onBackToHome, onLogout }) => {
 
   // Sample user data - fallback if no users exist in localStorage
   const sampleUsers = [
-    { id: 1, firstName: 'John', lastName: 'Doe', email: 'john@example.com', role: 'admin', isBlocked: false, createdAt: '2023-01-15' },
-    { id: 2, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', role: 'user', isBlocked: false, createdAt: '2023-02-20' },
-    { id: 3, firstName: 'Bob', lastName: 'Johnson', email: 'bob@example.com', role: 'user', isBlocked: true, createdAt: '2023-03-10' },
-    { id: 4, firstName: 'Alice', lastName: 'Williams', email: 'alice@example.com', role: 'user', isBlocked: false, createdAt: '2023-04-05' },
+    { id: 1, firstName: 'Ivan', lastName: 'Louie', email: 'ivanlouie@gmail.com', role: 'admin', isBlocked: false, createdAt: '2023-01-15' },
+    { id: 2, firstName: 'Harley', lastName: 'Cuba', email: 'harley@gmail.com', role: 'user', isBlocked: false, createdAt: '2023-02-20' },
+    { id: 3, firstName: 'Ace', lastName: 'Futalan', email: 'ace@gmail.com', role: 'user', isBlocked: false, createdAt: '2023-03-10' },
+    { id: 4, firstName: 'Bongbong', lastName: 'Badong', email: 'bongbongbadong@gmail.com', role: 'user', isBlocked: false, createdAt: '2023-04-05' },
   ];
 
   useEffect(() => {
@@ -178,17 +178,6 @@ const UserManagement = ({ user, onBackToHome, onLogout }) => {
       cursor: 'pointer',
       fontSize: '14px',
       transition: 'all 0.3s ease'
-    },
-    logoutButton: {
-      backgroundColor: 'transparent',
-      border: '1px solid rgba(239, 68, 68, 0.3)',
-      color: '#ef4444',
-      padding: '10px 20px',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      fontSize: '14px',
-      transition: 'all 0.3s ease',
-      marginLeft: '10px'
     },
     buttonContainer: {
       display: 'flex',
@@ -514,18 +503,6 @@ const UserManagement = ({ user, onBackToHome, onLogout }) => {
     e.target.style.transform = 'translateY(0)';
   };
 
-  const handleLogoutButtonHover = (e) => {
-    e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-    e.target.style.borderColor = 'rgba(239, 68, 68, 0.6)';
-    e.target.style.transform = 'translateY(-2px)';
-  };
-
-  const handleLogoutButtonLeave = (e) => {
-    e.target.style.backgroundColor = 'transparent';
-    e.target.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-    e.target.style.transform = 'translateY(0)';
-  };
-
   const handleCreateButtonHover = (e) => {
     e.target.style.backgroundColor = 'transparent';
     e.target.style.color = '#64ffda';
@@ -566,23 +543,7 @@ const UserManagement = ({ user, onBackToHome, onLogout }) => {
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.title}>User Management</h1>
-        <div style={styles.buttonContainer}>
-          <button 
-            style={styles.backButton}
-            onClick={onBackToHome}
-            onMouseEnter={handleButtonHover}
-            onMouseLeave={handleButtonLeave}
-          >
-            Dashboard
-          </button>
-          <button 
-            style={styles.logoutButton}
-            onClick={onLogout}
-            onMouseEnter={handleLogoutButtonHover}
-            onMouseLeave={handleLogoutButtonLeave}
-          >
-            Logout
-          </button>
+        <div>
         </div>
       </div>
 
@@ -641,8 +602,12 @@ const UserManagement = ({ user, onBackToHome, onLogout }) => {
             onBlur={handleInputBlur}
           >
             <option value="all">All Roles</option>
-            <option value="user">Users Only</option>
-            <option value="admin">Admins Only</option>
+            <option value="user">Members</option>
+            <option value="admin">President</option>
+            <option value="admin">Vice President</option>
+            <option value="admin">Secretary</option>
+            <option value="admin">Treasurer</option>
+            <option value="user">User</option>
           </select>
         </div>
         <button

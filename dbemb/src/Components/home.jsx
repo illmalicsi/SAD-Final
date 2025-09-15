@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock, FaUser } from 'react-icons/fa';
 import bg2 from "./Assets/bg2.jpg";
 import bandGigs from "./Assets/bandGigs.jpg";
 import musicArrangement from "./Assets/music-arrangement.jpg";
@@ -291,58 +291,6 @@ const Home = () => {
     lineHeight: 1.7
   };
 
-  // Officers styles
-  const officersHeaderStyle = {
-    color: '#e5e7eb',
-    fontFamily: 'Marcellus, serif',
-    fontWeight: 600,
-    fontSize: '24px',
-    margin: '0 0 16px 0',
-    letterSpacing: '0.04em',
-    textAlign: 'center'
-  };
-
-  const officersGridStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-    gap: '16px',
-    maxWidth: '980px',
-    margin: '0 auto'
-  };
-
-  const officerCardStyle = {
-    backgroundColor: 'rgba(10, 25, 47, 0.6)',
-    border: '1px solid rgba(100, 255, 218, 0.15)',
-    borderRadius: '12px',
-    padding: '16px',
-    textAlign: 'center',
-    color: '#e5e7eb'
-  };
-
-  const officerAvatarStyle = (image) => ({
-    width: '100%',
-    height: '120px',
-    backgroundImage: `url(${image})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    borderRadius: '8px',
-    marginBottom: '10px'
-  });
-
-  const officerRoleStyle = {
-    color: '#64ffda',
-    fontSize: '13px',
-    letterSpacing: '0.16em',
-    textTransform: 'uppercase',
-    margin: '0 0 6px 0'
-  };
-
-  const officerNameStyle = {
-    fontFamily: 'Marcellus, serif',
-    fontSize: '16px',
-    margin: 0
-  };
-
   const contactSectionStyle = {
     backgroundImage: 'linear-gradient(180deg, rgba(2,6,23,1) 0%, rgba(2,6,23,1) 100%)',
     padding: '80px 24px',
@@ -536,194 +484,194 @@ const Home = () => {
     textTransform: 'uppercase'
   };
 
-     const infoCardTextStyle = {
-     color: '#a8b2d1',
-     fontSize: '14px',
-     lineHeight: 1.6,
-     margin: 0
-   };
+  const infoCardTextStyle = {
+    color: '#a8b2d1',
+    fontSize: '14px',
+    lineHeight: 1.6,
+    margin: 0
+  };
 
-   // Footer styles
-   const footerStyle = {
-     backgroundColor: '#0a1929',
-     borderTop: '1px solid rgba(100, 255, 218, 0.1)',
-     padding: '0'
-   };
+  // Footer styles
+  const footerStyle = {
+    backgroundColor: '#0a1929',
+    borderTop: '1px solid rgba(100, 255, 218, 0.1)',
+    padding: '0'
+  };
 
-   const footerContainerStyle = {
-     maxWidth: '1200px',
-     margin: '0 auto',
-     padding: '0 24px'
-   };
+  const footerContainerStyle = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 24px'
+  };
 
-   const footerMainStyle = {
-     display: 'grid',
-     gridTemplateColumns: '2fr 1fr 1fr 1fr',
-     gap: '48px',
-     padding: '64px 0 48px 0',
-     borderBottom: '1px solid rgba(100, 255, 218, 0.1)'
-   };
+  const footerMainStyle = {
+    display: 'grid',
+    gridTemplateColumns: '2fr 1fr 1fr 1fr',
+    gap: '48px',
+    padding: '64px 0 48px 0',
+    borderBottom: '1px solid rgba(100, 255, 218, 0.1)'
+  };
 
-   const footerBrandStyle = {
-     display: 'flex',
-     flexDirection: 'column',
-     gap: '20px'
-   };
+  const footerBrandStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px'
+  };
 
-   const footerLogoStyle = {
-     display: 'flex',
-     flexDirection: 'column',
-     alignItems: 'flex-start'
-   };
+  const footerLogoStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start'
+  };
 
-   const footerLogoTitleStyle = {
-     fontFamily: 'Marcellus, serif',
-     fontSize: '28px',
-     fontWeight: 'bold',
-     background: 'linear-gradient(45deg, #60a5fa, #3b82f6)',
-     WebkitBackgroundClip: 'text',
-     WebkitTextFillColor: 'transparent',
-     margin: 0
-   };
+  const footerLogoTitleStyle = {
+    fontFamily: 'Marcellus, serif',
+    fontSize: '28px',
+    fontWeight: 'bold',
+    background: 'linear-gradient(45deg, #60a5fa, #3b82f6)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    margin: 0
+  };
 
-   const footerLogoSubtitleStyle = {
-     fontSize: '16px',
-     color: '#93c5fd',
-     margin: 0,
-     letterSpacing: '0.1em'
-   };
+  const footerLogoSubtitleStyle = {
+    fontSize: '16px',
+    color: '#93c5fd',
+    margin: 0,
+    letterSpacing: '0.1em'
+  };
 
-   const footerDescriptionStyle = {
-     color: '#a8b2d1',
-     fontSize: '16px',
-     lineHeight: 1.6,
-     margin: 0,
-     maxWidth: '300px'
-   };
+  const footerDescriptionStyle = {
+    color: '#a8b2d1',
+    fontSize: '16px',
+    lineHeight: 1.6,
+    margin: 0,
+    maxWidth: '300px'
+  };
 
-   const footerSocialStyle = {
-     display: 'flex',
-     gap: '16px'
-   };
+  const footerSocialStyle = {
+    display: 'flex',
+    gap: '16px'
+  };
 
-   const socialLinkStyle = {
-     display: 'flex',
-     alignItems: 'center',
-     justifyContent: 'center',
-     width: '44px',
-     height: '44px',
-     backgroundColor: 'rgba(100, 255, 218, 0.1)',
-     border: '1px solid rgba(100, 255, 218, 0.2)',
-     borderRadius: '8px',
-     transition: 'all 0.3s ease',
-     textDecoration: 'none',
-     cursor: 'pointer',
-     ':hover': {
-       backgroundColor: 'rgba(100, 255, 218, 0.2)',
-       borderColor: 'rgba(100, 255, 218, 0.4)',
-       transform: 'translateY(-2px)',
-       boxShadow: '0 4px 12px rgba(100, 255, 218, 0.2)'
-     }
-   };
+  const socialLinkStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '44px',
+    height: '44px',
+    backgroundColor: 'rgba(100, 255, 218, 0.1)',
+    border: '1px solid rgba(100, 255, 218, 0.2)',
+    borderRadius: '8px',
+    transition: 'all 0.3s ease',
+    textDecoration: 'none',
+    cursor: 'pointer',
+    ':hover': {
+      backgroundColor: 'rgba(100, 255, 218, 0.2)',
+      borderColor: 'rgba(100, 255, 218, 0.4)',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 4px 12px rgba(100, 255, 218, 0.2)'
+    }
+  };
 
-   const socialIconStyle = {
-     fontSize: '20px',
-     color: '#60a5fa'
-   };
+  const socialIconStyle = {
+    fontSize: '20px',
+    color: '#60a5fa'
+  };
 
-   const footerSectionStyle = {
-     display: 'flex',
-     flexDirection: 'column',
-     gap: '20px'
-   };
+  const footerSectionStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px'
+  };
 
-   const footerSectionTitleStyle = {
-     color: '#e5e7eb',
-     fontFamily: 'Marcellus, serif',
-     fontSize: '18px',
-     fontWeight: 600,
-     margin: 0,
-     letterSpacing: '0.04em'
-   };
+  const footerSectionTitleStyle = {
+    color: '#e5e7eb',
+    fontFamily: 'Marcellus, serif',
+    fontSize: '18px',
+    fontWeight: 600,
+    margin: 0,
+    letterSpacing: '0.04em'
+  };
 
-   const footerLinkListStyle = {
-     listStyle: 'none',
-     margin: 0,
-     padding: 0,
-     display: 'flex',
-     flexDirection: 'column',
-     gap: '12px'
-   };
+  const footerLinkListStyle = {
+    listStyle: 'none',
+    margin: 0,
+    padding: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  };
 
-   const footerLinkStyle = {
-     color: '#a8b2d1',
-     textDecoration: 'none',
-     fontSize: '15px',
-     transition: 'all 0.3s ease',
-     cursor: 'pointer',
-     ':hover': {
-       color: '#64ffda'
-     }
-   };
+  const footerLinkStyle = {
+    color: '#a8b2d1',
+    textDecoration: 'none',
+    fontSize: '15px',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+    ':hover': {
+      color: '#64ffda'
+    }
+  };
 
-   const footerContactListStyle = {
-     display: 'flex',
-     flexDirection: 'column',
-     gap: '16px'
-   };
+  const footerContactListStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px'
+  };
 
-   const footerContactItemStyle = {
-     display: 'flex',
-     alignItems: 'center',
-     gap: '12px'
-   };
+  const footerContactItemStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  };
 
-   const footerContactIconStyle = {
-     fontSize: '18px',
-     width: '20px',
-     flexShrink: 0,
-     color: '#e5e7eb'
-   };
+  const footerContactIconStyle = {
+    fontSize: '18px',
+    width: '20px',
+    flexShrink: 0,
+    color: '#e5e7eb'
+  };
 
-   const footerContactTextStyle = {
-     color: '#a8b2d1',
-     fontSize: '15px',
-     lineHeight: 1.4
-   };
+  const footerContactTextStyle = {
+    color: '#a8b2d1',
+    fontSize: '15px',
+    lineHeight: 1.4
+  };
 
-   const footerBottomStyle = {
-     padding: '24px 0'
-   };
+  const footerBottomStyle = {
+    padding: '24px 0'
+  };
 
-   const footerBottomContentStyle = {
-     display: 'flex',
-     justifyContent: 'space-between',
-     alignItems: 'center',
-     flexWrap: 'wrap',
-     gap: '16px'
-   };
+  const footerBottomContentStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '16px'
+  };
 
-   const footerCopyrightStyle = {
-     color: '#94a3b8',
-     fontSize: '14px',
-     margin: 0
-   };
+  const footerCopyrightStyle = {
+    color: '#94a3b8',
+    fontSize: '14px',
+    margin: 0
+  };
 
-   const footerBottomLinksStyle = {
-     display: 'flex',
-     gap: '24px'
-   };
+  const footerBottomLinksStyle = {
+    display: 'flex',
+    gap: '24px'
+  };
 
-   const footerBottomLinkStyle = {
-     color: '#94a3b8',
-     textDecoration: 'none',
-     fontSize: '14px',
-     transition: 'all 0.3s ease',
-     cursor: 'pointer',
-     ':hover': {
-       color: '#64ffda'
-     }
-   };
+  const footerBottomLinkStyle = {
+    color: '#94a3b8',
+    textDecoration: 'none',
+    fontSize: '14px',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+    ':hover': {
+      color: '#64ffda'
+    }
+  };
 
   const servicesContainerStyle = {
     maxWidth: '1200px',
@@ -1152,7 +1100,7 @@ const Home = () => {
     }, 5000);
     return () => clearInterval(id);
   }, []);
-  
+
   // Load bookings from localStorage
   useEffect(() => {
     try {
@@ -1320,971 +1268,750 @@ const Home = () => {
   ];
 
   useEffect(() => {
-  const savedUser = localStorage.getItem('davaoBlueEaglesUser');
-  if (savedUser) {
-    try {
-      setUser(JSON.parse(savedUser));
-    } catch (error) {
-      localStorage.removeItem('davaoBlueEaglesUser');
+    const savedUser = localStorage.getItem('davaoBlueEaglesUser');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        localStorage.removeItem('davaoBlueEaglesUser');
+      }
     }
-  }
-}, []);
+  }, []);
 
-const handleLogin = (userData) => {
-  // For the predefined admin, check credentials
-  if (userData.email === ADMIN_CREDENTIALS.email && userData.password === ADMIN_CREDENTIALS.password) {
-    const adminUser = {
-      email: ADMIN_CREDENTIALS.email,
-      firstName: 'Admin',
-      lastName: 'User',
-      role: 'admin',
-      isLoggedIn: true,
-      isBlocked: false
+  const handleLogin = (userData) => {
+    // For the predefined admin, check credentials
+    if (userData.email === ADMIN_CREDENTIALS.email && userData.password === ADMIN_CREDENTIALS.password) {
+      const adminUser = {
+        email: ADMIN_CREDENTIALS.email,
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'admin',
+        isLoggedIn: true,
+        isBlocked: false
+      };
+      setUser(adminUser);
+      localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(adminUser));
+      setLoginError(''); // Clear any previous errors
+      setCurrentView('dashboard');
+      return;
+    }
+
+    // Check users created in User Management
+    const storedUsers = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
+    const userFromStorage = storedUsers.find(user => user.email === userData.email);
+
+    if (!userFromStorage) {
+      setLoginError('Invalid credentials. Please check your email and password.');
+      setCurrentView('login');
+      return;
+    }
+
+    // Check password for users created in User Management
+    if (userFromStorage.password !== userData.password) {
+      setLoginError('Invalid credentials. Please check your email and password.');
+      setCurrentView('login');
+      return;
+    }
+
+    // Check if user is blocked
+    if (userFromStorage.isBlocked) {
+      alert('Your account has been blocked. Please contact administrator.');
+      return;
+    }
+
+    const userWithRole = {
+      ...userFromStorage,
+      isLoggedIn: true
     };
-    setUser(adminUser);
-    localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(adminUser));
+
+    setUser(userWithRole);
+    localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(userWithRole));
     setLoginError(''); // Clear any previous errors
-    setCurrentView('dashboard');
-    return;
-  }
-  
-  // Check users created in User Management
-  const storedUsers = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
-  const userFromStorage = storedUsers.find(user => user.email === userData.email);
-  
-  if (!userFromStorage) {
-    setLoginError('Invalid credentials. Please check your email and password.');
-    setCurrentView('login');
-    return;
-  }
-  
-  // Check password for users created in User Management
-  if (userFromStorage.password !== userData.password) {
-    setLoginError('Invalid credentials. Please check your email and password.');
-    setCurrentView('login');
-    return;
-  }
-  
-  // Check if user is blocked
-  if (userFromStorage.isBlocked) {
-    alert('Your account has been blocked. Please contact administrator.');
-    return;
-  }
-  
-  const userWithRole = {
-    ...userFromStorage,
-    isLoggedIn: true
+
+    // Only admin users go to dashboard, regular users stay on home
+    if (userWithRole.role === 'admin') {
+      setCurrentView('dashboard');
+    } else {
+      setCurrentView('home');
+    }
   };
-  
-  setUser(userWithRole);
-  localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(userWithRole));
-  setLoginError(''); // Clear any previous errors
-  
-  // Only admin users go to dashboard, regular users stay on home
-  if (userWithRole.role === 'admin') {
-    setCurrentView('dashboard');
-  } else {
-    setCurrentView('home');
-  }
-};
 
-const handleLogout = () => {
-  setUser(null);
-  localStorage.removeItem('davaoBlueEaglesUser');
-  setShowUserMenu(false);
-};
-
-const handleShowLogin = () => {
-  setCurrentView('login');
-};
-
-const handleBackToHome = () => {
-  setCurrentView('home');
-};
-
-const handleShowSignup = () => {
-  setCurrentView('signup');
-};
-
-const handleSignup = (userData) => {
-  // Add new user to users list
-  const storedUsers = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
-  const newUser = {
-    ...userData,
-    id: Date.now(),
-    role: 'user', // Default role
-    isBlocked: false, // Default not blocked
-    createdAt: new Date().toISOString().split('T')[0]
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('davaoBlueEaglesUser');
+    setShowUserMenu(false);
   };
-  
-  const updatedUsers = [...storedUsers, newUser];
-  localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
-  
-  setUser(newUser);
-  localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(newUser));
-  
-  // Only admin users go to dashboard, regular users stay on home
-  if (newUser.role === 'admin') {
-    setCurrentView('dashboard');
-  } else {
+
+  const handleShowLogin = () => {
+    setCurrentView('login');
+  };
+
+  const handleBackToHome = () => {
     setCurrentView('home');
-  }
-};
+  };
 
-const handleSwitchToLogin = () => {
-  setCurrentView('login');
-};
+  const handleShowSignup = () => {
+    setCurrentView('signup');
+  };
 
-const handleSwitchToSignup = () => {
-  setCurrentView('signup');
-};
+  const handleSignup = (userData) => {
+    // Add new user to users list
+    const storedUsers = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
+    const newUser = {
+      ...userData,
+      id: Date.now(),
+      role: 'user', // Default role
+      isBlocked: false, // Default not blocked
+      createdAt: new Date().toISOString().split('T')[0]
+    };
 
-const handleClearLoginError = () => {
-  setLoginError('');
-};
+    const updatedUsers = [...storedUsers, newUser];
+    localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
 
-return (
-  <>
-    {/* Login view */}
-    {currentView === 'login' && (
-      <Login onBack={handleBackToHome} onLogin={handleLogin} onSwitchToSignup={handleSwitchToSignup} error={loginError} onClearError={handleClearLoginError} />
-    )}
+    setUser(newUser);
+    localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(newUser));
 
-    {/* Add this after the login view */}
-{currentView === 'signup' && (
-  <Signup 
-    onBack={handleBackToHome} 
-    onSignup={handleSignup}
-    onSwitchToLogin={handleSwitchToLogin}
-  />
-)}
+    // Only admin users go to dashboard, regular users stay on home
+    if (newUser.role === 'admin') {
+      setCurrentView('dashboard');
+    } else {
+      setCurrentView('home');
+    }
+  };
 
-{currentView === 'dashboard' && (
-  <Dashboard 
-    user={user} 
-    onBackToHome={() => setCurrentView('home')} 
-    onLogout={handleLogout}
-  />
-)}
+  const handleSwitchToLogin = () => {
+    setCurrentView('login');
+  };
+
+  const handleSwitchToSignup = () => {
+    setCurrentView('signup');
+  };
+
+  const handleClearLoginError = () => {
+    setLoginError('');
+  };
+
+  return (
+    <>
+      {/* Login view */}
+      {currentView === 'login' && (
+        <Login onBack={handleBackToHome} onLogin={handleLogin} onSwitchToSignup={handleSwitchToSignup} error={loginError} onClearError={handleClearLoginError} />
+      )}
+
+      {/* Add this after the login view */}
+      {currentView === 'signup' && (
+        <Signup
+          onBack={handleBackToHome}
+          onSignup={handleSignup}
+          onSwitchToLogin={handleSwitchToLogin}
+        />
+      )}
+
+      {currentView === 'dashboard' && (
+        <Dashboard
+          user={user}
+          onBackToHome={() => setCurrentView('home')}
+          onLogout={handleLogout}
+        />
+      )}
 
 
 
 
-    
-    {/* Home view */}
-    {currentView === 'home' && (
-      <div style={containerStyle}>
-        <nav style={navStyle}>
-          {/* Logo Section */}
-          <div style={logoStyle}>
-            <h1 style={logoMainStyle}>DAVAO</h1>
-            <p style={logoSubStyle}>BLUE EAGLES</p>
-          </div>
 
-          {/* Navigation Links */}
-          <ul style={ulStyle}>
-            <li>
-              <a 
-                href="#home" 
-                style={linkStyle}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-              >
-                Home
-              </a>
-            </li>
-            <li>
-              <a 
-                href="#services" 
-                style={linkStyle}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-              >
-                Services
-              </a>
-            </li>
-            <li>
-              <a 
-                href="#about" 
-                style={linkStyle}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-              >
-                About Us
-              </a>
-            </li>
-            <li>
-              <a 
-                href="#contact" 
-                style={linkStyle}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-              >
-                Contact
-              </a>
-            </li>
-          </ul>
+      {/* Home view */}
+      {currentView === 'home' && (
+        <div style={containerStyle}>
+          <nav style={navStyle}>
+            {/* Logo Section */}
+            <div style={logoStyle}>
+              <h1 style={logoMainStyle}>DAVAO</h1>
+              <p style={logoSubStyle}>BLUE EAGLES</p>
+            </div>
 
-          {/* Updated Buttons Section with Authentication */}
-          <div style={buttonContainerStyle}>
-            {user ? (
-              // Logged in state
-              <div style={{ position: 'relative' }}>
-                <button 
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: '1px solid rgba(100, 255, 218, 0.3)',
-                    color: '#e5e7eb',
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)';
-                    e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
-                  }}
+            {/* Navigation Links */}
+            <ul style={ulStyle}>
+              <li>
+                <a
+                  href="#home"
+                  style={linkStyle}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
                 >
-                  👤 {user.firstName || user.email.split('@')[0]} ▼
-                </button>
-                
-                
-                {showUserMenu && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    right: 0,
-                    backgroundColor: 'rgba(10, 25, 47, 0.95)',
-                    border: '1px solid rgba(100, 255, 218, 0.2)',
-                    borderRadius: '8px',
-                    padding: '8px 0',
-                    minWidth: '180px',
-                    marginTop: '4px',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-                    backdropFilter: 'blur(10px)'
-                  }}>
-                    <a href="#profile" style={{ 
-                      display: 'block', 
-                      padding: '12px 16px', 
-                      color: '#e5e7eb', 
-                      textDecoration: 'none',
+                  Home
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#services"
+                  style={linkStyle}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  Services
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#about"
+                  style={linkStyle}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  About Us
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#contact"
+                  style={linkStyle}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  Contact
+                </a>
+              </li>
+            </ul>
+
+            {/* Updated Buttons Section with Authentication */}
+            <div style={buttonContainerStyle}>
+              {user ? (
+                // Logged in state
+                <div style={{ position: 'relative' }}>
+                  <button
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(100, 255, 218, 0.3)',
+                      color: '#e5e7eb',
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
                       fontSize: '14px',
-                      transition: 'background-color 0.2s',
-                      cursor: 'pointer'
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
                     }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >My Profile</a>
-                    <a href="#bookings" style={{ 
-                      display: 'block', 
-                      padding: '12px 16px', 
-                      color: '#e5e7eb', 
-                      textDecoration: 'none',
-                      fontSize: '14px',
-                      transition: 'background-color 0.2s',
-                      cursor: 'pointer'
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)';
+                      e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
                     }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    onClick={(e) => { e.preventDefault(); setShowMyBookings(true); setShowUserMenu(false); }}
-                    >My Bookings</a>
-                    
-                    {/* Only show User Management for admins */}
-                    {user.role === 'admin' && (
-                      <a href="#user-management" style={{ 
-                        display: 'block', 
-                        padding: '12px 16px', 
-                        color: '#e5e7eb', 
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = 'transparent';
+                      e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
+                    }}
+                  >
+                    <FaUser /> {user.firstName || user.email.split('@')[0]} ▼
+                  </button>
+                  {showUserMenu && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      backgroundColor: 'rgba(10, 25, 47, 0.95)',
+                      border: '1px solid rgba(100, 255, 218, 0.2)',
+                      borderRadius: '8px',
+                      padding: '8px 0',
+                      minWidth: '180px',
+                      marginTop: '4px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                      backdropFilter: 'blur(10px)'
+                    }}>
+                      <a href="#profile" style={{
+                        display: 'block',
+                        padding: '12px 16px',
+                        color: '#e5e7eb',
                         textDecoration: 'none',
                         fontSize: '14px',
                         transition: 'background-color 0.2s',
                         cursor: 'pointer'
                       }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                      >User Management</a>
-                    )}
-                    
-                    <hr style={{ 
-                      margin: '8px 0', 
-                      border: 'none', 
-                      borderTop: '1px solid rgba(100, 255, 218, 0.2)' 
-                    }} />
-                    <button 
-                      onClick={handleLogout}
-                      style={{ 
-                        display: 'block', 
-                        width: '100%', 
-                        padding: '12px 16px', 
-                        color: '#e5e7eb', 
-                        background: 'none', 
-                        border: 'none', 
-                        textAlign: 'left', 
-                        cursor: 'pointer',
+                        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                      >Profile</a>
+                      <a href="#bookings" style={{
+                        display: 'block',
+                        padding: '12px 16px',
+                        color: '#e5e7eb',
+                        textDecoration: 'none',
                         fontSize: '14px',
-                        transition: 'background-color 0.2s'
+                        transition: 'background-color 0.2s',
+                        cursor: 'pointer'
                       }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 99, 99, 0.1)'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              // Not logged in state
-              <>
-                <button 
-                  onClick={handleShowLogin}
-                  style={loginButtonStyle}
-                  onMouseEnter={handleButtonHover}
-                  onMouseLeave={handleButtonLeave}
-                >
-                  Login
-                </button>
-                <button 
-                  onClick={handleShowSignup}
-                  style={signUpButtonStyle}
-                  onMouseEnter={handleButtonHover}
-                  onMouseLeave={handleButtonLeave}
-                >
-                  Sign Up
-                </button>
-              </>
-            )}
-          </div>
-        </nav>
+                        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                        onClick={(e) => { e.preventDefault(); setShowMyBookings(true); setShowUserMenu(false); }}
+                      >Bookings</a>
 
-        {/* Hero Section */}
-        <section id="home" style={heroSectionStyle}>
-          <div style={heroContentStyle}>
-            <h2 style={taglineStyle}>CIRVA A LA GENTE POR LA MUSICA</h2>
-            <p style={subTaglineStyle}>Serve the People through Music.</p>
-            <button 
-              onClick={handleShowSignup}
-              style={signUpButtonStyle}
-              onMouseEnter={handleButtonHover}
-              onMouseLeave={handleButtonLeave}
-            >
-              Register Now!
-            </button>
-          </div>
-        </section>
-
-        {/* Services Section */}
-        <section id="services" style={servicesSectionStyle}>
-          <div style={servicesContainerStyle}>
-            <div style={servicesHeaderWrapStyle}>
-              <div>
-                <div style={sectionEyebrowStyle}>What we offer</div>
-                <h3 style={servicesHeaderStyle}>Our Services</h3>
-              </div>
-              <div style={servicesHeaderRightStyle}>
-                <p style={servicesSubTextStyle}>From parades and corporate shows to workshops and rentals—we tailor each service to your event with professional coordination and musical excellence.</p>
-                <div style={{ color: '#e5e7eb', fontFamily: 'Marcellus, serif', fontSize: '20px', fontWeight: 600 }}>Certified Excellence</div>
-              </div>
-            </div>
-
-            {/* New card layout: 3 on top, 2 centered below */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', marginBottom: '16px' }}>
-              {services.slice(0,3).map((service) => (
-                <div key={service.title} style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(100,255,218,0.2)', backgroundColor: 'rgba(10,25,47,0.6)' }}>
-                  <div style={{ position: 'relative', height: `${serviceCardH}px` }}>
-                    <div style={{ ...cardImageStyle, backgroundImage: `url(${service.img})` }} />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(2,6,23,0.92), rgba(2,6,23,0.2) 60%)' }} />
-                    <div style={cardBodyStyle}>
-                      <div style={cardBottomPillStyle}>{service.title}</div>
-                      <button aria-label="Open" style={cardArrowButtonStyle} onClick={() => setModalService(service)}>↗</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px', maxWidth: '860px', margin: '16px auto 0' }}>
-              {services.slice(3).map((service) => (
-                <div key={service.title} style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(100,255,218,0.2)', backgroundColor: 'rgba(10,25,47,0.6)' }}>
-                  <div style={{ position: 'relative', height: `${serviceCardH}px` }}>
-                    <div style={{ ...cardImageStyle, backgroundImage: `url(${service.img})` }} />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(2,6,23,0.92), rgba(2,6,23,0.2) 60%)' }} />
-                    <div style={cardBodyStyle}>
-                      <div style={cardBottomPillStyle}>{service.title}</div>
-                      <button aria-label="Open" style={cardArrowButtonStyle} onClick={() => setModalService(service)}>↗</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-          </div>
-        </section>
-
-        {/* About Section */}
-        <section id="about" style={aboutSectionStyle}>
-          <div style={servicesContainerStyle}>
-            <div style={servicesHeaderWrapStyle}>
-              <div>
-                <div style={sectionEyebrowStyle}>Who we are</div>
-                <h3 style={aboutHeaderStyle}>About Us</h3>
-              </div>
-            </div>
-            <div style={aboutWrapStyle}>
-              <div style={aboutTextCardStyle}>
-                <div>
-                  <p style={aboutStoryParagraphStyle}>
-                    The Davao Blue Eagles Marching Band (DBEMB) was founded in 2012, with November 24, 2012, as its official anniversary date. This marks the band's first-ever competition in Bohol, where it made history by sweeping all four major awards and breaking the 15-year championship streak of Bohol Island State University (BISU).
-                  </p>
-                  <p style={aboutStoryParagraphStyle}>
-                    Since then, DBEMB has expanded its reach, competing across the Visayas (Bohol), Mindanao (Davao, Tagum, Kidapawan), and Luzon (Pasay, Pasig, Bacoor).
-                  </p>
-                  <p style={aboutStoryParagraphStyle}>
-                    The band has secured five major championship titles—two from the Alturas Drum and Bugle competition in Tagbilaran City, Bohol, and three in Davao City.
-                  </p>
-                  <p style={aboutStoryParagraphStyle}>
-                    However, the band's strength has gradually declined after the pandemic lockdown, particularly from early 2022 onward. Challenges such as reduced membership, financial struggles, and operational difficulties have affected its performance and stability. Despite these setbacks, DBEMB remains committed to its legacy of excellence, striving to rebuild and continue serving the people through music.
-                  </p>
-                </div>
-              </div>
-
-              {/* Carousel */}
-              <div style={carouselWrapperStyle}>
-                <div
-                  style={{
-                    ...carouselImageStyle,
-                    backgroundImage: `url(${aboutImages[currentSlide]})`
-                  }}
-                />
-                <div style={carouselControlsStyle}>
-                  <button style={navButtonStyle} onClick={goPrev} aria-label="Previous slide">‹</button>
-                  <button style={navButtonStyle} onClick={goNext} aria-label="Next slide">›</button>
-                </div>
-                <div style={dotsStyle}>
-                  {aboutImages.map((_, idx) => (
-                    <span key={idx} style={dotStyle(idx === currentSlide)} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Contact Section */}
-        <section id="contact" style={contactSectionStyle}>
-          <div style={servicesContainerStyle}>
-            <div style={servicesHeaderWrapStyle}>
-              <div>
-                <div style={sectionEyebrowStyle}>Get in touch</div>
-                <h3 style={servicesHeaderStyle}>Contact Us</h3>
-              </div>
-              <p style={servicesSubTextStyle}>
-                Ready to bring the Davao Blue Eagles Marching Band to your event? Get in touch with us for bookings, inquiries, or collaborations.
-              </p>
-            </div>
-
-            <div style={contactGridStyle}>
-              {/* Contact Information */}
-              <div style={contactInfoCardStyle}>
-                <h4 style={contactCardTitleStyle}>Get In Touch</h4>
-                <div style={contactInfoListStyle}>
-                  <div style={contactInfoItemStyle}>
-                    <div style={contactIconStyle}><FaEnvelope /></div>
-                    <div>
-                      <h5 style={contactLabelStyle}>Email</h5>
-                      <p style={contactValueStyle}>dbe.official@example.com</p>
-                    </div>
-                  </div>
-                  <div style={contactInfoItemStyle}>
-                    <div style={contactIconStyle}><FaPhoneAlt /></div>
-                    <div>
-                      <h5 style={contactLabelStyle}>Phone</h5>
-                      <p style={contactValueStyle}>+63 900 000 0000</p>
-                    </div>
-                  </div>
-                  <div style={contactInfoItemStyle}>
-                    <div style={contactIconStyle}><FaMapMarkerAlt /></div>
-                    <div>
-                      <h5 style={contactLabelStyle}>Location</h5>
-                      <p style={contactValueStyle}>Davao City, Philippines</p>
-                    </div>
-                  </div>
-                  <div style={contactInfoItemStyle}>
-                    <div style={contactIconStyle}><FaClock /></div>
-                    <div>
-                      <h5 style={contactLabelStyle}>Response Time</h5>
-                      <p style={contactValueStyle}>Within 24 hours</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Form */}
-              <div style={contactFormCardStyle}>
-                <h4 style={contactCardTitleStyle}>Send Us a Message</h4>
-                <form style={contactFormStyle}>
-                  <div style={formRowStyle}>
-                    <div style={formFieldStyle}>
-                      <label style={formLabelStyle}>First Name *</label>
-                      <input 
-                        type="text" 
-                        style={formInputStyle}
-                        placeholder="Enter your first name"
-                        required
-                      />
-                    </div>
-                    <div style={formFieldStyle}>
-                      <label style={formLabelStyle}>Last Name *</label>
-                      <input 
-                        type="text" 
-                        style={formInputStyle}
-                        placeholder="Enter your last name"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div style={formFieldStyle}>
-                    <label style={formLabelStyle}>Email Address *</label>
-                    <input 
-                      type="email" 
-                      style={formInputStyle}
-                      placeholder="Enter your email address"
-                      required
-                    />
-                  </div>
-                  <div style={formFieldStyle}>
-                    <label style={formLabelStyle}>Phone Number</label>
-                    <input 
-                      type="tel" 
-                      style={formInputStyle}
-                      placeholder="Enter your phone number"
-                    />
-                  </div>
-                  <div style={formFieldStyle}>
-                    <label style={formLabelStyle}>Event Type *</label>
-                    <select style={formInputStyle} required>
-                      <option value="">Select an event type</option>
-                      <option value="corporate">Corporate Event</option>
-                      <option value="festival">Festival</option>
-                      <option value="parade">Parade</option>
-                      <option value="ceremony">Ceremony</option>
-                      <option value="workshop">Music Workshop</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                  <div style={formFieldStyle}>
-                    <label style={formLabelStyle}>Event Date</label>
-                    <input 
-                      type="date" 
-                      style={formInputStyle}
-                    />
-                  </div>
-                  <div style={formFieldStyle}>
-                    <label style={formLabelStyle}>Message *</label>
-                    <textarea 
-                      style={formTextareaStyle}
-                      placeholder="Tell us about your event and requirements..."
-                      rows="4"
-                      required
-                    ></textarea>
-                  </div>
-                  <button type="submit" style={submitButtonStyle}>
-                    Send Message
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            {/* Additional Info */}
-            <div style={additionalInfoStyle}>
-              <div style={infoCardStyle}>
-                <h5 style={infoCardTitleStyle}>Booking Process</h5>
-                <p style={infoCardTextStyle}>
-                  We'll review your request and get back to you within 24 hours with availability and pricing details.
-                </p>
-              </div>
-              <div style={infoCardStyle}>
-                <h5 style={infoCardTitleStyle}>Service Areas</h5>
-                <p style={infoCardTextStyle}>
-                  We serve Davao City and surrounding areas. For events outside our immediate area, please contact us for special arrangements.
-                </p>
-              </div>
-              <div style={infoCardStyle}>
-                <h5 style={infoCardTitleStyle}>Payment Terms</h5>
-                <p style={infoCardTextStyle}>
-                  We require a 50% deposit upon booking confirmation, with the remaining balance due on the event date.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Modal - redesigned service info */}
-        {modalService && (
-          <div style={modalOverlayStyle} onClick={() => setModalService(null)}>
-            <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-              <div style={modalHeaderStyle}>
-                <h4 style={modalTitleStyle}>{modalService.title}</h4>
-                <button style={closeButtonStyle} onClick={() => setModalService(null)}>×</button>
-              </div>
-              <div style={{ ...modalBodyStyle, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div>
-                  <div style={{ height: '220px', borderRadius: '10px', backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${modalService.img})`, border: '1px solid rgba(100,255,218,0.2)' }} />
-                </div>
-                <div>
-                  <p style={readMoreTextStyle}>{modalService.description}</p>
-                  <ul style={{ color: '#a8b2d1', fontSize: '14px', lineHeight: 1.7, paddingLeft: '18px' }}>
-                    <li>Professional coordination and stage management</li>
-                    <li>Flexible ensemble size tailored to your event</li>
-                    <li>Repertoire planning and arrangement support</li>
-                    <li>Equipment and logistics assistance</li>
-                  </ul>
-                </div>
-              </div>
-              <div style={{ ...modalActionsStyle, justifyContent: 'space-between' }}>
-                <div style={{ color: '#94a3b8', fontSize: '14px' }}>Ready to proceed? Reserve a date to get started.</div>
-                <a href="#book" style={bookButtonStyle} onClick={(e) => { e.preventDefault(); localStorage.setItem('dbeOpenBookingForService', modalService?.title || ''); const url = window.location.origin + window.location.pathname + '#/booking'; window.open(url, '_blank'); }}>Book Now</a>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Booking Modal */}
-        {showBookingModal && (
-          <div style={modalOverlayStyle} onClick={closeBooking}>
-            <div style={bookingModalContentStyle} onClick={(e) => e.stopPropagation()}>
-              <div style={bookingHeaderStyle}>
-                <h4 style={bookingTitleStyle}>Book: {bookingService || bookingForm.service || 'Select Service'}</h4>
-                <button style={{
-                  background: '#ffffff',
-                  border: '1px solid #e5e7eb',
-                  color: '#111827',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontSize: '18px',
-                  fontWeight: 700
-                }} onClick={closeBooking}>×</button>
-              </div>
-              <div style={bookingBodyStyle}>
-                <div style={bookingSectionStyle}>
-                  <h5 style={bookingSectionTitleStyle}>Contact Information</h5>
-                  <div style={gridTwoStyle}>
-                    <div>
-                      <label style={darkLabelStyle}>Full Name *</label>
-                      <input style={darkInputStyle} value={bookingForm.name} onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })} required />
-                    </div>
-                    <div>
-                      <label style={darkLabelStyle}>Email *</label>
-                      <input type="email" style={darkInputStyle} value={bookingForm.email} onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })} required />
-                    </div>
-                  </div>
-                  <div style={{ marginTop: '12px', ...gridTwoStyle }}>
-                    <div>
-                      <label style={darkLabelStyle}>Phone</label>
-                      <input style={darkInputStyle} value={bookingForm.phone} onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })} />
-                    </div>
-                    <div>
-                      <label style={darkLabelStyle}>Service *</label>
-                      <select style={darkInputStyle} value={bookingForm.service} onChange={(e) => setBookingForm({ ...bookingForm, service: e.target.value })} required>
-                        <option value="">Select service</option>
-                        {services.map(s => (
-                          <option key={s.title} value={s.title}>{s.title}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <div style={bookingSectionStyle}>
-                  <h5 style={bookingSectionTitleStyle}>Schedule</h5>
-                  <div style={gridThreeStyle}>
-                    <div>
-                      <label style={darkLabelStyle}>Date *</label>
-                      <input type="date" style={darkInputStyle} value={bookingForm.date} onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })} required />
-                    </div>
-                    <div>
-                      <label style={darkLabelStyle}>Start Time *</label>
-                      <input type="time" style={darkInputStyle} value={bookingForm.startTime} onChange={(e) => setBookingForm({ ...bookingForm, startTime: e.target.value })} required />
-                    </div>
-                    <div>
-                      <label style={darkLabelStyle}>End Time *</label>
-                      <input type="time" style={darkInputStyle} value={bookingForm.endTime} onChange={(e) => setBookingForm({ ...bookingForm, endTime: e.target.value })} required />
-                    </div>
-                  </div>
-                  {/* Monthly Calendar */}
-                  <div style={{ marginTop: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <button style={{...closeButtonStyle, width: '36px'}} onClick={handlePrevMonth}>‹</button>
-                      <div style={{ color: '#e5e7eb', fontWeight: 600 }}>{new Date(calendarYear, calendarMonth, 1).toLocaleString('default', { month: 'long', year: 'numeric' })}</div>
-                      <button style={{...closeButtonStyle, width: '36px'}} onClick={handleNextMonth}>›</button>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
-                      {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-                        <div key={d} style={{ color: '#94a3b8', textAlign: 'center', fontSize: '12px' }}>{d}</div>
-                      ))}
-                      {Array.from({ length: firstWeekday(calendarYear, calendarMonth) }).map((_, i) => (
-                        <div key={`empty-${i}`} />
-                      ))}
-                      {Array.from({ length: daysInMonth(calendarYear, calendarMonth) }).map((_, i) => {
-                        const day = i + 1;
-                        const taken = isDayTaken(bookingForm.service, calendarYear, calendarMonth, day);
-                        const dateStr = ymd(calendarYear, calendarMonth, day);
-                        const isSelected = bookingForm.date === dateStr;
-                        return (
-                          <button
-                            key={day}
-                            onClick={() => !taken && setBookingForm({ ...bookingForm, date: dateStr })}
-                            style={{
-                              padding: '10px 0',
-                              borderRadius: '8px',
-                              border: '1px solid ' + (taken ? 'rgba(239,68,68,0.6)' : isSelected ? 'rgba(100,255,218,0.6)' : 'rgba(100,255,218,0.2)'),
-                              backgroundColor: taken ? 'rgba(239,68,68,0.15)' : isSelected ? 'rgba(100,255,218,0.12)' : 'rgba(10,25,47,0.4)',
-                              color: taken ? '#ef4444' : '#e5e7eb',
-                              cursor: taken ? 'not-allowed' : 'pointer'
-                            }}
-                            disabled={taken}
-                            title={taken ? 'Fully booked' : 'Available'}
-                          >
-                            {day}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  {bookingForm.service && bookingForm.date && (
-                    <div style={{ marginTop: '14px' }}>
-                      <div style={{ marginBottom: '8px', color: '#374151', fontSize: '14px', fontWeight: 600 }}>Existing bookings for {bookingForm.service} on {bookingForm.date}:</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {bookings.filter(b => b.service === bookingForm.service && b.date === bookingForm.date && b.status !== 'cancelled').length === 0 && (
-                          <div style={{ color: '#059669', fontWeight: 600 }}>No bookings yet for this date.</div>
-                        )}
-                        {bookings.filter(b => b.service === bookingForm.service && b.date === bookingForm.date && b.status !== 'cancelled').map(b => (
-                          <div key={b.id} style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '6px 10px',
-                            borderRadius: '999px',
-                            border: '1px solid #e5e7eb',
-                            backgroundColor: '#ffffff',
-                            color: '#111827',
-                            fontSize: '13px'
-                          }}>
-                            <span>🕒 {b.startTime} - {b.endTime}</span>
-                            <span style={{ marginLeft: '4px', ...statusBadgeStyle(b.status) }}>{b.status}</span>
-                          </div>
-                        ))}
-                      </div>
-                      {hasConflict(bookingForm.service, bookingForm.date, bookingForm.startTime, bookingForm.endTime) && (
-                        <div style={{ color: '#dc2626', marginTop: '8px', fontWeight: 600 }}>Conflict detected with an existing booking.</div>
+                      {/* Only show Dashboard for admins */}
+                      {user.role === 'admin' && (
+                        <a href="#dashboard" style={{
+                          display: 'block',
+                          padding: '12px 16px',
+                          color: '#e5e7eb',
+                          textDecoration: 'none',
+                          fontSize: '14px',
+                          transition: 'background-color 0.2s',
+                          cursor: 'pointer'
+                        }}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                          onClick={(e) => { e.preventDefault(); setCurrentView('dashboard'); setShowUserMenu(false); }}
+                        >Dashboard</a>
                       )}
+
+                      <hr style={{
+                        margin: '8px 0',
+                        border: 'none',
+                        borderTop: '1px solid rgba(100, 255, 218, 0.2)'
+                      }} />
+                      <button
+                        onClick={handleLogout}
+                        style={{
+                          display: 'block',
+                          width: '100%',
+                          padding: '12px 16px',
+                          color: '#e5e7eb',
+                          background: 'none',
+                          border: 'none',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 99, 99, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                      >
+                        Logout
+                      </button>
                     </div>
                   )}
                 </div>
-                <div style={bookingSectionStyle}>
-                  <h5 style={bookingSectionTitleStyle}>Additional Details</h5>
+              ) : (
+                // Not logged in state
+                <>
+                  <button
+                    onClick={handleShowLogin}
+                    style={loginButtonStyle}
+                    onMouseEnter={handleButtonHover}
+                    onMouseLeave={handleButtonLeave}
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={handleShowSignup}
+                    style={signUpButtonStyle}
+                    onMouseEnter={handleButtonHover}
+                    onMouseLeave={handleButtonLeave}
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
+            </div>
+          </nav>
+
+          {/* Hero Section */}
+          <section id="home" style={heroSectionStyle}>
+            <div style={heroContentStyle}>
+              <h2 style={taglineStyle}>CIRVA A LA GENTE POR LA MUSICA</h2>
+              <p style={subTaglineStyle}>Serve the People through Music.</p>
+              <button
+                onClick={handleShowSignup}
+                style={signUpButtonStyle}
+                onMouseEnter={handleButtonHover}
+                onMouseLeave={handleButtonLeave}
+              >
+                Register Now!
+              </button>
+            </div>
+          </section>
+
+          {/* Services Section */}
+          <section id="services" style={servicesSectionStyle}>
+            <div style={servicesContainerStyle}>
+              <div style={servicesHeaderWrapStyle}>
+                <div>
+                  <div style={sectionEyebrowStyle}>What we offer</div>
+                  <h3 style={servicesHeaderStyle}>Our Services</h3>
+                </div>
+                <div style={servicesHeaderRightStyle}>
+                  <p style={servicesSubTextStyle}>From parades and corporate shows to workshops and rentals—we tailor each service to your event with professional coordination and musical excellence.</p>
+                  <div style={{ color: '#e5e7eb', fontFamily: 'Marcellus, serif', fontSize: '20px', fontWeight: 600 }}>Certified Excellence</div>
+                </div>
+              </div>
+
+              {/* New card layout: 3 on top, 2 centered below */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', marginBottom: '16px' }}>
+                {services.slice(0, 3).map((service) => (
+                  <div key={service.title} style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(100,255,218,0.2)', backgroundColor: 'rgba(10,25,47,0.6)' }}>
+                    <div style={{ position: 'relative', height: `${serviceCardH}px` }}>
+                      <div style={{ ...cardImageStyle, backgroundImage: `url(${service.img})` }} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(2,6,23,0.92), rgba(2,6,23,0.2) 60%)' }} />
+                      <div style={cardBodyStyle}>
+                        <div style={cardBottomPillStyle}>{service.title}</div>
+                        <button aria-label="Open" style={cardArrowButtonStyle} onClick={() => setModalService(service)}>↗</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px', maxWidth: '860px', margin: '16px auto 0' }}>
+                {services.slice(3).map((service) => (
+                  <div key={service.title} style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(100,255,218,0.2)', backgroundColor: 'rgba(10,25,47,0.6)' }}>
+                    <div style={{ position: 'relative', height: `${serviceCardH}px` }}>
+                      <div style={{ ...cardImageStyle, backgroundImage: `url(${service.img})` }} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(2,6,23,0.92), rgba(2,6,23,0.2) 60%)' }} />
+                      <div style={cardBodyStyle}>
+                        <div style={cardBottomPillStyle}>{service.title}</div>
+                        <button aria-label="Open" style={cardArrowButtonStyle} onClick={() => setModalService(service)}>↗</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          </section>
+
+          {/* About Section */}
+          <section id="about" style={aboutSectionStyle}>
+            <div style={servicesContainerStyle}>
+              <div style={servicesHeaderWrapStyle}>
+                <div>
+                  <div style={sectionEyebrowStyle}>Who we are</div>
+                  <h3 style={aboutHeaderStyle}>About Us</h3>
+                </div>
+              </div>
+              <div style={aboutWrapStyle}>
+                <div style={aboutTextCardStyle}>
                   <div>
-                    <label style={darkLabelStyle}>Notes</label>
-                    <textarea style={darkTextareaStyle} value={bookingForm.notes} onChange={(e) => setBookingForm({ ...bookingForm, notes: e.target.value })} />
+                    <p style={aboutStoryParagraphStyle}>
+                      The Davao Blue Eagles Marching Band (DBEMB) was founded in 2012, with November 24, 2012, as its official anniversary date. This marks the band's first-ever competition in Bohol, where it made history by sweeping all four major awards and breaking the 15-year championship streak of Bohol Island State University (BISU).
+                    </p>
+                    <p style={aboutStoryParagraphStyle}>
+                      Since then, DBEMB has expanded its reach, competing across the Visayas (Bohol), Mindanao (Davao, Tagum, Kidapawan), and Luzon (Pasay, Pasig, Bacoor).
+                    </p>
+                    <p style={aboutStoryParagraphStyle}>
+                      The band has secured five major championship titles—two from the Alturas Drum and Bugle competition in Tagbilaran City, Bohol, and three in Davao City.
+                    </p>
+                    <p style={aboutStoryParagraphStyle}>
+                      However, the band's strength has gradually declined after the pandemic lockdown, particularly from early 2022 onward. Challenges such as reduced membership, financial struggles, and operational difficulties have affected its performance and stability. Despite these setbacks, DBEMB remains committed to its legacy of excellence, striving to rebuild and continue serving the people through music.
+                    </p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                  <button
-                    type="button"
-                    onClick={closeBooking}
+
+                {/* Carousel */}
+                <div style={carouselWrapperStyle}>
+                  <div
                     style={{
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(100,255,218,0.35)',
-                      color: '#e5e7eb',
-                      padding: '12px 18px',
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      fontWeight: 600
+                      ...carouselImageStyle,
+                      backgroundImage: `url(${aboutImages[currentSlide]})`
                     }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={confirmBooking}
-                    style={{
-                      ...primaryButtonDarkStyle,
-                      opacity: (!bookingForm.service || !bookingForm.name || !bookingForm.email || !bookingForm.date || !bookingForm.startTime || !bookingForm.endTime || hasConflict(bookingForm.service, bookingForm.date, bookingForm.startTime, bookingForm.endTime)) ? 0.6 : 1,
-                      cursor: (!bookingForm.service || !bookingForm.name || !bookingForm.email || !bookingForm.date || !bookingForm.startTime || !bookingForm.endTime || hasConflict(bookingForm.service, bookingForm.date, bookingForm.startTime, bookingForm.endTime)) ? 'not-allowed' : 'pointer'
-                    }}
-                    disabled={!bookingForm.service || !bookingForm.name || !bookingForm.email || !bookingForm.date || !bookingForm.startTime || !bookingForm.endTime || hasConflict(bookingForm.service, bookingForm.date, bookingForm.startTime, bookingForm.endTime)}
-                  >
-                    Submit Booking
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* My Bookings Modal */}
-        {showMyBookings && (
-          <div style={modalOverlayStyle} onClick={() => setShowMyBookings(false)}>
-            <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-              <div style={modalHeaderStyle}>
-                <h4 style={modalTitleStyle}>My Bookings</h4>
-                <button style={closeButtonStyle} onClick={() => setShowMyBookings(false)}>Close</button>
-              </div>
-              <div style={modalBodyStyle}>
-                {bookings.filter(b => !user || b.email === user.email).length === 0 ? (
-                  <div style={{ color: '#a8b2d1' }}>No bookings found.</div>
-                ) : (
-                  <div style={{ display: 'grid', gap: '12px' }}>
-                    {bookings
-                      .filter(b => !user || b.email === user.email)
-                      .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime))
-                      .map(b => (
-                        <div key={b.id} style={{ border: '1px solid rgba(100,255,218,0.2)', borderRadius: '12px', padding: '14px', backgroundColor: 'rgba(10,25,47,0.4)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-                            <div>
-                              <div style={{ color: '#e5e7eb', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <strong>{b.service}</strong>
-                                <span style={statusBadgeStyle(b.status)}>{b.status}</span>
-                              </div>
-                              <div style={{ color: '#a8b2d1', marginTop: '4px' }}>📅 {b.date} • 🕒 {b.startTime} - {b.endTime}</div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              {b.status !== 'cancelled' && (
-                                <button style={closeButtonStyle} onClick={() => cancelBooking(b.id)}>Cancel</button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                  />
+                  <div style={carouselControlsStyle}>
+                    <button style={navButtonStyle} onClick={goPrev} aria-label="Previous slide">‹</button>
+                    <button style={navButtonStyle} onClick={goNext} aria-label="Next slide">›</button>
                   </div>
-                )}
+                  <div style={dotsStyle}>
+                    {aboutImages.map((_, idx) => (
+                      <span key={idx} style={dotStyle(idx === currentSlide)} />
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          </section>
 
-        {/* Toast */}
-        {toast && (
-          <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 3000 }}>
-            <div style={{
-              backgroundColor: toast.type === 'success' ? 'rgba(34,197,94,0.1)' : 'rgba(96,165,250,0.1)',
-              border: `1px solid ${toast.type === 'success' ? 'rgba(34,197,94,0.4)' : 'rgba(96,165,250,0.4)'}`,
-              color: toast.type === 'success' ? '#22c55e' : '#60a5fa',
-              padding: '12px 16px',
-              borderRadius: '10px',
-              backdropFilter: 'blur(8px)'
-            }}>
-              {toast.message}
-            </div>
-          </div>
-        )}
-        {/* Footer */}
-        <footer style={footerStyle}>
-          <div style={footerContainerStyle}>
-            {/* Main Footer Content */}
-            <div style={footerMainStyle}>
-              {/* Brand Section */}
-              <div style={footerBrandStyle}>
-                <div style={footerLogoStyle}>
-                  <h3 style={footerLogoTitleStyle}>DAVAO</h3>
-                  <p style={footerLogoSubtitleStyle}>BLUE EAGLES</p>
+          {/* Contact Section */}
+          <section id="contact" style={contactSectionStyle}>
+            <div style={servicesContainerStyle}>
+              <div style={servicesHeaderWrapStyle}>
+                <div>
+                  <div style={sectionEyebrowStyle}>Get in touch</div>
+                  <h3 style={servicesHeaderStyle}>Contact Us</h3>
                 </div>
-                <p style={footerDescriptionStyle}>
-                  Serving the people through music since 2012. We bring excellence, passion, and unforgettable performances to every event.
+                <p style={servicesSubTextStyle}>
+                  Ready to bring the Davao Blue Eagles Marching Band to your event? Get in touch with us for bookings, inquiries, or collaborations.
                 </p>
-                <div style={footerSocialStyle}>
-                  <a href="#" style={socialLinkStyle} aria-label="Facebook">
-                    <FaFacebookF />
-                  </a>
-                  <a href="#" style={socialLinkStyle} aria-label="Instagram">
-                    <FaInstagram />
-                  </a>
-                  <a href="#" style={socialLinkStyle} aria-label="YouTube">
-                    <FaYoutube />
-                  </a>
-                  <a href="#" style={socialLinkStyle} aria-label="Email">
-                    <FaEnvelope />
-                  </a>
+              </div>
+
+              <div style={contactGridStyle}>
+                {/* Contact Information */}
+                <div style={contactInfoCardStyle}>
+                  <h4 style={contactCardTitleStyle}>Get In Touch</h4>
+                  <div style={contactInfoListStyle}>
+                    <div style={contactInfoItemStyle}>
+                      <div style={contactIconStyle}><FaEnvelope /></div>
+                      <div>
+                        <h5 style={contactLabelStyle}>Email</h5>
+                        <p style={contactValueStyle}>dbe.official@example.com</p>
+                      </div>
+                    </div>
+                    <div style={contactInfoItemStyle}>
+                      <div style={contactIconStyle}><FaPhoneAlt /></div>
+                      <div>
+                        <h5 style={contactLabelStyle}>Phone</h5>
+                        <p style={contactValueStyle}>+63 900 000 0000</p>
+                      </div>
+                    </div>
+                    <div style={contactInfoItemStyle}>
+                      <div style={contactIconStyle}><FaMapMarkerAlt /></div>
+                      <div>
+                        <h5 style={contactLabelStyle}>Location</h5>
+                        <p style={contactValueStyle}>Davao City, Philippines</p>
+                      </div>
+                    </div>
+                    <div style={contactInfoItemStyle}>
+                      <div style={contactIconStyle}><FaClock /></div>
+                      <div>
+                        <h5 style={contactLabelStyle}>Response Time</h5>
+                        <p style={contactValueStyle}>Within 24 hours</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Form */}
+                <div style={contactFormCardStyle}>
+                  <h4 style={contactCardTitleStyle}>Send Us a Message</h4>
+                  <form style={contactFormStyle}>
+                    <div style={formRowStyle}>
+                      <div style={formFieldStyle}>
+                        <label style={formLabelStyle}>First Name *</label>
+                        <input
+                          type="text"
+                          style={formInputStyle}
+                          placeholder="Enter your first name"
+                          required
+                        />
+                      </div>
+                      <div style={formFieldStyle}>
+                        <label style={formLabelStyle}>Last Name *</label>
+                        <input
+                          type="text"
+                          style={formInputStyle}
+                          placeholder="Enter your last name"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div style={formFieldStyle}>
+                      <label style={formLabelStyle}>Email Address *</label>
+                      <input
+                        type="email"
+                        style={formInputStyle}
+                        placeholder="Enter your email address"
+                        required
+                      />
+                    </div>
+                    <div style={formFieldStyle}>
+                      <label style={formLabelStyle}>Phone Number</label>
+                      <input
+                        type="tel"
+                        style={formInputStyle}
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+                    <div style={formFieldStyle}>
+                      <label style={formLabelStyle}>Event Type *</label>
+                      <select style={formInputStyle} required>
+                        <option value="">Select an event type</option>
+                        <option value="corporate">Corporate Event</option>
+                        <option value="festival">Festival</option>
+                        <option value="parade">Parade</option>
+                        <option value="ceremony">Ceremony</option>
+                        <option value="workshop">Music Workshop</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div style={formFieldStyle}>
+                      <label style={formLabelStyle}>Event Date</label>
+                      <input
+                        type="date"
+                        style={formInputStyle}
+                      />
+                    </div>
+                    <div style={formFieldStyle}>
+                      <label style={formLabelStyle}>Message *</label>
+                      <textarea
+                        style={formTextareaStyle}
+                        placeholder="Tell us about your event and requirements..."
+                        rows="4"
+                        required
+                      ></textarea>
+                    </div>
+                    <button type="submit" style={submitButtonStyle}>
+                      Send Message
+                    </button>
+                  </form>
                 </div>
               </div>
 
-              {/* Quick Links */}
-              <div style={footerSectionStyle}>
-                <h4 style={footerSectionTitleStyle}>Quick Links</h4>
-                <ul style={footerLinkListStyle}>
-                  <li><a href="#home" style={footerLinkStyle}>Home</a></li>
-                  <li><a href="#services" style={footerLinkStyle}>Services</a></li>
-                  <li><a href="#about" style={footerLinkStyle}>About Us</a></li>
-                  <li><a href="#contact" style={footerLinkStyle}>Contact</a></li>
-                  <li><a href="#" style={footerLinkStyle}>Gallery</a></li>
-                  <li><a href="#" style={footerLinkStyle}>News & Events</a></li>
-                </ul>
+              {/* Additional Info */}
+              <div style={additionalInfoStyle}>
+                <div style={infoCardStyle}>
+                  <h5 style={infoCardTitleStyle}>Booking Process</h5>
+                  <p style={infoCardTextStyle}>
+                    We'll review your request and get back to you within 24 hours with availability and pricing details.
+                  </p>
+                </div>
+                <div style={infoCardStyle}>
+                  <h5 style={infoCardTitleStyle}>Service Areas</h5>
+                  <p style={infoCardTextStyle}>
+                    We serve Davao City and surrounding areas. For events outside our immediate area, please contact us for special arrangements.
+                  </p>
+                </div>
+                <div style={infoCardStyle}>
+                  <h5 style={infoCardTitleStyle}>Payment Terms</h5>
+                  <p style={infoCardTextStyle}>
+                    We require a 50% deposit upon booking confirmation, with the remaining balance due on the event date.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Modal - redesigned service info */}
+          {modalService && (
+            <div style={modalOverlayStyle} onClick={() => setModalService(null)}>
+              <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+                <div style={modalHeaderStyle}>
+                  <h4 style={modalTitleStyle}>{modalService.title}</h4>
+                  <button style={closeButtonStyle} onClick={() => setModalService(null)}>×</button>
+                </div>
+                <div style={{ ...modalBodyStyle, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <div style={{ height: '220px', borderRadius: '10px', backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${modalService.img})`, border: '1px solid rgba(100,255,218,0.2)' }} />
+                  </div>
+                  <div>
+                    <p style={readMoreTextStyle}>{modalService.description}</p>
+                  
+                  </div>
+                </div>
+                <div style={{ ...modalActionsStyle, justifyContent: 'space-between' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '14px' }}>Ready to proceed? Reserve a date to get started.</div>
+                  <a href="#book" style={bookButtonStyle} onClick={(e) => { e.preventDefault(); localStorage.setItem('dbeOpenBookingForService', modalService?.title || ''); const url = window.location.origin + window.location.pathname + '#/booking'; window.open(url, '_blank'); }}>Book Now</a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Toast */}
+          {toast && (
+            <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 3000 }}>
+              <div style={{
+                backgroundColor: toast.type === 'success' ? 'rgba(34,197,94,0.1)' : 'rgba(96,165,250,0.1)',
+                border: `1px solid ${toast.type === 'success' ? 'rgba(34,197,94,0.4)' : 'rgba(96,165,250,0.4)'}`,
+                color: toast.type === 'success' ? '#22c55e' : '#60a5fa',
+                padding: '12px 16px',
+                borderRadius: '10px',
+                backdropFilter: 'blur(8px)'
+              }}>
+                {toast.message}
+              </div>
+            </div>
+          )}
+          {/* Footer */}
+          <footer style={footerStyle}>
+            <div style={footerContainerStyle}>
+              {/* Main Footer Content */}
+              <div style={footerMainStyle}>
+                {/* Brand Section */}
+                <div style={footerBrandStyle}>
+                  <div style={footerLogoStyle}>
+                    <h3 style={footerLogoTitleStyle}>DAVAO</h3>
+                    <p style={footerLogoSubtitleStyle}>BLUE EAGLES</p>
+                  </div>
+                  <p style={footerDescriptionStyle}>
+                    Serving the people through music since 2012. We bring excellence, passion, and unforgettable performances to every event.
+                  </p>
+                  <div style={footerSocialStyle}>
+                    <a href="#" style={socialLinkStyle} aria-label="Facebook">
+                      <FaFacebookF />
+                    </a>
+                    <a href="#" style={socialLinkStyle} aria-label="Instagram">
+                      <FaInstagram />
+                    </a>
+                    <a href="#" style={socialLinkStyle} aria-label="YouTube">
+                      <FaYoutube />
+                    </a>
+                    <a href="#" style={socialLinkStyle} aria-label="Email">
+                      <FaEnvelope />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Quick Links */}
+                <div style={footerSectionStyle}>
+                  <h4 style={footerSectionTitleStyle}>Quick Links</h4>
+                  <ul style={footerLinkListStyle}>
+                    <li><a href="#home" style={footerLinkStyle}>Home</a></li>
+                    <li><a href="#services" style={footerLinkStyle}>Services</a></li>
+                    <li><a href="#about" style={footerLinkStyle}>About Us</a></li>
+                    <li><a href="#contact" style={footerLinkStyle}>Contact</a></li>
+                    <li><a href="#" style={footerLinkStyle}>Gallery</a></li>
+                    <li><a href="#" style={footerLinkStyle}>News & Events</a></li>
+                  </ul>
+                </div>
+
+                {/* Services */}
+                <div style={footerSectionStyle}>
+                  <h4 style={footerSectionTitleStyle}>Our Services</h4>
+                  <ul style={footerLinkListStyle}>
+                    <li><a href="#" style={footerLinkStyle}>Band Gigs</a></li>
+                    <li><a href="#" style={footerLinkStyle}>Music Arrangement</a></li>
+                    <li><a href="#" style={footerLinkStyle}>Parade Events</a></li>
+                    <li><a href="#" style={footerLinkStyle}>Music Workshops</a></li>
+                    <li><a href="#" style={footerLinkStyle}>Instrument Rentals</a></li>
+                    <li><a href="#" style={footerLinkStyle}>Custom Performances</a></li>
+                  </ul>
+                </div>
+
+                {/* Contact Info */}
+                <div style={footerSectionStyle}>
+                  <h4 style={footerSectionTitleStyle}>Contact Info</h4>
+                  <div style={footerContactListStyle}>
+                    <div style={footerContactItemStyle}>
+                      <span style={footerContactIconStyle}><FaMapMarkerAlt /></span>
+                      <span style={footerContactTextStyle}>Davao City, Philippines</span>
+                    </div>
+                    <div style={footerContactItemStyle}>
+                      <span style={footerContactIconStyle}><FaEnvelope /></span>
+                      <span style={footerContactTextStyle}>dbe.official@example.com</span>
+                    </div>
+                    <div style={footerContactItemStyle}>
+                      <span style={footerContactIconStyle}><FaPhoneAlt /></span>
+                      <span style={footerContactTextStyle}>+63 900 000 0000</span>
+                    </div>
+                    <div style={footerContactItemStyle}>
+                      <span style={footerContactIconStyle}><FaClock /></span>
+                      <span style={footerContactTextStyle}>Mon-Fri: 9AM-6PM</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Services */}
-              <div style={footerSectionStyle}>
-                <h4 style={footerSectionTitleStyle}>Our Services</h4>
-                <ul style={footerLinkListStyle}>
-                  <li><a href="#" style={footerLinkStyle}>Band Gigs</a></li>
-                  <li><a href="#" style={footerLinkStyle}>Music Arrangement</a></li>
-                  <li><a href="#" style={footerLinkStyle}>Parade Events</a></li>
-                  <li><a href="#" style={footerLinkStyle}>Music Workshops</a></li>
-                  <li><a href="#" style={footerLinkStyle}>Instrument Rentals</a></li>
-                  <li><a href="#" style={footerLinkStyle}>Custom Performances</a></li>
-                </ul>
-              </div>
-
-              {/* Contact Info */}
-              <div style={footerSectionStyle}>
-                <h4 style={footerSectionTitleStyle}>Contact Info</h4>
-                <div style={footerContactListStyle}>
-                  <div style={footerContactItemStyle}>
-                    <span style={footerContactIconStyle}><FaMapMarkerAlt /></span>
-                    <span style={footerContactTextStyle}>Davao City, Philippines</span>
-                  </div>
-                  <div style={footerContactItemStyle}>
-                    <span style={footerContactIconStyle}><FaEnvelope /></span>
-                    <span style={footerContactTextStyle}>dbe.official@example.com</span>
-                  </div>
-                  <div style={footerContactItemStyle}>
-                    <span style={footerContactIconStyle}><FaPhoneAlt /></span>
-                    <span style={footerContactTextStyle}>+63 900 000 0000</span>
-                  </div>
-                  <div style={footerContactItemStyle}>
-                    <span style={footerContactIconStyle}><FaClock /></span>
-                    <span style={footerContactTextStyle}>Mon-Fri: 9AM-6PM</span>
+              {/* Footer Bottom */}
+              <div style={footerBottomStyle}>
+                <div style={footerBottomContentStyle}>
+                  <p style={footerCopyrightStyle}>
+                    © 2025 Davao Blue Eagles Marching Band. All rights reserved.
+                  </p>
+                  <div style={footerBottomLinksStyle}>
+                    <a href="#" style={footerBottomLinkStyle}>Privacy Policy</a>
+                    <a href="#" style={footerBottomLinkStyle}>Terms of Service</a>
+                    <a href="#" style={footerBottomLinkStyle}>Cookie Policy</a>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Footer Bottom */}
-            <div style={footerBottomStyle}>
-              <div style={footerBottomContentStyle}>
-                <p style={footerCopyrightStyle}>
-                  © 2024 Davao Blue Eagles Marching Band. All rights reserved.
-                </p>
-                <div style={footerBottomLinksStyle}>
-                  <a href="#" style={footerBottomLinkStyle}>Privacy Policy</a>
-                  <a href="#" style={footerBottomLinkStyle}>Terms of Service</a>
-                  <a href="#" style={footerBottomLinkStyle}>Cookie Policy</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
-    )}
-  </>
-);
+          </footer>
+        </div>
+      )}
+    </>
+  );
 }
 export default Home;
