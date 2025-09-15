@@ -1,7 +1,8 @@
 import React, { useState, Suspense } from 'react';
 
-// Import UserManagement component
+// Import components
 const UserManagement = React.lazy(() => import('./usermanagement'));
+const Inventory = React.lazy(() => import('./inventory'));
 
 const Dashboard = ({ user, onBackToHome, onLogout }) => {
   const [currentView, setCurrentView] = useState('main');
@@ -205,6 +206,23 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     );
   }
 
+  // Show Inventory Management view
+  if (currentView === 'inventory-management') {
+    return (
+      <Suspense fallback={
+        <div style={styles.container}>
+          <div style={{textAlign: 'center', padding: '40px', color: '#e5e7eb'}}>Loading Inventory Management...</div>
+        </div>
+      }>
+        <Inventory 
+          user={user} 
+          onBackToHome={() => setCurrentView('main')} 
+          onLogout={onLogout}
+        />
+      </Suspense>
+    );
+  }
+
   // Main dashboard view
   return (
     <div style={styles.container}>
@@ -252,6 +270,16 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             <p style={styles.cardText}>Manage user accounts, permissions, and access controls.</p>
           </div>
         )}
+        
+        <div 
+          style={styles.card}
+          onMouseEnter={handleCardHover}
+          onMouseLeave={handleCardLeave}
+          onClick={() => setCurrentView('inventory-management')}
+        >
+          <h3 style={styles.cardTitle}>Inventory Management</h3>
+          <p style={styles.cardText}>Manage marching band instruments, track availability and condition.</p>
+        </div>
         
         <div 
           style={styles.card}
