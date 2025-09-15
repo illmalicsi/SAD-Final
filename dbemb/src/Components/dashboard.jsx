@@ -1,4 +1,5 @@
 import React, { useState, Suspense } from 'react';
+import { FaHome, FaBell, FaBoxOpen, FaUsers, FaClipboardList, FaChartLine, FaUser, FaQuestionCircle, FaBars, FaSignOutAlt } from 'react-icons/fa';
 
 // Import components
 const UserManagement = React.lazy(() => import('./usermanagement'));
@@ -7,7 +8,38 @@ const Inventory = React.lazy(() => import('./inventory'));
 const Dashboard = ({ user, onBackToHome, onLogout }) => {
   const [currentView, setCurrentView] = useState('main');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  
+
+  const navigationGroups = [
+    {
+      title: 'Main',
+      items: [
+        { id: 'main', icon: <FaHome size={18} />, text: 'Dashboard', view: 'main', adminOnly: false },
+        { id: 'notifications', icon: <FaBell size={18} />, text: 'Notifications', view: 'notifications', adminOnly: false }
+      ]
+    },
+    {
+      title: 'Management',
+      items: [
+        { id: 'inventory', icon: <FaBoxOpen size={18} />, text: 'Inventory', view: 'inventory-management', adminOnly: false },
+        { id: 'customers', icon: <FaClipboardList size={18} />, text: 'Customers', view: 'customer-management', adminOnly: false },
+        { id: 'performances', icon: <FaChartLine size={18} />, text: 'Performances', view: 'performance-history', adminOnly: false }
+      ]
+    },
+    {
+      title: 'Administration',
+      items: [
+        { id: 'users', icon: <FaUsers size={18} />, text: 'User Management', view: 'user-management', adminOnly: true }
+      ]
+    },
+    {
+      title: 'Account',
+      items: [
+        { id: 'profile', icon: <FaUser size={18} />, text: 'Profile', view: 'my-profile', adminOnly: false },
+        { id: 'help', icon: <FaQuestionCircle size={18} />, text: 'Help & Support', view: 'help-support', adminOnly: false }
+      ]
+    }
+  ];
+
   const styles = {
     container: {
       display: 'flex',
@@ -62,11 +94,15 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     userSection: {
       padding: '20px',
       borderBottom: '1px solid #2d3748',
-      backgroundColor: '#1a1f29'
+      backgroundColor: '#1a1f29',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     userAvatar: {
-      width: '40px',
-      height: '40px',
+      width: '56px',
+      height: '56px',
       borderRadius: '50%',
       backgroundColor: '#4a5568',
       display: 'flex',
@@ -74,27 +110,33 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       justifyContent: 'center',
       color: '#e2e8f0',
       fontWeight: '600',
-      fontSize: '16px',
-      marginBottom: sidebarCollapsed ? '0' : '12px'
+      fontSize: '20px',
+      marginBottom: sidebarCollapsed ? '0' : '12px',
+      marginLeft: 'auto',
+      marginRight: 'auto',
     },
     userName: {
-      fontSize: sidebarCollapsed ? '0px' : '14px',
+      fontSize: sidebarCollapsed ? '0px' : '16px',
       fontWeight: '600',
       color: '#e2e8f0',
       marginBottom: '4px',
       transition: 'all 0.3s ease',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      textAlign: 'center',
     },
     userRole: {
       display: sidebarCollapsed ? 'none' : 'inline-flex',
-      padding: '2px 8px',
+      padding: '2px 12px',
       borderRadius: '12px',
-      fontSize: '11px',
-      fontWeight: '600',
+      fontSize: '12px',
+      fontWeight: '700',
       backgroundColor: user?.role === 'admin' ? '#2d5a87' : '#2d4a5a',
       color: user?.role === 'admin' ? '#90cdf4' : '#81e6d9',
       textTransform: 'uppercase',
-      letterSpacing: '0.5px'
+      letterSpacing: '0.5px',
+      marginTop: '4px',
+      textAlign: 'center',
+      justifyContent: 'center',
     },
     navigation: {
       flex: 1,
@@ -366,36 +408,6 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     }
   };
 
-  const navigationGroups = [
-    {
-      title: 'Main',
-      items: [
-        { id: 'main', icon: '🏠', text: 'Dashboard', view: 'main', adminOnly: false },
-        { id: 'notifications', icon: '🔔', text: 'Notifications', view: 'notifications', adminOnly: false }
-      ]
-    },
-    {
-      title: 'Management',
-      items: [
-        { id: 'inventory', icon: '📦', text: 'Inventory', view: 'inventory-management', adminOnly: false },
-        { id: 'customers', icon: '👥', text: 'Customers', view: 'customer-management', adminOnly: false },
-        { id: 'performances', icon: '🎭', text: 'Performances', view: 'performance-history', adminOnly: false }
-      ]
-    },
-    {
-      title: 'Administration',
-      items: [
-        { id: 'users', icon: '⚙️', text: 'User Management', view: 'user-management', adminOnly: true }
-      ]
-    },
-    {
-      title: 'Account',
-      items: [
-        { id: 'profile', icon: '👤', text: 'Profile', view: 'my-profile', adminOnly: false },
-        { id: 'help', icon: '❓', text: 'Help & Support', view: 'help-support', adminOnly: false }
-      ]
-    }
-  ];
 
   const handleNavItemHover = (e) => {
     if (!e.currentTarget.classList.contains('active')) {
@@ -689,8 +701,9 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             onMouseEnter={handleCollapseHover}
             onMouseLeave={handleCollapseLeave}
+            aria-label="Toggle sidebar"
           >
-            {sidebarCollapsed ? '→' : '←'}
+            <FaBars size={18} />
           </button>
         </div>
 
@@ -748,8 +761,9 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             onMouseEnter={(e) => handleButtonHover(e)}
             onMouseLeave={(e) => handleButtonLeave(e)}
             title="Back to Home"
+            aria-label="Home"
           >
-            {sidebarCollapsed ? '🏠' : 'Home'}
+            <FaHome size={18} />
           </button>
           <button 
             style={styles.logoutButton}
@@ -757,8 +771,9 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             onMouseEnter={(e) => handleButtonHover(e, true)}
             onMouseLeave={(e) => handleButtonLeave(e, true)}
             title="Logout"
+            aria-label="Logout"
           >
-            {sidebarCollapsed ? '🚪' : 'Logout'}
+            <FaSignOutAlt size={18} />
           </button>
         </div>
       </div>
