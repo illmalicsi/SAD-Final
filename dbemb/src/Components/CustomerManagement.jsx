@@ -1,27 +1,28 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Home,
-  Users,
-  UserCheck,
-  Clock,
-  BookOpen,
-  BarChart3,
-  Mail,
-  Phone,
-  Calendar,
-  MapPin,
-  User,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Eye,
-  PlusCircle,
-  X,
-  Search,
-  Filter,
-} from "lucide-react";
+  FaHome,
+  FaUsers,
+  FaUserCheck,
+  FaClock,
+  FaBookOpen,
+  FaChartBar,
+  FaEnvelope,
+  FaPhone,
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaUser,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaSpinner,
+  FaEye,
+  FaTimes,
+  FaSearch,
+  FaFilter,
+  FaThumbsUp,
+  FaThumbsDown,
+} from "react-icons/fa";
 
-const CustomerManagement = ({}) => {
+const CustomerManagement = ({ }) => {
   const [customers, setCustomers] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,49 +30,118 @@ const CustomerManagement = ({}) => {
   const [serviceFilter, setServiceFilter] = useState("all");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCustomerDetails, setShowCustomerDetails] = useState(false);
-  const [showBookingModal, setShowBookingModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [notification, setNotification] = useState(null);
 
-  const adminEmail = "ivanlouiemalicsi@gmail.com";
+  // Static booking data from your Booking component
+  const bookingsData = [
+    {
+      id: 1,
+      service: 'Band Gigs',
+      name: 'John Doe',
+      email: 'john@example.com',
+      phone: '+63 912 345 6789',
+      location: 'Ayala Malls Abreeza',
+      notes: 'Corporate event',
+      date: '2025-09-25',
+      startTime: '14:00',
+      endTime: '18:00',
+      createdAt: '2025-09-17T10:00:00.000Z',
+      status: 'approved'
+    },
+    {
+      id: 2,
+      service: 'Music Workshops',
+      name: 'Jane Smith',
+      email: 'jane@example.com',
+      phone: '+63 917 654 3210',
+      location: 'SM City Davao',
+      notes: 'Guitar workshop for beginners',
+      date: '2025-09-26',
+      startTime: '10:00',
+      endTime: '12:00',
+      createdAt: '2025-09-17T11:00:00.000Z',
+      status: 'pending'
+    },
+    {
+      id: 3,
+      service: 'Band Gigs',
+      name: 'Mark Johnson',
+      email: 'mark@example.com',
+      phone: '+63 920 111 2222',
+      location: 'Gmall of Davao',
+      notes: 'Birthday party',
+      date: '2025-09-26',
+      startTime: '15:00',
+      endTime: '19:00',
+      createdAt: '2025-09-17T12:00:00.000Z',
+      status: 'pending'
+    }
+  ];
 
-  // Demo Data
+  // Convert booking data to customer data
   useEffect(() => {
-    setCustomers([
-      {
-        id: 1,
-        name: "Ivan Lim",
-        email: "illmalicsi017@gmail.com",
-        phone: "09123456789",
-        service: "Marching Band",
-        status: "pending", // not approved yet
-        bookings: 0,
-        address: "Davao City",
-        lastBooking: "2025-09-01",
-      },
-      {
-        id: 2,
-        name: "Justin Nabunturan",
-        email: "illmalicsi017@gmail.com",
-        phone: "09987654321",
-        service: "Event Performance",
-        status: "cancelled", // can also be rejected
-        bookings: 1,
-        address: "Tagum City",
-        lastBooking: "2025-08-25",
-      },
-    ]);
+    const customerMap = new Map();
+    
+    bookingsData.forEach(booking => {
+      const customerKey = booking.email; // Use email as unique identifier
+      
+      if (customerMap.has(customerKey)) {
+        // Update existing customer
+        const existing = customerMap.get(customerKey);
+        existing.bookings.push(booking);
+        existing.totalBookings += 1;
+        
+        // Update last booking date if this booking is more recent
+        if (new Date(booking.date) > new Date(existing.lastBooking)) {
+          existing.lastBooking = booking.date;
+          existing.lastService = booking.service;
+        }
+        
+        // Update status based on most recent booking
+        if (booking.status === 'approved') {
+          existing.status = 'active';
+        } else if (booking.status === 'pending' && existing.status !== 'active') {
+          existing.status = 'pending';
+        } else if (booking.status === 'rejected' && existing.status !== 'active' && existing.status !== 'pending') {
+          existing.status = 'rejected';
+        } else if (booking.status === 'cancelled' && existing.status !== 'active' && existing.status !== 'pending' && existing.status !== 'rejected') {
+          existing.status = 'cancelled';
+        }
+      } else {
+        // Create new customer
+        customerMap.set(customerKey, {
+          id: customerMap.size + 1,
+          name: booking.name,
+          email: booking.email,
+          phone: booking.phone,
+          service: booking.service,
+          status: booking.status === 'approved' ? 'active' : booking.status,
+          totalBookings: 1,
+          bookings: [booking],
+          address: booking.location,
+          lastBooking: booking.date,
+          lastService: booking.service,
+          joinDate: booking.createdAt.split('T')[0]
+        });
+      }
+    });
+    
+    setCustomers(Array.from(customerMap.values()));
   }, []);
 
   useEffect(() => {
     let filtered = customers.filter((c) =>
-      c.name.toLowerCase().includes(searchTerm.toLowerCase())
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
     if (statusFilter !== "all") {
       filtered = filtered.filter((c) => c.status === statusFilter);
     }
     if (serviceFilter !== "all") {
-      filtered = filtered.filter((c) => c.service === serviceFilter);
+      filtered = filtered.filter((c) => 
+        c.bookings.some(booking => booking.service === serviceFilter)
+      );
     }
     setFilteredCustomers(filtered);
   }, [customers, searchTerm, statusFilter, serviceFilter]);
@@ -81,29 +151,45 @@ const CustomerManagement = ({}) => {
       total: customers.length,
       active: customers.filter((c) => c.status === "active").length,
       pending: customers.filter((c) => c.status === "pending").length,
-      totalBookings: customers.reduce((a, c) => a + c.bookings, 0),
+      rejected: customers.filter((c) => c.status === "rejected").length,
+      cancelled: customers.filter((c) => c.status === "cancelled").length,
+      totalBookings: customers.reduce((a, c) => a + c.totalBookings, 0),
       avgBookingsPerCustomer:
         customers.length > 0
           ? (
-              customers.reduce((a, c) => a + c.bookings, 0) / customers.length
-            ).toFixed(1)
+            customers.reduce((a, c) => a + c.totalBookings, 0) / customers.length
+          ).toFixed(1)
           : 0,
     }),
     [customers]
   );
+
+  // Get unique services for filter
+  const services = [...new Set(bookingsData.map(b => b.service))];
 
   const showNotification = (message, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000);
   };
 
-  const handleBooking = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setShowBookingModal(false);
-      showNotification("Booking confirmed successfully!", "success");
-    }, 2000);
+  // Approve customer (set status to 'active')
+  const handleApprove = (id) => {
+    setCustomers((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, status: "active" } : c
+      )
+    );
+    showNotification("Customer approved!", "success");
+  };
+
+  // Reject customer (set status to 'rejected')
+  const handleReject = (id) => {
+    setCustomers((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, status: "rejected" } : c
+      )
+    );
+    showNotification("Customer rejected.", "error");
   };
 
   const getStatusBadge = (status) => {
@@ -129,6 +215,14 @@ const CustomerManagement = ({}) => {
         {status}
       </span>
     );
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   const styles = {
@@ -205,7 +299,7 @@ const CustomerManagement = ({}) => {
     },
     cardGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
       gap: "20px",
     },
     customerCard: {
@@ -243,8 +337,41 @@ const CustomerManagement = ({}) => {
       background: "rgba(10, 25, 47, 0.95)",
       padding: "24px",
       borderRadius: "12px",
-      width: "400px",
+      width: "500px",
+      maxWidth: "90vw",
       color: "#e5e7eb",
+      maxHeight: "80vh",
+      overflowY: "auto",
+    },
+    actionBtn: {
+      padding: "6px 12px",
+      borderRadius: "8px",
+      border: "none",
+      cursor: "pointer",
+      fontWeight: "600",
+      fontSize: "13px",
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+      marginRight: "8px",
+      background: "#1e293b",
+      color: "#fff",
+      transition: "background 0.2s",
+    },
+    rejectBtn: {
+      background: "#ef4444",
+      color: "#fff",
+    },
+    approveBtn: {
+      background: "#22c55e",
+      color: "#fff",
+    },
+    bookingItem: {
+      background: "rgba(30, 41, 59, 0.5)",
+      padding: "12px",
+      borderRadius: "8px",
+      marginBottom: "8px",
+      border: "1px solid rgba(100, 255, 218, 0.1)",
     },
   };
 
@@ -262,9 +389,9 @@ const CustomerManagement = ({}) => {
           }}
         >
           {notification.type === "success" ? (
-            <CheckCircle size={20} />
+            <FaCheckCircle size={20} />
           ) : (
-            <XCircle size={20} />
+            <FaTimesCircle size={20} />
           )}
           {notification.message}
         </div>
@@ -272,57 +399,59 @@ const CustomerManagement = ({}) => {
 
       {/* Header */}
       <div style={styles.header}>
-        <div>
-          <h1 style={styles.title}>Customer Management</h1>
-          <p style={{ fontSize: "14px", color: "#94a3b8" }}>
-            Admin: {adminEmail}
-          </p>
-        </div>
+        <h1 style={styles.title}>Customer Management</h1>
       </div>
 
       {/* Stats */}
       <div style={styles.statsContainer}>
         <div style={styles.statCard}>
-          <Users size={24} color="#60a5fa" />
-          <div style={{ fontSize: "22px", fontWeight: "600" }}>
+          <FaUsers size={24} color="#60a5fa" />
+          <div style={{ fontSize: "22px", fontWeight: "600", marginTop: "8px" }}>
             {stats.total}
           </div>
-          <div>Total Customers</div>
+          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Total Customers</div>
         </div>
         <div style={styles.statCard}>
-          <UserCheck size={24} color="#22c55e" />
-          <div style={{ fontSize: "22px", fontWeight: "600" }}>
+          <FaUserCheck size={24} color="#22c55e" />
+          <div style={{ fontSize: "22px", fontWeight: "600", marginTop: "8px" }}>
             {stats.active}
           </div>
-          <div>Active</div>
+          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Active</div>
         </div>
         <div style={styles.statCard}>
-          <Clock size={24} color="#f59e0b" />
-          <div style={{ fontSize: "22px", fontWeight: "600" }}>
+          <FaClock size={24} color="#f59e0b" />
+          <div style={{ fontSize: "22px", fontWeight: "600", marginTop: "8px" }}>
             {stats.pending}
           </div>
-          <div>Pending</div>
+          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Pending</div>
         </div>
         <div style={styles.statCard}>
-          <BookOpen size={24} color="#64ffda" />
-          <div style={{ fontSize: "22px", fontWeight: "600" }}>
+          <FaTimesCircle size={24} color="#ef4444" />
+          <div style={{ fontSize: "22px", fontWeight: "600", marginTop: "8px" }}>
+            {stats.rejected + stats.cancelled}
+          </div>
+          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Rejected/Cancelled</div>
+        </div>
+        <div style={styles.statCard}>
+          <FaBookOpen size={24} color="#64ffda" />
+          <div style={{ fontSize: "22px", fontWeight: "600", marginTop: "8px" }}>
             {stats.totalBookings}
           </div>
-          <div>Total Bookings</div>
+          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Total Bookings</div>
         </div>
         <div style={styles.statCard}>
-          <BarChart3 size={24} color="#fbbf24" />
-          <div style={{ fontSize: "22px", fontWeight: "600" }}>
+          <FaChartBar size={24} color="#fbbf24" />
+          <div style={{ fontSize: "22px", fontWeight: "600", marginTop: "8px" }}>
             {stats.avgBookingsPerCustomer}
           </div>
-          <div>Avg/Customer</div>
+          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Avg/Customer</div>
         </div>
       </div>
 
       {/* Filter Bar */}
       <div style={styles.filterBar}>
         <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
-          <Search size={18} style={{ marginRight: "8px", color: "#64ffda" }} />
+          <FaSearch size={18} style={{ marginRight: "8px", color: "#64ffda" }} />
           <input
             type="text"
             placeholder="Search customers..."
@@ -332,7 +461,7 @@ const CustomerManagement = ({}) => {
           />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Filter size={18} style={{ color: "#64ffda" }} />
+          <FaFilter size={18} style={{ color: "#64ffda" }} />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -350,8 +479,9 @@ const CustomerManagement = ({}) => {
             style={styles.select}
           >
             <option value="all">All Services</option>
-            <option value="Marching Band">Marching Band</option>
-            <option value="Event Performance">Event Performance</option>
+            {services.map(service => (
+              <option key={service} value={service}>{service}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -360,22 +490,32 @@ const CustomerManagement = ({}) => {
       <div style={styles.cardGrid}>
         {filteredCustomers.map((c) => (
           <div key={c.id} style={styles.customerCard}>
-            <h3 style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <User size={16} /> {c.name} {getStatusBadge(c.status)}
-            </h3>
-            <p>
-              <Mail size={14} /> {c.email}
-            </p>
-            <p>
-              <Phone size={14} /> {c.phone}
-            </p>
-            <p>
-              <MapPin size={14} /> {c.address}
-            </p>
-            <p>
-              <Calendar size={14} /> Last booking: {c.lastBooking}
-            </p>
-            <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+              <h3 style={{ display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+                <FaUser size={16} /> {c.name}
+              </h3>
+              {getStatusBadge(c.status)}
+            </div>
+            
+            <div style={{ color: "#94a3b8", fontSize: "14px", lineHeight: "1.6" }}>
+              <p style={{ margin: "4px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FaEnvelope size={12} /> {c.email}
+              </p>
+              <p style={{ margin: "4px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FaPhone size={12} /> {c.phone}
+              </p>
+              <p style={{ margin: "4px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FaMapMarkerAlt size={12} /> {c.address}
+              </p>
+              <p style={{ margin: "4px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FaCalendarAlt size={12} /> Last booking: {formatDate(c.lastBooking)}
+              </p>
+              <p style={{ margin: "4px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FaBookOpen size={12} /> {c.totalBookings} booking{c.totalBookings !== 1 ? 's' : ''}
+              </p>
+            </div>
+            
+            <div style={{ display: "flex", gap: "8px", marginTop: "16px", flexWrap: "wrap" }}>
               <button
                 style={styles.button}
                 onClick={() => {
@@ -383,65 +523,97 @@ const CustomerManagement = ({}) => {
                   setShowCustomerDetails(true);
                 }}
               >
-                <Eye size={14} /> View
+                <FaEye size={14} /> View Details
               </button>
-              <button
-                style={styles.button}
-                onClick={() => {
-                  setSelectedCustomer(c);
-                  setShowBookingModal(true);
-                }}
-              >
-                <PlusCircle size={14} /> Book
-              </button>
+              
+              {/* Approve/Reject buttons for pending customers */}
+              {c.status === "pending" && (
+                <>
+                  <button
+                    style={{ ...styles.actionBtn, ...styles.approveBtn }}
+                    onClick={() => handleApprove(c.id)}
+                  >
+                    <FaThumbsUp /> Approve
+                  </button>
+                  <button
+                    style={{ ...styles.actionBtn, ...styles.rejectBtn }}
+                    onClick={() => handleReject(c.id)}
+                  >
+                    <FaThumbsDown /> Reject
+                  </button>
+                </>
+              )}
             </div>
           </div>
         ))}
       </div>
 
+      {filteredCustomers.length === 0 && (
+        <div style={{ textAlign: "center", color: "#94a3b8", padding: "40px" }}>
+          <FaUser size={48} style={{ marginBottom: "16px", opacity: 0.5 }} />
+          <p>No customers found matching your criteria.</p>
+        </div>
+      )}
+
       {/* Customer Details Modal */}
       {showCustomerDetails && selectedCustomer && (
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
-            <h2>{selectedCustomer.name}</h2>
-            <p>
-              <Mail size={14} /> {selectedCustomer.email}
-            </p>
-            <p>
-              <Phone size={14} /> {selectedCustomer.phone}
-            </p>
-            <p>
-              <MapPin size={14} /> {selectedCustomer.address}
-            </p>
-            <p>Status: {getStatusBadge(selectedCustomer.status)}</p>
-            <button
-              style={{ ...styles.button, marginTop: "12px" }}
-              onClick={() => setShowCustomerDetails(false)}
-            >
-              <X size={14} /> Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Booking Modal */}
-      {showBookingModal && selectedCustomer && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modal}>
-            <h2>Book for {selectedCustomer.name}</h2>
-            <p>Select service and confirm booking.</p>
-            <button
-              style={{ ...styles.button, marginTop: "12px" }}
-              onClick={handleBooking}
-            >
-              <CheckCircle size={14} /> Confirm Booking
-            </button>
-            <button
-              style={{ ...styles.button, marginTop: "12px" }}
-              onClick={() => setShowBookingModal(false)}
-            >
-              <X size={14} /> Cancel
-            </button>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+              <div>
+                <h2 style={{ margin: "0 0 8px 0" }}>{selectedCustomer.name}</h2>
+                {getStatusBadge(selectedCustomer.status)}
+              </div>
+              <button
+                style={{ ...styles.button, padding: "8px" }}
+                onClick={() => setShowCustomerDetails(false)}
+              >
+                <FaTimes size={16} />
+              </button>
+            </div>
+            
+            <div style={{ marginBottom: "24px" }}>
+              <h3 style={{ color: "#64ffda", marginBottom: "12px" }}>Contact Information</h3>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FaEnvelope size={14} /> {selectedCustomer.email}
+              </p>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FaPhone size={14} /> {selectedCustomer.phone}
+              </p>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FaMapMarkerAlt size={14} /> {selectedCustomer.address}
+              </p>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FaCalendarAlt size={14} /> Joined: {formatDate(selectedCustomer.joinDate)}
+              </p>
+            </div>
+            
+            <div>
+              <h3 style={{ color: "#64ffda", marginBottom: "12px" }}>
+                Booking History ({selectedCustomer.totalBookings})
+              </h3>
+              <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+                {selectedCustomer.bookings.map(booking => (
+                  <div key={booking.id} style={styles.bookingItem}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                      <strong style={{ color: "#fff" }}>{booking.service}</strong>
+                      {getStatusBadge(booking.status)}
+                    </div>
+                    <p style={{ margin: "4px 0", fontSize: "14px", color: "#94a3b8" }}>
+                      <FaCalendarAlt size={12} /> {formatDate(booking.date)} • {booking.startTime} - {booking.endTime}
+                    </p>
+                    <p style={{ margin: "4px 0", fontSize: "14px", color: "#94a3b8" }}>
+                      <FaMapMarkerAlt size={12} /> {booking.location}
+                    </p>
+                    {booking.notes && (
+                      <p style={{ margin: "8px 0 0 0", fontSize: "14px", color: "#cbd5e1", fontStyle: "italic" }}>
+                        "{booking.notes}"
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -450,8 +622,10 @@ const CustomerManagement = ({}) => {
       {isProcessing && (
         <div style={styles.modalOverlay}>
           <div style={styles.modal}>
-            <Loader2 size={28} className="spin" color="#64ffda" />
-            <p style={{ marginTop: "12px" }}>Processing booking...</p>
+            <div style={{ textAlign: "center" }}>
+              <FaSpinner size={28} className="spin" color="#64ffda" />
+              <p style={{ marginTop: "12px" }}>Processing request...</p>
+            </div>
           </div>
         </div>
       )}

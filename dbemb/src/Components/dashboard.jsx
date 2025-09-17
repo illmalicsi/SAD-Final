@@ -4,6 +4,7 @@ import { FaHome, FaBell, FaBoxOpen, FaUsers, FaClipboardList, FaChartLine, FaUse
 // Import components
 const UserManagement = React.lazy(() => import('./usermanagement'));
 const Inventory = React.lazy(() => import('./inventory'));
+const CustomerManagement = React.lazy(() => import('./CustomerManagement'));
 
 const Dashboard = ({ user, onBackToHome, onLogout }) => {
   const [currentView, setCurrentView] = useState('main');
@@ -20,7 +21,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     {
       title: 'Management',
       items: [
-        { id: 'inventory', icon: <FaBoxOpen size={18} />, text: 'Inventory', view: 'inventory-management', adminOnly: false },
+        { id: 'inventory', icon: <FaBoxOpen size={18} />, text: 'Equipments', view: 'inventory-management', adminOnly: false },
         { id: 'customers', icon: <FaClipboardList size={18} />, text: 'Customers', view: 'customer-management', adminOnly: false },
         { id: 'performances', icon: <FaChartLine size={18} />, text: 'Performances', view: 'performance-history', adminOnly: false }
       ]
@@ -28,7 +29,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     {
       title: 'Administration',
       items: [
-        { id: 'users', icon: <FaUsers size={18} />, text: 'User Management', view: 'user-management', adminOnly: true }
+        { id: 'users', icon: <FaUsers size={18} />, text: 'Users', view: 'user-management', adminOnly: true }
       ]
     },
     {
@@ -468,7 +469,6 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
               onMouseEnter={(e) => handleButtonHover(e)}
               onMouseLeave={(e) => handleButtonLeave(e)}
             >
-              ← Back to Home
             </button>
           </div>
           
@@ -597,11 +597,6 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       case 'user-management':
         if (user?.role === 'admin') {
           return (
-            <div style={styles.panelContainer}>
-              <div style={styles.panelHeader}>
-                <h2 style={styles.panelTitle}>User Management</h2>
-              </div>
-              <div style={styles.panelBody}>
                 <Suspense fallback={<div style={styles.loadingContainer}>Loading User Management...</div>}>
                   <UserManagement 
                     user={user} 
@@ -610,8 +605,6 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
                     embedded={true}
                   />
                 </Suspense>
-              </div>
-            </div>
           );
         }
         break;
@@ -630,14 +623,14 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
         
       case 'customer-management':
         return (
-          <div style={styles.panelContainer}>
-            <div style={styles.panelHeader}>
-              <h2 style={styles.panelTitle}>Customer Management</h2>
-            </div>
-            <div style={styles.panelBody}>
-              {getComingSoonContent('Customer Management', '👥')}
-            </div>
-          </div>
+          <Suspense fallback={<div style={styles.loadingContainer}>Loading Customer Management...</div>}>
+            <CustomerManagement 
+              user={user} 
+              onBackToHome={() => setCurrentView('main')} 
+              onLogout={onLogout}
+              embedded={true}
+            />
+          </Suspense>
         );
         
       case 'performance-history':
@@ -694,7 +687,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
         {/* Sidebar Header */}
         <div style={styles.sidebarHeader}>
           <div style={styles.logo}>
-            {sidebarCollapsed ? '🎵' : 'Band Manager'}
+            {sidebarCollapsed ? '🎵' : 'Administrator'}
           </div>
           <button 
             style={styles.collapseButton}
@@ -763,7 +756,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             title="Back to Home"
             aria-label="Home"
           >
-            <FaHome size={18} />
+            <FaHome size={16} style={{marginRight: 6}} /> Home
           </button>
           <button 
             style={styles.logoutButton}
@@ -773,7 +766,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             title="Logout"
             aria-label="Logout"
           >
-            <FaSignOutAlt size={18} />
+            <FaSignOutAlt size={16} style={{marginRight: 6}} /> Log Out
           </button>
         </div>
       </div>

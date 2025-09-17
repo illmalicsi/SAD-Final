@@ -6,53 +6,114 @@ const Booking = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState([
+    // Sample data to demonstrate the system
+    {
+      id: 1,
+      service: 'Band Gigs',
+      name: 'John Doe',
+      email: 'john@example.com',
+      phone: '+63 912 345 6789',
+      location: 'Ayala Malls Abreeza',
+      notes: 'Corporate event',
+      date: '2025-09-25',
+      startTime: '14:00',
+      endTime: '18:00',
+      createdAt: '2025-09-17T10:00:00.000Z',
+      status: 'approved'
+    },
+    {
+      id: 2,
+      service: 'Music Workshops',
+      name: 'Jane Smith',
+      email: 'jane@example.com',
+      phone: '+63 917 654 3210',
+      location: 'SM City Davao',
+      notes: 'Guitar workshop for beginners',
+      date: '2025-09-26',
+      startTime: '10:00',
+      endTime: '12:00',
+      createdAt: '2025-09-17T11:00:00.000Z',
+      status: 'pending'
+    },
+    {
+      id: 3,
+      service: 'Band Gigs',
+      name: 'Mark Johnson',
+      email: 'mark@example.com',
+      phone: '+63 920 111 2222',
+      location: 'Gmall of Davao',
+      notes: 'Birthday party',
+      date: '2025-09-26',
+      startTime: '15:00',
+      endTime: '19:00',
+      createdAt: '2025-09-17T12:00:00.000Z',
+      status: 'pending'
+    }
+  ]);
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
   const [showSuccess, setShowSuccess] = useState(false);
-  const services = ['Band Gigs','Music Arrangement','Parade Events','Music Workshops','Instrument Rentals'];
+  const [selectedBookingDetails, setSelectedBookingDetails] = useState(null);
+  
+  const services = ['Band Gigs', 'Music Arrangement', 'Parade Events', 'Music Workshops', 'Instrument Rentals'];
 
-  const daysInMonth = (y,m) => new Date(y, m+1, 0).getDate();
-  const firstWeekday = (y,m) => new Date(y, m, 1).getDay();
-  const pad2 = n => (n<10?`0${n}`:`${n}`);
-  const ymd = (y,m,d) => `${y}-${pad2(m+1)}-${pad2(d)}`;
-  const isTaken = (svc, y,m,d) => bookings.some(b => b.service===svc && b.date===ymd(y,m,d) && b.status!=='cancelled');
+  const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
+  const firstWeekday = (y, m) => new Date(y, m, 1).getDay();
+  const pad2 = n => (n < 10 ? `0${n}` : `${n}`);
+  const ymd = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
   const todayStr = ymd(today.getFullYear(), today.getMonth(), today.getDate());
-  const hasConflict = useMemo(() => {
-    if (!service || !date || !startTime || !endTime) return false;
-    const start = `${date}T${startTime}`;
-    const end = `${date}T${endTime}`;
-    const overlap = (aS,aE,bS,bE)=> aS<bE && bS<aE;
-    return bookings.some(b => b.service===service && b.date===date && b.status!=='cancelled' && overlap(start,end,`${b.date}T${b.startTime}`,`${b.date}T${b.endTime}`));
-  }, [service,date,startTime,endTime,bookings]);
 
-  const submit = (e) => {
-    e.preventDefault();
-    if (!service || !name || !email || !date || !startTime || !endTime) return;
+  // Check if a date is blocked (has approved booking)
+  const isDateBlocked = (dateStr) => {
+    return bookings.some(b => b.date === dateStr && b.status === 'approved');
+  };
+
+  // Get date status for calendar display
+  const getDateStatus = (dateStr) => {
+    const dayBookings = bookings.filter(b => b.date === dateStr);
+    const approvedBookings = dayBookings.filter(b => b.status === 'approved');
+    const pendingBookings = dayBookings.filter(b => b.status === 'pending');
+    const rejectedBookings = dayBookings.filter(b => b.status === 'rejected');
+
+    if (approvedBookings.length > 0) return 'approved';
+    if (pendingBookings.length > 0) return 'pending';
+    if (rejectedBookings.length > 0) return 'rejected';
+    return 'available';
+  };
+
+  const handleSubmit = () => {
+    if (!service || !name || !email || !date || !startTime || !endTime || !location) return;
     if (endTime <= startTime) return;
-    if (hasConflict) return;
-    const newBooking = { 
-      id: Date.now(), 
-      service, 
-      name, 
-      email, 
-      phone, 
-      notes, 
-      date, 
-      startTime, 
-      endTime, 
-      createdAt: new Date().toISOString(), 
-      status:'pending' 
+    if (isDateBlocked(date)) return;
+    
+    const newBooking = {
+      id: Date.now(),
+      service,
+      name,
+      email,
+      phone,
+      location,
+      notes,
+      date,
+      startTime,
+      endTime,
+      createdAt: new Date().toISOString(),
+      status: 'pending'
     };
     setBookings(prev => [...prev, newBooking]);
+    
     setShowSuccess(true);
+    setService('');
     setName('');
     setEmail('');
     setPhone('');
+    setLocation('');
     setNotes('');
     setDate('');
     setStartTime('');
@@ -60,69 +121,93 @@ const Booking = () => {
     setTimeout(() => setShowSuccess(false), 4000);
   };
 
-  const isFormValid = service && name && email && date && startTime && endTime && !hasConflict && endTime > startTime;
+  const handleCancelBooking = (bookingId) => {
+    setBookings(prev => prev.map(booking => 
+      booking.id === bookingId 
+        ? { ...booking, status: 'cancelled' }
+        : booking
+    ));
+    setSelectedBookingDetails(null);
+  };
+
+  // Mock admin functions for demonstration
+  const handleApproveBooking = (bookingId) => {
+    setBookings(prev => prev.map(booking => {
+      if (booking.id === bookingId) {
+        // When approving, reject all other pending bookings for the same date
+        const updatedBookings = prev.map(b => 
+          b.date === booking.date && b.id !== bookingId && b.status === 'pending'
+            ? { ...b, status: 'rejected' }
+            : b
+        );
+        return { ...booking, status: 'approved' };
+      }
+      return booking;
+    }));
+  };
+
+  const handleRejectBooking = (bookingId) => {
+    setBookings(prev => prev.map(booking => 
+      booking.id === bookingId 
+        ? { ...booking, status: 'rejected' }
+        : booking
+    ));
+  };
+
+  const isFormValid = service && name && email && location && date && startTime && endTime && !isDateBlocked(date) && endTime > startTime;
+
+  const inputStyle = {
+    width: '100%',
+    padding: '16px 20px',
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    border: '1px solid rgba(100, 116, 139, 0.3)',
+    borderRadius: '12px',
+    color: '#ffffff',
+    fontSize: '16px',
+    fontFamily: 'inherit',
+    transition: 'all 0.3s ease',
+    outline: 'none',
+    boxSizing: 'border-box'
+  };
+
+  const labelStyle = {
+    display: 'block',
+    color: '#e2e8f0',
+    fontSize: '14px',
+    fontWeight: '600',
+    marginBottom: '8px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em'
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'approved': return '#10b981';
+      case 'pending': return '#f59e0b';
+      case 'rejected': return '#ef4444';
+      case 'cancelled': return '#6b7280';
+      default: return '#94a3b8';
+    }
+  };
+
+  const getStatusBg = (status) => {
+    switch (status) {
+      case 'approved': return 'rgba(16, 185, 129, 0.15)';
+      case 'pending': return 'rgba(245, 158, 11, 0.15)';
+      case 'rejected': return 'rgba(239, 68, 68, 0.15)';
+      case 'cancelled': return 'rgba(107, 114, 128, 0.15)';
+      default: return 'rgba(148, 163, 184, 0.15)';
+    }
+  };
 
   return (
     <div style={{
       minHeight: '100vh',
       background: 'radial-gradient(ellipse at top, #0f172a 0%, #020617 100%)',
-      padding: '32px 16px',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
-      {/* Close page button */}
-      <button
-        onClick={() => { try { window.close(); } catch (e) { /* ignore */ } finally { if (!window.opener) { window.location.href = '/'; } } }}
-        aria-label="Close booking page"
-        title="Close"
-        style={{
-          position: 'fixed',
-          top: '16px',
-          right: '16px',
-          width: '36px',
-          height: '36px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'rgba(15, 23, 42, 0.7)',
-          border: '1px solid rgba(148, 163, 184, 0.2)',
-          color: '#e2e8f0',
-          borderRadius: '10px',
-          cursor: 'pointer',
-          zIndex: 50,
-          transition: 'all 0.2s ease'
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(30, 41, 59, 0.8)'; e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.5)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(15, 23, 42, 0.7)'; e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.2)'; }}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-      {/* Animated background elements */}
-      <div style={{
-        position: 'absolute',
-        top: '10%',
-        left: '5%',
-        width: '300px',
-        height: '300px',
-        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)',
-        borderRadius: '50%',
-        filter: 'blur(60px)',
-        animation: 'float 20s ease-in-out infinite'
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '10%',
-        right: '5%',
-        width: '400px',
-        height: '400px',
-        background: 'radial-gradient(circle, rgba(168, 85, 247, 0.06) 0%, transparent 70%)',
-        borderRadius: '50%',
-        filter: 'blur(80px)',
-        animation: 'float 25s ease-in-out infinite reverse'
-      }} />
 
       <style>{`
         @keyframes float {
@@ -139,623 +224,945 @@ const Booking = () => {
           to { opacity: 1; transform: scale(1); }
         }
         .form-input:focus {
-          outline: none;
           border-color: #3b82f6 !important;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+          transform: translateY(-2px);
+        }
+        .form-input:hover {
           transform: translateY(-1px);
+          border-color: rgba(148, 163, 184, 0.4);
         }
         .cal-day:hover:not(:disabled) {
           transform: translateY(-2px) scale(1.05);
-          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15) !important;
         }
         .submit-btn:not(:disabled):hover {
           transform: translateY(-2px);
           box-shadow: 0 20px 40px rgba(16, 185, 129, 0.4) !important;
         }
         .month-nav:hover {
-          background: rgba(59, 130, 246, 0.1) !important;
           transform: scale(1.1);
+          background: rgba(59, 130, 246, 0.15) !important;
+        }
+        .glass-card {
+          background: rgba(15, 23, 42, 0.85);
+          backdropFilter: blur(20px);
+          border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        .glass-card:hover {
+          border-color: rgba(59, 130, 246, 0.2);
+        }
+        * {
+          box-sizing: border-box;
+        }
+        
+        @media (max-width: 1200px) {
+          .main-grid {
+            grid-template-columns: 1fr !important;
+            gap: 32px !important;
+          }
+          .calendar-section {
+            max-width: none !important;
+            order: -1;
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .contact-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .schedule-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .calendar-grid {
+            gap: 4px !important;
+          }
+          .cal-day {
+            height: 40px !important;
+            font-size: 12px !important;
+          }
         }
       `}</style>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+      {/* Close Button */}
+      <button
+        onClick={() => { 
+          try { window.close(); } 
+          catch (e) { } 
+          finally { if (!window.opener) { window.location.href = '/'; } } 
+        }}
+        style={{
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          zIndex: 50,
+          width: '48px',
+          height: '48px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(15, 23, 42, 0.8)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(148, 163, 184, 0.2)',
+          borderRadius: '12px',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = 'rgba(30, 41, 59, 0.9)';
+          e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = 'rgba(15, 23, 42, 0.8)';
+          e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)';
+        }}
+      >
+        <svg width="20" height="20" fill="none" stroke="#e2e8f0" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      {/* Success Message */}
+      {showSuccess && (
+        <div style={{
+          position: 'fixed',
+          top: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 50,
+          padding: '16px 32px',
+          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '12px',
+          color: 'white',
+          fontWeight: '600',
+          boxShadow: '0 25px 50px rgba(16, 185, 129, 0.3)',
+          animation: 'slideUp 0.5s ease-out'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            Booking submitted successfully! Status: Pending
+          </div>
+        </div>
+      )}
+
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        maxWidth: '1600px',
+        margin: '0 auto',
+        padding: '48px 24px'
+      }}>
         {/* Header */}
         <div style={{
           textAlign: 'center',
-          marginBottom: '48px',
+          marginBottom: '64px',
           animation: 'slideUp 0.8s ease-out'
         }}>
           <h1 style={{
-            fontSize: '48px',
+            fontSize: 'clamp(32px, 8vw, 56px)',
             fontWeight: '800',
-            background: 'linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%)',
+            background: 'linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            marginBottom: '12px',
+            marginBottom: '16px',
             letterSpacing: '-0.02em'
           }}>
             Book Your Session
           </h1>
           <p style={{
             color: '#94a3b8',
-            fontSize: '18px',
+            fontSize: 'clamp(16px, 3vw, 20px)',
             fontWeight: '400',
-            maxWidth: '600px',
+            maxWidth: '700px',
             margin: '0 auto',
             lineHeight: '1.6'
           }}>
-            Schedule your music service with our professional team. Select your preferred date and time below.
+            Schedule your music service with our professional team. Only one booking per date is accepted after approval.
           </p>
         </div>
 
-        {/* Success Message */}
-        {showSuccess && (
-          <div style={{
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            color: 'white',
-            padding: '16px 24px',
-            borderRadius: '12px',
-            boxShadow: '0 10px 30px rgba(16, 185, 129, 0.3)',
-            zIndex: 1000,
-            animation: 'slideUp 0.5s ease-out',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-          }}>
-            Booking submitted successfully!
-          </div>
-        )}
-
-        <div style={{
+        <div className="main-grid" style={{
           display: 'grid',
-          gridTemplateColumns: '1.2fr 0.8fr',
-          gap: '32px',
+          gridTemplateColumns: '1fr 400px',
+          gap: '48px',
           alignItems: 'start'
         }}>
           {/* Form Section */}
-          <div style={{
-            background: 'rgba(15, 23, 42, 0.8)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(148, 163, 184, 0.1)',
-            borderRadius: '24px',
-            padding: '32px',
-            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
-            animation: 'scaleIn 0.6s ease-out 0.2s both'
+          <div style={{ 
+            animation: 'scaleIn 0.6s ease-out 0.2s both',
+            minWidth: 0
           }}>
-            <h2 style={{
-              color: '#ffffff',
-              fontSize: '24px',
-              fontWeight: '700',
-              marginBottom: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px'
+            <div className="glass-card" style={{
+              borderRadius: '24px',
+              padding: 'clamp(24px, 5vw, 40px)',
+              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+              transition: 'all 0.3s ease'
             }}>
-              <span style={{
-                width: '8px',
-                height: '8px',
-                background: '#3b82f6',
-                borderRadius: '50%'
-              }}></span>
-              Contact Information
-            </h2>
-
-            <form onSubmit={submit}>
-              {/* Row 1 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
-                <div>
-                  <label style={{
-                    color: '#e2e8f0',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'block',
-                    marginBottom: '8px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Full Name *
-                  </label>
-                  <input 
-                    className="form-input"
-                    style={{
-                      width: '100%',
-                      background: 'rgba(30, 41, 59, 0.5)',
-                      border: '1px solid rgba(148, 163, 184, 0.2)',
-                      borderRadius: '12px',
-                      padding: '14px 16px',
-                      color: '#ffffff',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      boxSizing: 'border-box'
-                    }}
-                    value={name}
-                    onChange={e=>setName(e.target.value)}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div>
-                  <label style={{
-                    color: '#e2e8f0',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'block',
-                    marginBottom: '8px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Email *
-                  </label>
-                  <input 
-                    type="email"
-                    className="form-input"
-                    style={{
-                      width: '100%',
-                      background: 'rgba(30, 41, 59, 0.5)',
-                      border: '1px solid rgba(148, 163, 184, 0.2)',
-                      borderRadius: '12px',
-                      padding: '14px 16px',
-                      color: '#ffffff',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      boxSizing: 'border-box'
-                    }}
-                    value={email}
-                    onChange={e=>setEmail(e.target.value)}
-                    placeholder="your.email@example.com"
-                  />
-                </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                marginBottom: '32px'
+              }}>
+                <div style={{
+                  width: '12px',
+                  height: '12px',
+                  background: '#3b82f6',
+                  borderRadius: '50%'
+                }}></div>
+                <h2 style={{
+                  color: '#ffffff',
+                  fontSize: 'clamp(20px, 4vw, 28px)',
+                  fontWeight: '700',
+                  margin: 0
+                }}>
+                  Booking Details
+                </h2>
               </div>
 
-              {/* Row 2 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* Service Selection */}
                 <div>
-                  <label style={{
-                    color: '#e2e8f0',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'block',
-                    marginBottom: '8px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Phone
+                  <label style={labelStyle}>
+                    Service Type <span style={{ color: '#ef4444' }}>*</span>
                   </label>
-                  <input 
-                    className="form-input"
-                    style={{
-                      width: '100%',
-                      background: 'rgba(30, 41, 59, 0.5)',
-                      border: '1px solid rgba(148, 163, 184, 0.2)',
-                      borderRadius: '12px',
-                      padding: '14px 16px',
-                      color: '#ffffff',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      boxSizing: 'border-box'
-                    }}
-                    value={phone}
-                    onChange={e=>setPhone(e.target.value)}
-                    placeholder="(555) 123-4567"
-                  />
-                </div>
-                <div>
-                  <label style={{
-                    color: '#e2e8f0',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'block',
-                    marginBottom: '8px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Service *
-                  </label>
-                  <select 
-                    className="form-input"
-                    style={{
-                      width: '100%',
-                      background: 'rgba(30, 41, 59, 0.5)',
-                      border: '1px solid rgba(148, 163, 184, 0.2)',
-                      borderRadius: '12px',
-                      padding: '14px 16px',
-                      color: '#ffffff',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      boxSizing: 'border-box'
-                    }}
+                  <select
                     value={service}
-                    onChange={e=>setService(e.target.value)}
+                    onChange={e => setService(e.target.value)}
+                    className="form-input"
+                    style={inputStyle}
                   >
-                    <option value="">Select a service</option>
+                    <option value="" style={{ background: '#1e293b' }}>Choose your service</option>
                     {services.map(s => (
                       <option key={s} value={s} style={{ background: '#1e293b' }}>{s}</option>
                     ))}
                   </select>
                 </div>
-              </div>
 
-              {/* Row 3 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '24px' }}>
-                <div>
-                  <label style={{
-                    color: '#e2e8f0',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'block',
-                    marginBottom: '8px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Date *
-                  </label>
-                  <input 
-                    type="date"
-                    className="form-input"
-                    style={{
-                      width: '100%',
-                      background: 'rgba(30, 41, 59, 0.5)',
-                      border: '1px solid rgba(148, 163, 184, 0.2)',
-                      borderRadius: '12px',
-                      padding: '14px 16px',
-                      color: '#ffffff',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      boxSizing: 'border-box'
-                    }}
-                    value={date}
-                    onChange={e=>setDate(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label style={{
-                    color: '#e2e8f0',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'block',
-                    marginBottom: '8px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Start Time *
-                  </label>
-                  <input 
-                    type="time"
-                    className="form-input"
-                    style={{
-                      width: '100%',
-                      background: 'rgba(30, 41, 59, 0.5)',
-                      border: '1px solid rgba(148, 163, 184, 0.2)',
-                      borderRadius: '12px',
-                      padding: '14px 16px',
-                      color: '#ffffff',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      boxSizing: 'border-box'
-                    }}
-                    value={startTime}
-                    onChange={e=>setStartTime(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label style={{
-                    color: '#e2e8f0',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    display: 'block',
-                    marginBottom: '8px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    End Time *
-                  </label>
-                  <input 
-                    type="time"
-                    className="form-input"
-                    style={{
-                      width: '100%',
-                      background: 'rgba(30, 41, 59, 0.5)',
-                      border: '1px solid rgba(148, 163, 184, 0.2)',
-                      borderRadius: '12px',
-                      padding: '14px 16px',
-                      color: '#ffffff',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                      boxSizing: 'border-box'
-                    }}
-                    value={endTime}
-                    onChange={e=>setEndTime(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Conflict Warning */}
-              {hasConflict && (
-                <div style={{
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  marginBottom: '24px',
-                  color: '#f87171',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px'
+                {/* Contact Information Grid */}
+                <div className="contact-grid" style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '20px'
                 }}>
-                  <span style={{ fontSize: '20px' }}>⚠️</span>
-                  Time conflict detected with an existing booking
+                  <div>
+                    <label style={labelStyle}>
+                      Full Name <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      placeholder="Your full name"
+                      className="form-input"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>
+                      Email Address <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="Enter your email address"
+                      className="form-input"
+                      style={inputStyle}
+                    />
+                  </div>
                 </div>
-              )}
 
-              {/* Notes */}
-              <div style={{ marginBottom: '32px' }}>
-                <label style={{
-                  color: '#e2e8f0',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  display: 'block',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
+                <div className="contact-grid" style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '20px'
                 }}>
-                  Additional Notes
-                </label>
-                <textarea 
-                  className="form-input"
+                  <div>
+                    <label style={labelStyle}>
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                      placeholder="(+63) 9xx xxx xxxx"
+                      className="form-input"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>
+                      Event Location <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={e => setLocation(e.target.value)}
+                      placeholder="Event address or venue"
+                      className="form-input"
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+
+                {/* Schedule */}
+                <div>
+                  <label style={labelStyle}>
+                    Schedule <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <div className="schedule-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: '2fr 1fr 1fr',
+                    gap: '20px'
+                  }}>
+                    <div>
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={e => setDate(e.target.value)}
+                        min={todayStr}
+                        className="form-input"
+                        style={inputStyle}
+                      />
+                      <p style={{
+                        fontSize: '12px',
+                        color: '#64748b',
+                        marginTop: '8px',
+                        fontWeight: '500'
+                      }}>Date</p>
+                    </div>
+                    <div>
+                      <input
+                        type="time"
+                        value={startTime}
+                        onChange={e => setStartTime(e.target.value)}
+                        className="form-input"
+                        style={inputStyle}
+                      />
+                      <p style={{
+                        fontSize: '12px',
+                        color: '#64748b',
+                        marginTop: '8px',
+                        fontWeight: '500'
+                      }}>Start time</p>
+                    </div>
+                    <div>
+                      <input
+                        type="time"
+                        value={endTime}
+                        onChange={e => setEndTime(e.target.value)}
+                        className="form-input"
+                        style={inputStyle}
+                      />
+                      <p style={{
+                        fontSize: '12px',
+                        color: '#64748b',
+                        marginTop: '8px',
+                        fontWeight: '500'
+                      }}>End time</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date Blocked Warning */}
+                {date && isDateBlocked(date) && (
+                  <div style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '16px',
+                    padding: '20px',
+                    backdropFilter: 'blur(10px)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        <svg width="18" height="18" fill="none" stroke="#f87171" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p style={{
+                          color: '#fca5a5',
+                          fontWeight: '700',
+                          fontSize: '18px',
+                          margin: '0 0 4px 0'
+                        }}>Date Not Available</p>
+                        <p style={{
+                          color: '#f87171',
+                          fontSize: '14px',
+                          margin: 0
+                        }}>This date already has an approved booking</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Additional Notes */}
+                <div>
+                  <label style={labelStyle}>
+                    Additional Notes
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    placeholder="Any special requirements, equipment needs, or additional information..."
+                    rows={4}
+                    className="form-input"
+                    style={{
+                      ...inputStyle,
+                      resize: 'vertical',
+                      minHeight: '120px'
+                    }}
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  onClick={handleSubmit}
+                  disabled={!isFormValid}
+                  className="submit-btn"
                   style={{
                     width: '100%',
-                    background: 'rgba(30, 41, 59, 0.5)',
-                    border: '1px solid rgba(148, 163, 184, 0.2)',
-                    borderRadius: '12px',
-                    padding: '14px 16px',
-                    color: '#ffffff',
-                    fontSize: '16px',
-                    minHeight: '120px',
-                    resize: 'vertical',
+                    padding: '20px 32px',
+                    background: isFormValid
+                      ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                      : 'rgba(100, 116, 139, 0.3)',
+                    color: isFormValid ? '#ffffff' : '#64748b',
+                    border: 'none',
+                    borderRadius: '16px',
+                    fontSize: '18px',
+                    fontWeight: '700',
+                    cursor: isFormValid ? 'pointer' : 'not-allowed',
                     transition: 'all 0.3s ease',
-                    boxSizing: 'border-box'
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    boxShadow: isFormValid
+                      ? '0 10px 30px rgba(16, 185, 129, 0.3)'
+                      : 'none'
                   }}
-                  value={notes}
-                  onChange={e=>setNotes(e.target.value)}
-                  placeholder="Any special requirements or additional information..."
-                />
+                >
+                  {isFormValid ? 'Submit Booking Request' : 'Complete Required Fields'}
+                </button>
               </div>
-
-              {/* Submit Button */}
-              <button 
-                type="submit"
-                className="submit-btn"
-                disabled={!isFormValid}
-                style={{
-                  width: '100%',
-                  background: isFormValid 
-                    ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                    : 'rgba(148, 163, 184, 0.3)',
-                  color: isFormValid ? '#ffffff' : '#64748b',
-                  border: 'none',
-                  borderRadius: '16px',
-                  padding: '18px 32px',
-                  fontSize: '18px',
-                  fontWeight: '700',
-                  cursor: isFormValid ? 'pointer' : 'not-allowed',
-                  transition: 'all 0.3s ease',
-                  boxShadow: isFormValid 
-                    ? '0 10px 30px rgba(16, 185, 129, 0.3)'
-                    : 'none',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}
-              >
-                {isFormValid ? 'Submit Booking' : 'Complete Required Fields'}
-              </button>
-            </form>
+            </div>
           </div>
 
           {/* Calendar Section */}
-          <div style={{
-            background: 'rgba(15, 23, 42, 0.8)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(148, 163, 184, 0.1)',
-            borderRadius: '24px',
-            padding: '32px',
-            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
-            animation: 'scaleIn 0.6s ease-out 0.4s both'
+          <div className="calendar-section" style={{ 
+            animation: 'scaleIn 0.6s ease-out 0.4s both',
+            minWidth: 0
           }}>
-            <h2 style={{
-              color: '#ffffff',
-              fontSize: '24px',
-              fontWeight: '700',
-              marginBottom: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px'
+            <div className="glass-card" style={{
+              borderRadius: '24px',
+              padding: '32px',
+              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+              transition: 'all 0.3s ease'
             }}>
-              <span style={{
-                width: '8px',
-                height: '8px',
-                background: '#a855f7',
-                borderRadius: '50%'
-              }}></span>
-              Availability
-            </h2>
-
-            {/* Month Navigation */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '24px'
-            }}>
-              <button 
-                className="month-nav"
-                onClick={() => setMonth(m => (m===0 ? (setYear(y=>y-1), 11) : m-1))}
-                style={{
-                  background: 'rgba(59, 130, 246, 0.1)',
-                  border: '1px solid rgba(59, 130, 246, 0.2)',
-                  borderRadius: '12px',
-                  color: '#3b82f6',
-                  padding: '12px 16px',
-                  cursor: 'pointer',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                ←
-              </button>
               <div style={{
-                color: '#ffffff',
-                fontSize: '20px',
-                fontWeight: '700',
-                textAlign: 'center'
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '32px'
               }}>
-                {new Date(year, month, 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
+                <div style={{
+                  width: '12px',
+                  height: '12px',
+                  background: '#a855f7',
+                  borderRadius: '50%'
+                }}></div>
+                <h2 style={{
+                  color: '#ffffff',
+                  fontSize: '24px',
+                  fontWeight: '700',
+                  margin: 0
+                }}>
+                  Calendar
+                </h2>
               </div>
-              <button 
-                className="month-nav"
-                onClick={() => setMonth(m => (m===11 ? (setYear(y=>y+1), 0) : m+1))}
-                style={{
-                  background: 'rgba(59, 130, 246, 0.1)',
-                  border: '1px solid rgba(59, 130, 246, 0.2)',
-                  borderRadius: '12px',
-                  color: '#3b82f6',
-                  padding: '12px 16px',
-                  cursor: 'pointer',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 18L15 12L9 6"/>
-                </svg>
-              </button>
-            </div>
 
-            {/* Calendar Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
-              {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(day => (
-                <div key={day} style={{
-                  color: '#94a3b8',
-                  textAlign: 'center',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  padding: '8px 0',
+              {/* Month Navigation */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '32px'
+              }}>
+                <button
+                  onClick={() => setMonth(m => (m === 0 ? (setYear(y => y - 1), 11) : m - 1))}
+                  className="month-nav"
+                  style={{
+                    padding: '12px',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <svg width="20" height="20" fill="none" stroke="#60a5fa" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                
+                <div style={{ textAlign: 'center' }}>
+                  <h3 style={{
+                    color: '#ffffff',
+                    fontSize: '20px',
+                    fontWeight: '700',
+                    margin: '0 0 4px 0'
+                  }}>
+                    {new Date(year, month, 1).toLocaleString('default', { month: 'long' })}
+                  </h3>
+                  <p style={{
+                    color: '#94a3b8',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    margin: 0
+                  }}>{year}</p>
+                </div>
+                
+                <button
+                  onClick={() => setMonth(m => (m === 11 ? (setYear(y => y + 1), 0) : m + 1))}
+                  className="month-nav"
+                  style={{
+                    padding: '12px',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <svg width="20" height="20" fill="none" stroke="#60a5fa" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Calendar Headers */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: '8px',
+                marginBottom: '16px'
+              }}>
+                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                  <div key={day} style={{
+                    textAlign: 'center',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#94a3b8',
+                    padding: '12px 0',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em'
+                  }}>
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="calendar-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: '6px',
+                marginBottom: '32px'
+              }}>
+                {/* Empty cells */}
+                {Array.from({ length: firstWeekday(year, month) }).map((_, i) => (
+                  <div key={`empty-${i}`} style={{ height: '48px' }} />
+                ))}
+
+                {/* Calendar days */}
+                {Array.from({ length: daysInMonth(year, month) }).map((_, i) => {
+                  const day = i + 1;
+                  const dateStr = ymd(year, month, day);
+                  const dayBookings = bookings.filter(b => b.date === dateStr && b.status !== 'cancelled');
+                  const dateStatus = getDateStatus(dateStr);
+                  const isSelected = date === dateStr;
+                  const isToday = dateStr === todayStr;
+                  const isPast = dateStr < todayStr;
+                  const blocked = isDateBlocked(dateStr);
+
+                  let borderColor, backgroundColor, textColor;
+                  
+                  if (isSelected) {
+                    borderColor = '#3b82f6';
+                    backgroundColor = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+                    textColor = '#ffffff';
+                  } else if (blocked) {
+                    borderColor = '#ef4444';
+                    backgroundColor = 'rgba(239, 68, 68, 0.15)';
+                    textColor = '#f87171';
+                  } else if (dateStatus === 'pending') {
+                    borderColor = '#f59e0b';
+                    backgroundColor = 'rgba(245, 158, 11, 0.15)';
+                    textColor = '#fbbf24';
+                  } else if (dateStatus === 'rejected') {
+                    borderColor = 'rgba(107, 114, 128, 0.6)';
+                    backgroundColor = 'rgba(107, 114, 128, 0.15)';
+                    textColor = '#9ca3af';
+                  } else if (isToday) {
+                    borderColor = 'rgba(59, 130, 246, 0.5)';
+                    backgroundColor = 'rgba(59, 130, 246, 0.2)';
+                    textColor = '#60a5fa';
+                  } else {
+                    borderColor = 'rgba(100, 116, 139, 0.2)';
+                    backgroundColor = 'rgba(30, 41, 59, 0.4)';
+                    textColor = isPast ? '#475569' : '#e2e8f0';
+                  }
+
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => {
+                        if (!isPast) {
+                          setDate(dateStr);
+                          if (dayBookings.length > 0) {
+                            setSelectedBookingDetails(dayBookings);
+                          } else {
+                            setSelectedBookingDetails(null);
+                          }
+                        }
+                      }}
+                      disabled={isPast}
+                      className="cal-day"
+                      style={{
+                        height: '48px',
+                        fontSize: '14px',
+                        borderRadius: '12px',
+                        transition: 'all 0.3s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: '600',
+                        position: 'relative',
+                        cursor: isPast ? 'not-allowed' : 'pointer',
+                        border: `2px solid ${borderColor}`,
+                        background: backgroundColor,
+                        color: textColor
+                      }}
+                    >
+                      {day}
+                      {dayBookings.length > 0 && !isSelected && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '4px',
+                          right: '4px',
+                          width: '8px',
+                          height: '8px',
+                          background: getStatusColor(dateStatus),
+                          borderRadius: '50%',
+                          border: '1px solid rgba(255, 255, 255, 0.3)'
+                        }} />
+                      )}
+                      {isToday && !isSelected && dayBookings.length === 0 && (
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '4px',
+                          width: '6px',
+                          height: '6px',
+                          background: '#3b82f6',
+                          borderRadius: '50%'
+                        }} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Booking Details */}
+              {date && (
+                <div style={{
+                  marginBottom: '32px',
+                  padding: '24px',
+                  background: 'rgba(30, 41, 59, 0.6)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(100, 116, 139, 0.2)'
+                }}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <h4 style={{
+                      color: '#ffffff',
+                      fontSize: '18px',
+                      fontWeight: '700',
+                      margin: '0 0 4px 0'
+                    }}>
+                      {new Date(date).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </h4>
+                    <p style={{
+                      color: '#94a3b8',
+                      fontSize: '14px',
+                      margin: 0
+                    }}>
+                      Bookings for this date
+                    </p>
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {bookings
+                      .filter(b => b.date === date && b.status !== 'cancelled')
+                      .map(booking => (
+                        <div key={booking.id} style={{
+                          background: getStatusBg(booking.status),
+                          padding: '16px',
+                          borderRadius: '12px',
+                          border: `1px solid ${getStatusColor(booking.status)}30`
+                        }}>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            marginBottom: '12px'
+                          }}>
+                            <div>
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginBottom: '8px'
+                              }}>
+                                <span style={{
+                                  color: getStatusColor(booking.status),
+                                  fontSize: '14px',
+                                  fontWeight: '700',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em'
+                                }}>
+                                  {booking.status}
+                                </span>
+                                <div style={{
+                                  width: '8px',
+                                  height: '8px',
+                                  background: getStatusColor(booking.status),
+                                  borderRadius: '50%'
+                                }}></div>
+                              </div>
+                              <p style={{
+                                color: '#ffffff',
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                margin: '0 0 4px 0'
+                              }}>
+                                {booking.service}
+                              </p>
+                              <p style={{
+                                color: '#94a3b8',
+                                fontSize: '14px',
+                                margin: '0 0 8px 0'
+                              }}>
+                                {booking.startTime} - {booking.endTime}
+                              </p>
+                              <p style={{
+                                color: '#cbd5e1',
+                                fontSize: '14px',
+                                margin: 0
+                              }}>
+                                {booking.name} • {booking.location}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Customer Actions */}
+                          {(booking.status === 'pending' || booking.status === 'approved') && (
+                            <div style={{
+                              display: 'flex',
+                              gap: '8px',
+                              marginTop: '16px',
+                              paddingTop: '16px',
+                              borderTop: '1px solid rgba(100, 116, 139, 0.2)'
+                            }}>
+                              <button
+                                onClick={() => handleCancelBooking(booking.id)}
+                                style={{
+                                  padding: '8px 16px',
+                                  background: 'rgba(107, 114, 128, 0.2)',
+                                  color: '#9ca3af',
+                                  border: '1px solid rgba(107, 114, 128, 0.3)',
+                                  borderRadius: '8px',
+                                  fontSize: '12px',
+                                  fontWeight: '600',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.3s ease',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.target.style.background = 'rgba(107, 114, 128, 0.3)';
+                                  e.target.style.color = '#ffffff';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.background = 'rgba(107, 114, 128, 0.2)';
+                                  e.target.style.color = '#9ca3af';
+                                }}
+                              >
+                                Cancel Booking
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    }
+                    
+                    {bookings.filter(b => b.date === date && b.status !== 'cancelled').length === 0 && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        padding: '16px',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(16, 185, 129, 0.2)'
+                      }}>
+                        <div style={{
+                          width: '8px',
+                          height: '8px',
+                          background: '#10b981',
+                          borderRadius: '50%'
+                        }}></div>
+                        <span style={{
+                          color: '#34d399',
+                          fontSize: '14px',
+                          fontWeight: '600'
+                        }}>
+                          No bookings for this date - Available
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Legend */}
+              <div style={{
+                paddingTop: '24px',
+                borderTop: '1px solid rgba(100, 116, 139, 0.2)'
+              }}>
+                <h5 style={{
+                  color: '#e2e8f0',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  marginBottom: '16px',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em'
-                }}>
-                  {day}
-                </div>
-              ))}
-
-              {/* Empty cells for first week */}
-              {Array.from({ length: firstWeekday(year, month) }).map((_, i) => (
-                <div key={`empty-${i}`} />
-              ))}
-
-              {/* Calendar days */}
-              {Array.from({ length: daysInMonth(year, month) }).map((_, i) => {
-                const day = i + 1;
-                const dateStr = ymd(year, month, day);
-                const taken = isTaken(service, year, month, day);
-                const isSelected = date === dateStr;
-                const isToday = dateStr === todayStr;
-
-                return (
-                  <button
-                    key={day}
-                    className="cal-day"
-                    onClick={() => !taken && setDate(dateStr)}
-                    disabled={taken}
-                    style={{
-                      padding: '12px',
-                      borderRadius: '12px',
-                      border: isSelected 
-                        ? '2px solid #3b82f6' 
-                        : isToday 
-                        ? '2px solid rgba(59, 130, 246, 0.5)'
-                        : '1px solid rgba(148, 163, 184, 0.1)',
-                      background: taken 
-                        ? 'rgba(239, 68, 68, 0.1)' 
-                        : isSelected 
-                        ? 'rgba(59, 130, 246, 0.2)'
-                        : 'rgba(30, 41, 59, 0.3)',
-                      color: taken 
-                        ? '#f87171' 
-                        : isSelected 
-                        ? '#60a5fa'
-                        : '#ffffff',
-                      cursor: taken ? 'not-allowed' : 'pointer',
-                      fontSize: '14px',
-                      fontWeight: isSelected || isToday ? '700' : '500',
-                      transition: 'all 0.3s ease',
+                }}>Legend</h5>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                      borderRadius: '8px',
+                      flexShrink: 0
+                    }}></div>
+                    <span style={{
+                      color: '#94a3b8',
+                      fontSize: '13px',
+                      fontWeight: '500'
+                    }}>Selected date</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      background: 'rgba(59, 130, 246, 0.2)',
+                      border: '2px solid rgba(59, 130, 246, 0.5)',
+                      borderRadius: '8px',
+                      flexShrink: 0
+                    }}></div>
+                    <span style={{
+                      color: '#94a3b8',
+                      fontSize: '13px',
+                      fontWeight: '500'
+                    }}>Today</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      background: 'rgba(16, 185, 129, 0.15)',
+                      border: '2px solid #10b981',
+                      borderRadius: '8px',
+                      flexShrink: 0
+                    }}></div>
+                    <span style={{
+                      color: '#94a3b8',
+                      fontSize: '13px',
+                      fontWeight: '500'
+                    }}>Approved booking (blocked)</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      background: 'rgba(245, 158, 11, 0.15)',
+                      border: '2px solid #f59e0b',
+                      borderRadius: '8px',
+                      flexShrink: 0,
                       position: 'relative'
-                    }}
-                  >
-                    {day}
-                    {isToday && (
+                    }}>
                       <div style={{
                         position: 'absolute',
-                        bottom: '2px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '4px',
-                        height: '4px',
-                        background: '#3b82f6',
+                        top: '2px',
+                        right: '2px',
+                        width: '6px',
+                        height: '6px',
+                        background: '#f59e0b',
                         borderRadius: '50%'
-                      }} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Booking Info */}
-            {service && date && (
-              <div style={{
-                marginTop: '24px',
-                padding: '20px',
-                background: 'rgba(30, 41, 59, 0.5)',
-                borderRadius: '16px',
-                border: '1px solid rgba(148, 163, 184, 0.1)'
-              }}>
-                <h4 style={{
-                  color: '#e2e8f0',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  marginBottom: '12px'
-                }}>
-                  {service} • {new Date(date).toLocaleDateString()}
-                </h4>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {bookings
-                    .filter(b => b.service === service && b.date === date && b.status !== 'cancelled')
-                    .map(booking => (
-                      <span key={booking.id} style={{
-                        padding: '6px 12px',
-                        background: 'rgba(168, 85, 247, 0.1)',
-                        border: '1px solid rgba(168, 85, 247, 0.2)',
-                        borderRadius: '20px',
-                        color: '#c084fc',
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }}>
-                        {booking.startTime} - {booking.endTime}
-                      </span>
-                    ))
-                  }
-                  {bookings.filter(b => b.service === service && b.date === date && b.status !== 'cancelled').length === 0 && (
-                    <span style={{ color: '#10b981', fontSize: '14px', fontWeight: '500', display:'inline-flex', alignItems:'center', gap:'6px' }}>
-                      <span style={{ display:'inline-block', width:'6px', height:'6px', background:'#10b981', borderRadius:'50%' }} />
-                      No bookings - full day available
-                    </span>
-                  )}
-                </div>
+                      }}></div>
+                    </div>
+                    <span style={{
+                      color: '#94a3b8',
+                      fontSize: '13px',
+                      fontWeight: '500'
+                    }}>Pending bookings</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      background: 'rgba(107, 114, 128, 0.15)',
+                      border: '2px solid rgba(107, 114, 128, 0.6)',
+                      borderRadius: '8px',
+                      flexShrink: 0
+                    }}></div>
+                    <span style={{
+                      color: '#94a3b8',
+                      fontSize: '13px',
+                      fontWeight: '500'
+                    }}>Rejected bookings</span>
+                  </div>
+                </div>  
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
