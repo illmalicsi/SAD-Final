@@ -22,7 +22,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       title: 'Management',
       items: [
         { id: 'inventory', icon: <FaBoxOpen size={18} />, text: 'Equipments', view: 'inventory-management', adminOnly: false },
-        { id: 'customers', icon: <FaClipboardList size={18} />, text: 'Customers', view: 'customer-management', adminOnly: false },
+        { id: 'customers', icon: <FaUsers size={18} />, text: 'Customers', view: 'customer-management', adminOnly: false },
         { id: 'performances', icon: <FaChartLine size={18} />, text: 'Performances', view: 'performance-history', adminOnly: false }
       ]
     },
@@ -463,7 +463,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
         <div style={styles.mainContent}>
           <div style={styles.mainHeader}>
             <h1 style={styles.mainTitle}>Access Denied</h1>
-            <button 
+            <button
               style={styles.footerButton}
               onClick={onBackToHome}
               onMouseEnter={(e) => handleButtonHover(e)}
@@ -471,13 +471,13 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             >
             </button>
           </div>
-          
+
           <div style={styles.contentArea}>
             <div style={styles.blockedContainer}>
               <div style={styles.blockedIcon}>🚫</div>
               <h2 style={styles.blockedTitle}>Account Blocked</h2>
               <p style={styles.blockedText}>
-                Your account has been temporarily suspended. Please contact the administrator at 
+                Your account has been temporarily suspended. Please contact the administrator at
                 <strong> dbe.official@example.com</strong> to restore access.
               </p>
             </div>
@@ -581,7 +581,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     switch (currentView) {
       case 'main':
         return getWelcomeContent();
-        
+
       case 'notifications':
         return (
           <div style={styles.panelContainer}>
@@ -593,46 +593,46 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             </div>
           </div>
         );
-        
+
       case 'user-management':
         if (user?.role === 'admin') {
           return (
-                <Suspense fallback={<div style={styles.loadingContainer}>Loading User Management...</div>}>
-                  <UserManagement 
-                    user={user} 
-                    onBackToHome={() => setCurrentView('main')} 
-                    onLogout={onLogout}
-                    embedded={true}
-                  />
-                </Suspense>
+            <Suspense fallback={<div style={styles.loadingContainer}>Loading User Management...</div>}>
+              <UserManagement
+                user={user}
+                onBackToHome={() => setCurrentView('main')}
+                onLogout={onLogout}
+                embedded={true}
+              />
+            </Suspense>
           );
         }
         break;
-        
+
       case 'inventory-management':
         return (
           <Suspense fallback={<div style={styles.loadingContainer}>Loading Inventory Management...</div>}>
-            <Inventory 
-              user={user} 
-              onBackToHome={() => setCurrentView('main')} 
+            <Inventory
+              user={user}
+              onBackToHome={() => setCurrentView('main')}
               onLogout={onLogout}
               embedded={true}
             />
           </Suspense>
         );
-        
+
       case 'customer-management':
         return (
           <Suspense fallback={<div style={styles.loadingContainer}>Loading Customer Management...</div>}>
-            <CustomerManagement 
-              user={user} 
-              onBackToHome={() => setCurrentView('main')} 
+            <CustomerManagement
+              user={user}
+              onBackToHome={() => setCurrentView('main')}
               onLogout={onLogout}
               embedded={true}
             />
           </Suspense>
         );
-        
+
       case 'performance-history':
         return (
           <div style={styles.panelContainer}>
@@ -644,7 +644,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             </div>
           </div>
         );
-        
+
       case 'my-profile':
         return (
           <div style={styles.panelContainer}>
@@ -656,7 +656,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             </div>
           </div>
         );
-        
+
       case 'help-support':
         return (
           <div style={styles.panelContainer}>
@@ -668,7 +668,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             </div>
           </div>
         );
-        
+
       default:
         return getWelcomeContent();
     }
@@ -689,7 +689,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
           <div style={styles.logo}>
             {sidebarCollapsed ? '🎵' : 'Administrator'}
           </div>
-          <button 
+          <button
             style={styles.collapseButton}
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             onMouseEnter={handleCollapseHover}
@@ -748,7 +748,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
 
         {/* Sidebar Footer */}
         <div style={styles.sidebarFooter}>
-          <button 
+          <button
             style={styles.footerButton}
             onClick={onBackToHome}
             onMouseEnter={(e) => handleButtonHover(e)}
@@ -756,9 +756,9 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             title="Back to Home"
             aria-label="Home"
           >
-            <FaHome size={16} style={{marginRight: 6}} /> Home
+            <FaHome size={16} style={{ marginRight: 6 }} />
           </button>
-          <button 
+          <button
             style={styles.logoutButton}
             onClick={onLogout}
             onMouseEnter={(e) => handleButtonHover(e, true)}
@@ -766,7 +766,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             title="Logout"
             aria-label="Logout"
           >
-            <FaSignOutAlt size={16} style={{marginRight: 6}} /> Log Out
+            <FaSignOutAlt size={16} style={{ marginRight: 6 }} />
           </button>
         </div>
       </div>
@@ -779,7 +779,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             <div style={styles.breadcrumbs}>{getBreadcrumbs()}</div>
           </div>
         </div>
-        
+
         <div style={styles.contentArea}>
           {getPanelContent()}
         </div>

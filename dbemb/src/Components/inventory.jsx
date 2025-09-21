@@ -9,35 +9,35 @@
     // Initial inventory data
     const [inventory, setInventory] = useState([
       // Percussion Category - Snare Drums
-      { id: 1, name: 'Yamaha Black Snare Drum #01', category: 'percussion', subcategory: 'Snare Drums', brand: 'Yamaha', condition: 'Good', status: 'Available', location: 'Storage A', notes: '', amount: 0 },
-      { id: 2, name: 'Yamaha Black Snare Drum #02', category: 'percussion', subcategory: 'Snare Drums', brand: 'Yamaha', condition: 'Good', status: 'Available', location: 'Storage A', notes: '', amount: 0 },
-      { id: 3, name: 'Yamaha Black Snare Drum (Evans Drum Head) #03', category: 'percussion', subcategory: 'Snare Drums', brand: 'Yamaha', condition: 'Excellent', status: 'Available', location: 'Storage A', notes: 'Evans drum head', amount: 0 },
-      { id: 4, name: 'Pearl Snare Drum Color White #01', category: 'percussion', subcategory: 'Snare Drums', brand: 'Pearl', condition: 'Good', status: 'Available', location: 'Storage A', notes: 'White color', amount: 0 },
-      { id: 5, name: 'Pearl Snare Drum Color Dirt White #02', category: 'percussion', subcategory: 'Snare Drums', brand: 'Pearl', condition: 'Fair', status: 'Available', location: 'Storage A', notes: 'Dirt white color', amount: 0 },
+      { id: 1, name: 'Yamaha Black Snare Drum #01', category: 'percussion', subcategory: 'Snare Drums', brand: 'Yamaha', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: '', amount: 1 },
+      { id: 2, name: 'Yamaha Black Snare Drum #02', category: 'percussion', subcategory: 'Snare Drums', brand: 'Yamaha', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: '', amount: 1 },
+      { id: 3, name: 'Yamaha Black Snare Drum (Evans Drum Head) #03', category: 'percussion', subcategory: 'Snare Drums', brand: 'Yamaha', condition: 'Excellent', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Evans drum head', amount: 2 },
+      { id: 4, name: 'Pearl Snare Drum Color White #01', category: 'percussion', subcategory: 'Snare Drums', brand: 'Pearl', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'White color', amount: 0 },
+      { id: 5, name: 'Pearl Snare Drum Color Dirt White #02', category: 'percussion', subcategory: 'Snare Drums', brand: 'Pearl', condition: 'Fair', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Dirt white color', amount: 2},
       
       // Percussion Category - Bass Drums
-      { id: 6, name: 'Lazer Size 16 Bass Drum #01', category: 'percussion', subcategory: 'Bass Drums', brand: 'Lazer', condition: 'Good', status: 'Available', location: 'Storage B', notes: 'Size 16', amount: 0 },
-      { id: 7, name: 'E-lance Size 20 Bass Drum #02', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Storage B', notes: 'Size 20', amount: 0 },
-      { id: 8, name: 'E-lance Size 22 Bass Drum 03', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Storage B', notes: 'Size 22', amount: 0 },
-      { id: 9, name: 'E-lance Size 24 Bass Drum 04', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Storage B', notes: 'Size 24', amount: 0 },
-      { id: 10, name: 'Fernando Size 20 Bass Drum 002', category: 'percussion', subcategory: 'Bass Drums', brand: 'Fernando', condition: 'Good', status: 'Available', location: 'Storage B', notes: 'Size 20', amount: 1 },
+      { id: 6, name: 'Lazer Size 16 Bass Drum #01', category: 'percussion', subcategory: 'Bass Drums', brand: 'Lazer', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Size 16', amount: 2 },
+      { id: 7, name: 'E-lance Size 20 Bass Drum #02', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Size 20', amount: 2 },
+      { id: 8, name: 'E-lance Size 22 Bass Drum #03', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Size 22', amount: 2 },
+      { id: 9, name: 'E-lance Size 24 Bass Drum #04', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Size 24', amount: 2 },
+      { id: 10, name: 'Fernando Size 20 Bass Drum #002', category: 'percussion', subcategory: 'Bass Drums', brand: 'Fernando', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Size 20', amount: 1 },
       
       // Percussion Category - Tenor Drums
-      { id: 11, name: 'E-lance Percussion Black Tenor Drums', category: 'percussion', subcategory: 'Tenor Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Storage C', notes: 'Black color', amount: 0 },
-      { id: 12, name: 'Century Percussion White Tenor Drums', category: 'percussion', subcategory: 'Tenor Drums', brand: 'Century', condition: 'Good', status: 'Available', location: 'Storage C', notes: 'White color', amount: 0 },
+      { id: 11, name: 'E-lance Percussion Black Tenor Drums', category: 'percussion', subcategory: 'Tenor Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Black color', amount: 2 },
+      { id: 12, name: 'Century Percussion White Tenor Drums', category: 'percussion', subcategory: 'Tenor Drums', brand: 'Century', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'White color', amount: 2 },
       
       // Percussion Category - Cymbals
-      { id: 13, name: 'Zildjian Marching Cymbals', category: 'percussion', subcategory: 'Cymbals', brand: 'Zildjian', condition: 'Excellent', status: 'Available', location: 'Storage D', notes: 'Marching cymbals', amount: 0 },
+      { id: 13, name: 'Zildjian Marching Cymbals', category: 'percussion', subcategory: 'Cymbals', brand: 'Zildjian', condition: 'Excellent', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Marching cymbals', amount: 2},
       
       // Percussion Category - Other
-      { id: 14, name: 'E-lance Percussion Marching Glockenspiel 01', category: 'percussion', subcategory: 'Other Percussion', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Storage E', notes: 'Marching glockenspiel', amount: 0 },
-      { id: 15, name: 'E-lance Percussion Marching Glockenspiel 02', category: 'percussion', subcategory: 'Other Percussion', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Storage E', notes: 'Marching glockenspiel', amount: 0 },
+      { id: 14, name: 'E-lance Percussion Marching Glockenspiel #01', category: 'percussion', subcategory: 'Other Percussion', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Marching glockenspiel', amount: 2},
+      { id: 15, name: 'E-lance Percussion Marching Glockenspiel #02', category: 'percussion', subcategory: 'Other Percussion', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Marching glockenspiel', amount: 2 },
       
       // Wind Instruments - Woodwinds
-      { id: 16, name: 'Yamaha Clarinet', category: 'wind', subcategory: 'Woodwinds', brand: 'Yamaha', condition: 'Good', status: 'Available', location: 'Wind Storage', notes: '', amount: 0 },
+      { id: 16, name: 'Yamaha Clarinet', category: 'wind', subcategory: 'Woodwinds', brand: 'Yamaha', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: '', amount: 2 },
       
       // Wind Instruments - Brass
-      { id: 17, name: 'Fernando Tuba', category: 'wind', subcategory: 'Brass', brand: 'Fernando', condition: 'Good', status: 'Available', location: 'Wind Storage', notes: '', amount: 0 }
+      { id: 17, name: 'Fernando Tuba', category: 'wind', subcategory: 'Brass', brand: 'Fernando', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: '', amount: 2}
     ]);
 
     // Styles consistent with UserManagement design
