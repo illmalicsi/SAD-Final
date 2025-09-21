@@ -614,19 +614,56 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
             </div>
 
             <div style={styles.gridTwo}>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>
-                  <FaPhone />
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  style={styles.input}
-                  placeholder="+63 912 345 6789"
-                />
-              </div>
+<div style={styles.inputGroup}>
+  <label style={styles.label}>
+    <FaPhone />
+    Phone Number
+  </label>
+  <input
+    type="tel"
+    value={phone}
+    onChange={(e) => {
+      let value = e.target.value;
+      
+      // Remove all non-digit characters for processing
+      const digitsOnly = value.replace(/\D/g, '');
+      
+      // Handle +63 format
+      if (value.startsWith('+63')) {
+        const remaining = digitsOnly.slice(2);
+        if (remaining.length <= 10) {
+          setPhone(`+63${remaining}`);
+        }
+      }
+      // Handle 09 format (convert to +63)
+      else if (digitsOnly.startsWith('09')) {
+        if (digitsOnly.length <= 11) {
+          setPhone(`+63${digitsOnly.slice(1)}`);
+        }
+      }
+      // Handle direct 11 digits starting with 9
+      else if (digitsOnly.startsWith('9')) {
+        if (digitsOnly.length <= 10) {
+          setPhone(`+63${digitsOnly}`);
+        }
+      }
+      // Handle any other digit input
+      else if (digitsOnly.length > 0) {
+        if (digitsOnly.length <= 10) {
+          setPhone(`+63${digitsOnly}`);
+        }
+      }
+      // Empty input
+      else {
+        setPhone('');
+      }
+    }}
+    style={styles.input}
+    placeholder="+63 912 345 6789"
+    pattern="\+639[0-9]{9}"
+    title="Please enter a valid Philippine mobile number"
+  />
+</div>
 
               <div style={styles.inputGroup}>
                 <label style={styles.label}>
