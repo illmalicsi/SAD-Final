@@ -753,10 +753,18 @@
                         type="number"
                         style={styles.formInput}
                         value={editingItem?.amount || ''}
-                        onChange={(e) => setEditingItem({...editingItem, amount: e.target.value === '' ? '' : parseInt(e.target.value) || 0})}
+                        onChange={(e) => {
+                          const value = e.target.value === '' ? '' : parseFloat(e.target.value);
+                          if (value < 0) {
+                            // Allow typing but don't update state with negative values
+                            return;
+                          }
+                          setEditingItem({...editingItem, amount: value || ''});
+                        }}
                         onFocus={handleInputFocus}
                         onBlur={handleInputBlur}
                         min="0"
+                        step="0.1"
                         placeholder="Enter amount"
                       />
                     </div>
