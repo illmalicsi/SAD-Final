@@ -93,17 +93,19 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       fontSize: '14px'
     },
     userSection: {
-      padding: '20px',
-      borderBottom: '1px solid #2d3748',
-      backgroundColor: '#1a1f29',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
+  padding: sidebarCollapsed ? '12px' : '20px',
+  borderBottom: '1px solid #2d3748',
+  backgroundColor: '#1a1f29',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: sidebarCollapsed ? '80px' : 'auto'
+},
+
     userAvatar: {
-      width: '56px',
-      height: '56px',
+      width: sidebarCollapsed ? '40px' : '56px',
+      height: sidebarCollapsed ? '40px' : '56px',
       borderRadius: '50%',
       backgroundColor: '#4a5568',
       display: 'flex',
@@ -111,20 +113,24 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       justifyContent: 'center',
       color: '#e2e8f0',
       fontWeight: '600',
-      fontSize: '20px',
+      fontSize: sidebarCollapsed ? '16px' : '20px',
       marginBottom: sidebarCollapsed ? '0' : '12px',
       marginLeft: 'auto',
       marginRight: 'auto',
+      transition: 'all 0.3s ease'
     },
+
     userName: {
-      fontSize: sidebarCollapsed ? '0px' : '16px',
+      fontSize: sidebarCollapsed ? '0px' : '20px',
       fontWeight: '600',
       color: '#e2e8f0',
       marginBottom: '4px',
       transition: 'all 0.3s ease',
       overflow: 'hidden',
       textAlign: 'center',
+      height: sidebarCollapsed ? '0px' : 'auto'
     },
+
     userRole: {
       display: sidebarCollapsed ? 'none' : 'inline-flex',
       padding: '2px 12px',
@@ -138,6 +144,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       marginTop: '4px',
       textAlign: 'center',
       justifyContent: 'center',
+      height: sidebarCollapsed ? '0px' : 'auto'
     },
     navigation: {
       flex: 1,
@@ -149,7 +156,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       marginBottom: '24px'
     },
     navGroupTitle: {
-      fontSize: sidebarCollapsed ? '0px' : '11px',
+      fontSize: sidebarCollapsed ? '0px' : '16px',
       fontWeight: '600',
       color: '#718096',
       textTransform: 'uppercase',
@@ -157,6 +164,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       marginBottom: '8px',
       paddingLeft: '20px',
       transition: 'all 0.3s ease',
+      textAlign: 'left',
       overflow: 'hidden'
     },
     navItem: {
@@ -198,11 +206,12 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       borderTop: '1px solid #2d3748',
       display: 'flex',
       flexDirection: sidebarCollapsed ? 'column' : 'row',
-      gap: '8px',
+      gap: sidebarCollapsed ? '8px' : '8px',
       backgroundColor: '#1a1f29'
     },
     footerButton: {
       height: '36px',
+      width: sidebarCollapsed ? '36px' : 'auto',
       backgroundColor: 'transparent',
       border: '1px solid #2d3748',
       borderRadius: '8px',
@@ -214,23 +223,26 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      flex: sidebarCollapsed ? 'none' : 1
+      flex: sidebarCollapsed ? 'none' : 1,
+      padding: sidebarCollapsed ? '0' : '0 8px'
     },
-    logoutButton: {
-      height: '36px',
-      backgroundColor: 'transparent',
-      border: '1px solid #e53e3e',
-      borderRadius: '8px',
-      color: '#fc8181',
-      cursor: 'pointer',
-      fontSize: sidebarCollapsed ? '14px' : '13px',
-      fontWeight: '500',
-      transition: 'all 0.2s ease',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flex: sidebarCollapsed ? 'none' : 1
-    },
+logoutButton: {
+  height: '36px',
+  width: sidebarCollapsed ? '36px' : 'auto',
+  backgroundColor: 'transparent',
+  border: '1px solid #e53e3e',
+  borderRadius: '8px',
+  color: '#fc8181',
+  cursor: 'pointer',
+  fontSize: sidebarCollapsed ? '14px' : '13px',
+  fontWeight: '500',
+  transition: 'all 0.2s ease',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flex: sidebarCollapsed ? 'none' : 1,
+  padding: sidebarCollapsed ? '0' : '0 8px'
+},
     mainContent: {
       flex: 1,
       display: 'flex',
@@ -756,7 +768,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             title="Back to Home"
             aria-label="Home"
           >
-            <FaHome size={16} style={{ marginRight: 6 }} />
+            <FaHome size={16} style={{ marginRight: sidebarCollapsed ? 0 : 6 }} />
           </button>
           <button
             style={styles.logoutButton}
@@ -766,7 +778,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             title="Logout"
             aria-label="Logout"
           >
-            <FaSignOutAlt size={16} style={{ marginRight: 6 }} />
+            <FaSignOutAlt size={16} style={{ marginRight:  sidebarCollapsed ? 0 : 6 }} />
           </button>
         </div>
       </div>
