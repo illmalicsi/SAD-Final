@@ -181,14 +181,17 @@ const Home = () => {
     scrollMarginTop: '80px'
   };
 
-  const aboutHeaderStyle = {
-    color: '#e5e7eb',
-    fontFamily: 'Marcellus, serif',
-    fontWeight: 600,
-    fontSize: '30px',
-    margin: 0,
-    letterSpacing: '0.04em'
-  };
+const aboutHeaderStyle = {
+  color: '#e5e7eb',
+  fontFamily: 'Marcellus, serif',
+  fontWeight: 700,
+  fontSize: '64px',
+  lineHeight: 1.0,
+  margin: '0 0 8px 0',
+  letterSpacing: '-0.02em',
+  textAlign: 'left',
+  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+};
 
   const aboutSubtextStyle = {
     color: '#94a3b8',
@@ -199,13 +202,13 @@ const Home = () => {
   };
 
   // About side-by-side layout
-  const aboutWrapStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)',
-    gap: '24px',
-    alignItems: 'start',
-    marginBottom: '28px'
-  };
+const aboutWrapStyle = {
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)',
+  gap: '24px',
+  alignItems: 'stretch',
+  marginBottom: '28px'
+};
 
   const aboutTextCardStyle = {
     backgroundColor: 'rgba(10, 25, 47, 0.6)',
@@ -219,26 +222,29 @@ const Home = () => {
     color: '#a8b2d1',
     textAlign: 'justify',
     lineHeight: 1.9,
-    margin: '0 0 12px 0'
+    margin: '0 0 12px 0',
+    fontSize: '17px'
   };
 
   // Carousel styles
-  const carouselWrapperStyle = {
-    position: 'relative',
-    width: '100%',
-    maxWidth: '980px',
-    margin: '0 auto 28px',
-    borderRadius: '16px',
-    overflow: 'hidden',
-    border: '1px solid rgba(100, 255, 218, 0.15)',
-    boxShadow: '0 14px 30px rgba(0,0,0,0.25)'
-  };
+const carouselWrapperStyle = {
+  position: 'relative',
+  width: '100%',
+  maxWidth: '980px',
+  margin: '0 auto 28px',
+  borderRadius: '16px',
+  overflow: 'hidden',
+  border: '1px solid rgba(100, 255, 218, 0.15)',
+  boxShadow: '0 14px 30px rgba(0,0,0,0.25)',
+  height: '100%'
+};
 
-  const carouselImageStyle = {
-    height: '440px',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center'
-  };
+const carouselImageStyle = {
+  height: '100%',
+  minHeight: '400px',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center'
+};
 
   const carouselControlsStyle = {
     position: 'absolute',
@@ -298,6 +304,27 @@ const Home = () => {
   };
 
   // Contact section styles
+
+  const contactHeaderStyle = {
+  color: '#e5e7eb',
+  fontFamily: 'Marcellus, serif',
+  fontWeight: 700,
+  fontSize: '64px',
+  lineHeight: 1.0,
+  margin: '0 0 8px 0',
+  letterSpacing: '-0.02em',
+  textAlign: 'left',
+  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+};
+
+const contactSubTextStyle = {
+  color: '#94a3b8',
+  fontSize: '14px',
+  maxWidth: '540px',
+  textAlign: 'center',
+  margin: '0 auto'
+};
+
   const contactGridStyle = {
     display: 'grid',
     gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.2fr)',
@@ -361,14 +388,16 @@ const Home = () => {
     fontWeight: 600,
     margin: '0 0 4px 0',
     letterSpacing: '0.08em',
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    textAlign: 'left'
   };
 
   const contactValueStyle = {
     color: '#a8b2d1',
     fontSize: '16px',
     margin: 0,
-    lineHeight: 1.5
+    lineHeight: 1.5,
+    whiteSpace: 'nowrap'
   };
 
   const contactFormStyle = {
@@ -546,7 +575,9 @@ const Home = () => {
     fontSize: '16px',
     lineHeight: 1.6,
     margin: 0,
-    maxWidth: '300px'
+    maxWidth: '300px',
+    textAlign: 'left',
+    textAlignLast: 'left'
   };
 
   const footerSocialStyle = {
@@ -678,13 +709,15 @@ const Home = () => {
     margin: '0 auto'
   };
 
-  const sectionEyebrowStyle = {
-    color: '#64ffda',
-    textTransform: 'uppercase',
-    letterSpacing: '0.22em',
-    fontSize: '12px',
-    marginBottom: '8px'
-  };
+const sectionEyebrowStyle = {
+  color: '#64ffda',
+  textTransform: 'uppercase',
+  letterSpacing: '0.25em',
+  fontSize: '15px',
+  marginBottom: '16px',
+  textAlign: 'left',
+  fontWeight: 600,
+};
 
   const servicesHeaderWrapStyle = {
     display: 'grid',
@@ -697,7 +730,8 @@ const Home = () => {
   const servicesSubTextStyle = {
     color: '#94a3b8',
     fontSize: '14px',
-    maxWidth: '540px'
+    textAlign: 'left',
+    maxWidth: '540px',
   };
 
 
@@ -705,19 +739,21 @@ const Home = () => {
     color: '#e5e7eb',
     fontFamily: 'Marcellus, serif',
     fontWeight: 700,
-    fontSize: '56px',
-    lineHeight: 1.05,
-    margin: 0,
-    letterSpacing: '0.01em'
+    fontSize: '64px',
+    lineHeight: 1.0,
+    margin: '0 0 8px 0',
+    letterSpacing: '-0.02em',
+    textAlign: 'left',
+    textShadow: '0 2px 4px rgba(0,0,0,0.3)',
   };
 
-  const servicesHeaderRightStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    justifySelf: 'end',
-    textAlign: 'left'
-  };
+const servicesHeaderRightStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+  justifySelf: 'end',
+  alignItems: 'flex-end'
+};
 
   const servicesHeaderActionsStyle = {
     display: 'flex',
@@ -1634,12 +1670,12 @@ const Home = () => {
             <div style={servicesContainerStyle}>
               <div style={servicesHeaderWrapStyle}>
                 <div>
-                  <div style={sectionEyebrowStyle}>What we offer</div>
                   <h3 style={servicesHeaderStyle}>Our Services</h3>
+                  <div style={sectionEyebrowStyle}>What we offer</div>
                 </div>
                 <div style={servicesHeaderRightStyle}>
-                  <p style={servicesSubTextStyle}>From parades and corporate shows to workshops and rentals—we tailor each service to your event with professional coordination and musical excellence.</p>
                   <div style={{ color: '#e5e7eb', fontFamily: 'Marcellus, serif', fontSize: '20px', fontWeight: 600 }}>Certified Excellence</div>
+                  <p style={servicesSubTextStyle}>From parades and corporate shows to workshops and rentals—we tailor each service to your event with professional coordination and musical excellence.</p>
                 </div>
               </div>
 
@@ -1681,8 +1717,8 @@ const Home = () => {
             <div style={servicesContainerStyle}>
               <div style={servicesHeaderWrapStyle}>
                 <div>
-                  <div style={sectionEyebrowStyle}>Who we are</div>
                   <h3 style={aboutHeaderStyle}>About Us</h3>
+                  <div style={sectionEyebrowStyle}>Who we are</div>
                 </div>
               </div>
               <div style={aboutWrapStyle}>
@@ -1730,10 +1766,10 @@ const Home = () => {
             <div style={servicesContainerStyle}>
               <div style={servicesHeaderWrapStyle}>
                 <div>
+                  <h3 style={contactHeaderStyle}>Contact Us</h3>
                   <div style={sectionEyebrowStyle}>Get in touch</div>
-                  <h3 style={servicesHeaderStyle}>Contact Us</h3>
                 </div>
-                <p style={servicesSubTextStyle}>
+                <p style={contactSubTextStyle}>
                   Ready to bring the Davao Blue Eagles Marching Band to your event? Get in touch with us for bookings, inquiries, or collaborations.
                 </p>
               </div>
