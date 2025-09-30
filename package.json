@@ -1,0 +1,11 @@
+{
+  "name": "dbemb-frontend",
+  "version": "1.0.0",
+  "dependencies": {
+    "firebase": "^12.3.0",
+    "lucide-react": "^0.544.0",
+    "react-router-dom": "^7.9.2",
+    "web-vitals": "^5.1.0"
+  },
+  "proxy": "http://localhost:5000"
+}
