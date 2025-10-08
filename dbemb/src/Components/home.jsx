@@ -26,18 +26,20 @@ const Home = () => {
   };
 
   const navStyle = {
-    background: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(25px)',
-    borderBottom: '1px solid rgba(59, 130, 246, 0.1)',
-    padding: '20px 40px',
+    // Solid non-transparent navbar for clearer separation from page content
+    background: 'linear-gradient(180deg, #0b3b78 0%, #0b4f8a 100%)',
+    color: '#fff',
+    padding: '14px 30px',
     position: 'sticky',
     top: 0,
     zIndex: 1000,
-    display: 'flex',
+    display: 'grid',
+    gridTemplateColumns: 'auto 1fr auto',
     alignItems: 'center',
     justifyContent: 'space-between',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-    transition: 'all 0.3s ease'
+    // Subtle shadow to lift the nav from the page
+    boxShadow: '0 6px 18px rgba(7, 24, 48, 0.14)',
+    transition: 'background 220ms ease, box-shadow 220ms ease'
   };
 
   const logoStyle = {
@@ -59,12 +61,10 @@ const Home = () => {
 
   const logoSubStyle = {
     fontSize: '12px',
-    background: 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
+    color: '#ffffff',
     margin: 0,
-    fontWeight: 500,
-    letterSpacing: '0.1em',
+    fontWeight: 600,
+    letterSpacing: '0.12em',
     textTransform: 'uppercase'
   };
 
@@ -78,7 +78,7 @@ const Home = () => {
   };
 
   const linkStyle = {
-    color: '#374151',
+    color: 'rgba(240, 248, 255, 0.95)',
     fontWeight: '600',
     fontSize: '15px',
     textDecoration: 'none',
@@ -97,8 +97,8 @@ const Home = () => {
 
   const loginButtonStyle = {
     background: 'transparent',
-    border: '2px solid #3b82f6',
-    color: '#3b82f6',
+    border: '2px solid rgba(255,255,255,0.14)',
+    color: 'rgba(240,248,255,0.95)',
     padding: '10px 24px',
     borderRadius: '10px',
     fontWeight: '600',
@@ -111,7 +111,7 @@ const Home = () => {
   };
 
   const signUpButtonStyle = {
-    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+    background: 'linear-gradient(135deg, rgba(59,130,246,0.95) 0%, rgba(29,78,216,0.95) 100%)',
     border: 'none',
     color: 'white',
     padding: '12px 28px',
@@ -129,15 +129,19 @@ const Home = () => {
   };
 
   const handleMouseEnter = (e) => {
-    e.target.style.color = '#3b82f6';
-    e.target.style.background = 'rgba(59, 130, 246, 0.08)';
-    e.target.style.transform = 'translateY(-1px)';
+    const t = e.currentTarget || e.target;
+    t.style.color = '#ffffff';
+    t.style.background = 'rgba(255,255,255,0.04)';
+    t.style.transform = 'translateY(-2px)';
+    t.style.boxShadow = '0 8px 24px rgba(2,6,23,0.12)';
   };
 
   const handleMouseLeave = (e) => {
-    e.target.style.color = '#374151';
-    e.target.style.background = 'transparent';
-    e.target.style.transform = 'translateY(0)';
+    const t = e.currentTarget || e.target;
+    t.style.color = 'rgba(240, 248, 255, 0.95)';
+    t.style.background = 'transparent';
+    t.style.transform = 'translateY(0)';
+    t.style.boxShadow = 'none';
   };
 
   const handleLoginHover = (e) => {
@@ -1353,6 +1357,10 @@ const servicesHeaderRightStyle = {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [user, setUser] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [activeHash, setActiveHash] = useState('#home');
   const [currentView, setCurrentView] = useState('home');
   const [loginError, setLoginError] = useState('');
   const [bookings, setBookings] = useState([]);
@@ -1370,6 +1378,8 @@ const servicesHeaderRightStyle = {
     notes: ''
   });
   const [toast, setToast] = useState(null);
+  const [profileFirstName, setProfileFirstName] = useState('');
+  const [profileLastName, setProfileLastName] = useState('');
   const today = new Date();
   const [calendarYear, setCalendarYear] = useState(today.getFullYear());
   const [calendarMonth, setCalendarMonth] = useState(today.getMonth()); // 0-11
@@ -1421,6 +1431,63 @@ const servicesHeaderRightStyle = {
     window.addEventListener('resize', setResponsive);
     return () => window.removeEventListener('resize', setResponsive);
   }, []);
+
+  // Navbar scroll effect: change translucency and shadow on scroll
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY || window.pageYOffset;
+      setScrolled(y > 8);
+      const root = document.documentElement;
+      if (y > 8) {
+        root.style.setProperty('--nav-bg', 'linear-gradient(180deg, rgba(6,38,83,0.36), rgba(3,105,161,0.18))');
+        root.style.setProperty('--nav-shadow', '0 12px 40px rgba(2,6,23,0.45)');
+      } else {
+        root.style.setProperty('--nav-bg', 'linear-gradient(180deg, rgba(6,38,83,0.24), rgba(3,105,161,0.12))');
+        root.style.setProperty('--nav-shadow', '0 4px 20px rgba(0, 0, 0, 0.08)');
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // close menus on Escape
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setMobileOpen(false);
+        setShowUserMenu(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // detect mobile width for hamburger
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 860);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // active link based on hash
+  useEffect(() => {
+    const setFromHash = () => setActiveHash(window.location.hash || '#home');
+    setFromHash();
+    window.addEventListener('hashchange', setFromHash);
+    return () => window.removeEventListener('hashchange', setFromHash);
+  }, []);
+
+  const handleNavClick = (e, hash) => {
+    e.preventDefault();
+    if (hash) {
+      setActiveHash(hash);
+      // navigate
+      try { window.location.hash = hash; } catch (err) {}
+    }
+    if (isMobile) setMobileOpen(false);
+  };
 
   const saveBookings = (next) => {
     setBookings(next);
@@ -1567,6 +1634,21 @@ const servicesHeaderRightStyle = {
         localStorage.removeItem('davaoBlueEaglesUser');
       }
     }
+    // Listen for external updates to the user (e.g., avatar changes in dashboard)
+    const onUserUpdated = (e) => {
+      try {
+        const updated = e?.detail || JSON.parse(localStorage.getItem('davaoBlueEaglesUser') || 'null');
+        if (updated) setUser(updated);
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    window.addEventListener('davaoUserUpdated', onUserUpdated);
+
+    return () => {
+      window.removeEventListener('davaoUserUpdated', onUserUpdated);
+    };
   }, []);
 
   const handleLogin = (userData) => {
@@ -1590,8 +1672,12 @@ const servicesHeaderRightStyle = {
       localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(authenticatedUser));
       setLoginError(''); // Clear any previous errors
 
-      // Send all authenticated users to the dashboard; Dashboard will choose the initial panel
-      setCurrentView('dashboard');
+      // Only admins can access the dashboard
+      if (authenticatedUser.role === 'admin') {
+        setCurrentView('dashboard');
+      } else {
+        setCurrentView('home');
+      }
       return;
     }
     
@@ -1605,6 +1691,41 @@ const servicesHeaderRightStyle = {
     setUser(null);
     localStorage.removeItem('davaoBlueEaglesUser');
     setShowUserMenu(false);
+  };
+
+  const openProfile = () => {
+    // Prefill form from current user
+    setProfileFirstName(user?.firstName || '');
+    setProfileLastName(user?.lastName || '');
+    setShowUserMenu(false);
+    setCurrentView('profile');
+  };
+
+  const handleSaveProfile = (e) => {
+    e && e.preventDefault();
+    try {
+      const stored = JSON.parse(localStorage.getItem('davaoBlueEaglesUser') || 'null') || user || {};
+      const updated = { ...stored, firstName: profileFirstName, lastName: profileLastName };
+      // persist single user
+      localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(updated));
+
+      // update users array if present
+      const users = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
+      if (users && users.length) {
+        const updatedUsers = users.map(u => u.id === updated.id ? { ...u, firstName: profileFirstName, lastName: profileLastName } : u);
+        localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
+      }
+
+      // update local state and notify
+      setUser(updated);
+      window.dispatchEvent(new CustomEvent('davaoUserUpdated', { detail: updated }));
+      setToast({ type: 'success', message: 'Profile updated.' });
+      // return to home after save
+      setCurrentView('home');
+    } catch (err) {
+      console.error('Saving profile failed', err);
+      setToast({ type: 'error', message: 'Failed to save profile.' });
+    }
   };
 
   const handleShowLogin = () => {
@@ -1680,6 +1801,88 @@ const servicesHeaderRightStyle = {
         />
       )}
 
+      {currentView === 'profile' && (
+        <div style={{ padding: '28px', maxWidth: '720px', margin: '28px auto' }}>
+          <div style={{ marginBottom: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2 style={{ margin: 0 }}>Edit Profile</h2>
+            <div style={{ color: '#6b7280', fontSize: 13 }}>Manage your account details</div>
+          </div>
+
+          <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))', padding: 22, borderRadius: 12, border: '1px solid rgba(255,255,255,0.04)' }}>
+            <form onSubmit={handleSaveProfile} style={{ display: 'grid', gap: '14px' }}>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                <div style={{ width: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 96, height: 96, borderRadius: 12, overflow: 'hidden', background: '#e6f2ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      (user?.firstName || user?.email || 'U').charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input id="profile-avatar-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+                      const file = e.target.files && e.target.files[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const base64 = String(reader.result);
+                        try {
+                          const stored = JSON.parse(localStorage.getItem('davaoBlueEaglesUser') || 'null');
+                          const updated = { ...(stored || {}), avatar: base64 };
+                          localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(updated));
+                          const users = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
+                          const updatedUsers = users.map(u => u.id === updated.id ? { ...u, avatar: base64 } : u);
+                          if (users.length) localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
+                          setUser(updated);
+                          window.dispatchEvent(new CustomEvent('davaoUserUpdated', { detail: updated }));
+                        } catch (err) {
+                          console.error('Saving avatar failed', err);
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }} />
+                    <label htmlFor="profile-avatar-input" style={{ cursor: 'pointer', padding: '8px 10px', borderRadius: 8, background: '#eef2ff', color: '#0b3b78', fontWeight: 700, fontSize: 13 }}>Upload</label>
+                    <button type="button" onClick={() => {
+                      try {
+                        const stored = JSON.parse(localStorage.getItem('davaoBlueEaglesUser') || 'null');
+                        if (!stored) return;
+                        const updated = { ...(stored || {}) };
+                        delete updated.avatar;
+                        localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(updated));
+                        const users = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
+                        const updatedUsers = users.map(u => u.id === updated.id ? (function(){ const o = { ...u }; delete o.avatar; return o; })() : u);
+                        if (users.length) localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
+                        setUser(updated);
+                        window.dispatchEvent(new CustomEvent('davaoUserUpdated', { detail: updated }));
+                      } catch (err) {
+                        console.error('Removing avatar failed', err);
+                      }
+                    }} style={{ padding: '8px 10px', borderRadius: 8, background: '#fff1f2', color: '#7f1d1d', border: 'none', fontWeight: 700, fontSize: 13 }}>Remove</button>
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, display: 'grid', gap: 14 }}>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <label style={{ width: 140, fontWeight: 700, color: '#0b3b78' }}>First Name</label>
+                    <input type="text" value={profileFirstName} onChange={(e) => setProfileFirstName(e.target.value)} placeholder="First name" style={{ flex: 1, padding: '12px', borderRadius: 8, border: '1px solid rgba(11,59,120,0.08)', background: '#fff', color: '#06264a' }} />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <label style={{ width: 140, fontWeight: 700, color: '#0b3b78' }}>Last Name</label>
+                    <input type="text" value={profileLastName} onChange={(e) => setProfileLastName(e.target.value)} placeholder="Last name" style={{ flex: 1, padding: '12px', borderRadius: 8, border: '1px solid rgba(11,59,120,0.08)', background: '#fff', color: '#06264a' }} />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 6 }}>
+                    <button type="button" onClick={() => setCurrentView('home')} style={{ padding: '10px 16px', borderRadius: 8, background: 'transparent', color: '#0b62d6', border: '1px solid rgba(11,98,214,0.12)', fontWeight: 700 }}>Cancel</button>
+                    <button type="submit" style={{ padding: '10px 16px', borderRadius: 8, background: 'linear-gradient(90deg,#06b6d4,#3b82f6)', color: 'white', border: 'none', fontWeight: 800 }}>Save changes</button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
 
 
 
@@ -1687,204 +1890,183 @@ const servicesHeaderRightStyle = {
       {/* Home view */}
       {currentView === 'home' && (
         <div style={containerStyle}>
-          <nav style={navStyle}>
-            {/* Logo Section */}
-            <div style={logoStyle}>
-              <h1 style={logoMainStyle}>DAVAO</h1>
-              <p style={logoSubStyle}>BLUE EAGLES</p>
+          {/* small local styles for navbar animations and focus */}
+          <style>{`
+            .nav-fade { transition: opacity 220ms ease, transform 220ms ease; }
+            .nav-link:focus { outline: 3px solid rgba(99,102,241,0.18); outline-offset: 4px; }
+            .dropdown-enter { transform: translateY(-6px); opacity: 0; }
+            .dropdown-enter-active { transform: translateY(0); opacity: 1; transition: all 220ms ease; }
+          `}</style>
+          <nav style={{ ...navStyle, alignItems: 'center' }} aria-label="Main navigation">
+            {/* Left: Logo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={logoStyle}>
+                <a href="#home" onClick={(e) => handleNavClick(e, '#home')} style={{ textDecoration: 'none' }}>
+                  <h1 style={logoMainStyle}>DAVAO</h1>
+                </a>
+                <p style={logoSubStyle}>BLUE EAGLES</p>
+              </div>
             </div>
 
-            {/* Navigation Links */}
-            <ul style={ulStyle}>
-              <li>
-                <a
-                  href="#home"
-                  style={linkStyle}
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  Home
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#services"
-                  style={linkStyle}
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  Services
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#about"
-                  style={linkStyle}
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#contact"
-                  style={linkStyle}
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  Contact
-                </a>
-              </li>
-            </ul>
-
-            {/* Updated Buttons Section with Authentication */}
-            <div style={buttonContainerStyle}>
-              {user ? (
-                // Logged in state
-                <div style={{ position: 'relative' }}>
-                  <button
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.15)',
-                      backdropFilter: 'blur(10px)',
-                      WebkitBackdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255, 255, 255, 0.3)',
-                      color: '#ffffff',
-                      padding: '10px 16px',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      letterSpacing: '0.025em',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
-                    }}
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'rgba(255, 255, 255, 0.25)';
-                      e.target.style.transform = 'translateY(-1px)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(255, 255, 255, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  >
-                    <FaUser /> {user.firstName || user.email.split('@')[0]} ▼
-                  </button>
-                  {showUserMenu && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      right: 0,
-                      background: 'rgba(255, 255, 255, 0.95)',
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(255, 255, 255, 0.3)',
-                      borderRadius: '16px',
-                      padding: '12px 0',
-                      minWidth: '200px',
-                      marginTop: '8px',
-                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
-                      zIndex: 1000
-                    }}>
-                      <a href="#profile" style={{
-                        display: 'block',
-                        padding: '12px 16px',
-                        color: '#e5e7eb',
-                        textDecoration: 'none',
-                        fontSize: '14px',
-                        transition: 'background-color 0.2s',
-                        cursor: 'pointer'
-                      }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                      >Profile</a>
-                      <a href="#bookings" style={{
-                        display: 'block',
-                        padding: '12px 16px',
-                        color: '#e5e7eb',
-                        textDecoration: 'none',
-                        fontSize: '14px',
-                        transition: 'background-color 0.2s',
-                        cursor: 'pointer'
-                      }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                        onClick={(e) => { e.preventDefault(); setShowMyBookings(true); setShowUserMenu(false); }}
-                      >Bookings</a>
-
-                      {/* Only show Dashboard for admins */}
-                      {user.role === 'admin' && (
-                        <a href="#dashboard" style={{
-                          display: 'block',
-                          padding: '12px 16px',
-                          color: '#e5e7eb',
-                          textDecoration: 'none',
-                          fontSize: '14px',
-                          transition: 'background-color 0.2s',
-                          cursor: 'pointer'
-                        }}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                          onClick={(e) => { e.preventDefault(); setCurrentView('dashboard'); setShowUserMenu(false); }}
-                        >Dashboard</a>
-                      )}
-
-                      <hr style={{
-                        margin: '8px 0',
-                        border: 'none',
-                        borderTop: '1px solid rgba(100, 255, 218, 0.2)'
-                      }} />
-                      <button
-                        onClick={handleLogout}
-                        style={{
-                          display: 'block',
-                          width: '100%',
-                          padding: '12px 16px',
-                          color: '#e5e7eb',
-                          background: 'none',
-                          border: 'none',
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          transition: 'background-color 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 99, 99, 0.1)'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            {/* Center: links (hidden on mobile) */}
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+              <ul style={{ ...ulStyle, display: isMobile ? 'none' : 'flex' }} role="menubar">
+                {['#home','#services','#about','#contact'].map((hash, i) => {
+                  const labels = ['Home','Services','About Us','Contact'];
+                  return (
+                    <li key={hash} style={{ listStyle: 'none' }}>
+                      <a
+                        href={hash}
+                        onClick={(e) => handleNavClick(e, hash)}
+                        style={{ ...linkStyle, ...(activeHash === hash ? { boxShadow: 'inset 0 -3px 0 rgba(255,255,255,0.12)' } : {}) }}
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                        role="menuitem"
                       >
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                // Not logged in state
-                <>
-                  <button
-                    onClick={handleShowLogin}
-                    style={loginButtonStyle}
-                    onMouseEnter={handleLoginHover}
-                    onMouseLeave={handleLoginLeave}
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={handleShowSignup}
-                    style={signUpButtonStyle}
-                    onMouseEnter={handleSignupHover}
-                    onMouseLeave={handleSignupLeave}
-                  >
-                    Sign Up
-                  </button>
-                </>
-              )}
+                        {labels[i]}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
+            {/* Right: actions */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Mobile toggle */}
+              <button
+                aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                aria-controls="mobile-menu"
+                aria-expanded={mobileOpen}
+                onClick={() => setMobileOpen(!mobileOpen)}
+                style={{ display: isMobile ? 'inline-flex' : 'none', background: 'transparent', border: 'none', color: 'rgba(240,248,255,0.95)', cursor: 'pointer', padding: '8px' }}
+              >
+                {mobileOpen ? (
+                  <span style={{ fontSize: 22 }} aria-hidden>×</span>
+                ) : (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 12h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                )}
+              </button>
+
+              <div style={buttonContainerStyle}>
+                {user ? (
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      style={{
+                        ...((buttonContainerStyle && {}) || {}),
+                        background: 'linear-gradient(90deg, rgba(2,6,23,0.65), rgba(15,23,42,0.55))',
+                        border: '1px solid rgba(255,255,255,0.04)',
+                        color: '#e6eef8',
+                        padding: '8px 12px',
+                        borderRadius: '999px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        fontSize: '14px',
+                        fontWeight: '700'
+                      }}
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      aria-controls="user-menu"
+                      aria-expanded={showUserMenu}
+                    >
+                      <div style={{ width: '34px', height: '34px', borderRadius: '999px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: user?.avatar ? 'transparent' : 'linear-gradient(135deg,#06b6d4,#3b82f6)' }}>
+                          {user?.avatar ? (
+                            <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <FaUser style={{ color: 'white' }} />
+                          )}
+                        </div>
+                      <div style={{ textAlign: 'left', lineHeight: 1 }}>
+                        <div style={{ fontSize: '13px', fontWeight: 800 }}>{user.firstName || (user.email || '').split('@')[0]}</div>
+                        <div style={{ fontSize: '11px', color: 'rgba(229,231,235,0.9)', marginTop: '2px' }}>{user.role || 'Member'}</div>
+                      </div>
+                      <div style={{ marginLeft: '6px', opacity: 0.9, transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 180ms ease' }}>▾</div>
+                    </button>
+
+                    {showUserMenu && (
+                      <div id="user-menu" role="menu" style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, background: '#ffffff', border: '1px solid rgba(15, 76, 129, 0.08)', borderRadius: '12px', padding: '14px', minWidth: '240px', boxShadow: '0 12px 28px rgba(2,6,23,0.18)', zIndex: 1200 }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid rgba(11,59,120,0.04)' }}>
+                          <div style={{ width: '48px', height: '48px', borderRadius: '10px', overflow: 'hidden', background: '#e6f2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0b3b78', fontWeight: 800, fontSize: '18px' }}>
+                            {user?.avatar ? (
+                              <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              (user.firstName || user.email || 'U').charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 800, fontSize: '15px', color: '#06264a' }}>{user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user.email || '').split('@')[0]}</div>
+                            <div style={{ fontSize: '12px', color: '#1e4f8a', marginTop: '3px' }}>{user.email}</div>
+                          </div>
+                        </div>
+
+                        <div style={{ marginTop: '12px', display: 'grid', gap: '8px' }}>
+                          {/* Avatar controls for all users */}
+                          {/* Avatar editing moved to profile page. Preview only shown above. */}
+                          <a href="#profile" onClick={(e) => { e.preventDefault(); openProfile(); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                            <FaUser style={{ color: '#0b62d6', minWidth: '18px' }} />
+                            <span>View Profile</span>
+                          </a>
+
+                          <a href="#bookings" onClick={(e) => { e.preventDefault(); setShowMyBookings(true); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 7h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M8 3v4" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M16 3v4" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 10v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <span>My Bookings</span>
+                          </a>
+
+                          {user.role === 'admin' && (
+                            <a href="#dashboard" onClick={(e) => { e.preventDefault(); if (user?.role === 'admin') { setCurrentView('dashboard'); } else { alert('Dashboard access is restricted to administrators.'); } setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              <span>Admin Dashboard</span>
+                            </a>
+                          )}
+
+                          <div style={{ height: '1px', background: 'rgba(11,59,120,0.06)', margin: '6px 0' }} />
+
+                          <button onClick={() => { handleLogout(); setShowUserMenu(false); }} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', background: '#0b62d6', color: 'white', fontWeight: 800, cursor: 'pointer' }}>Sign Out</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <button onClick={handleShowLogin} style={loginButtonStyle} onMouseEnter={handleLoginHover} onMouseLeave={handleLoginLeave}>Login</button>
+                    <button onClick={handleShowSignup} style={signUpButtonStyle} onMouseEnter={handleSignupHover} onMouseLeave={handleSignupLeave}>Sign Up</button>
+                  </>
+                )}
+              </div>
             </div>
           </nav>
+
+          {/* Mobile menu overlay */}
+          {mobileOpen && (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 1500, background: 'linear-gradient(180deg, rgba(2,6,23,0.92), rgba(2,6,23,0.98))', display: 'flex', flexDirection: 'column', padding: '32px' }} onClick={() => setMobileOpen(false)}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <h3 style={{ margin: 0, color: '#c7ddff', fontFamily: 'Marcellus, serif' }}>DAVAO</h3>
+                  <small style={{ color: '#9fb6d9' }}>BLUE EAGLES</small>
+                </div>
+                <button onClick={() => setMobileOpen(false)} style={{ background: 'transparent', border: 'none', color: '#c7ddff', fontSize: '22px' }}>×</button>
+              </div>
+
+              <nav style={{ marginTop: '36px', display: 'flex', flexDirection: 'column', gap: '18px' }} onClick={(e) => e.stopPropagation()}>
+                <a href="#home" onClick={(e) => handleNavClick(e, '#home')} style={{ color: '#e6eef8', fontSize: '20px', textDecoration: 'none' }}>Home</a>
+                <a href="#services" onClick={(e) => handleNavClick(e, '#services')} style={{ color: '#e6eef8', fontSize: '20px', textDecoration: 'none' }}>Services</a>
+                <a href="#about" onClick={(e) => handleNavClick(e, '#about')} style={{ color: '#e6eef8', fontSize: '20px', textDecoration: 'none' }}>About Us</a>
+                <a href="#contact" onClick={(e) => handleNavClick(e, '#contact')} style={{ color: '#e6eef8', fontSize: '20px', textDecoration: 'none' }}>Contact</a>
+
+                <div style={{ marginTop: '18px', display: 'flex', gap: '12px' }}>
+                  {user ? (
+                    <button onClick={() => { setMobileOpen(false); setShowUserMenu(true); }} style={{ padding: '12px', borderRadius: '10px', background: '#0b62d6', border: 'none', color: 'white', fontWeight: 700 }}>Account</button>
+                  ) : (
+                    <>
+                      <button onClick={() => { setMobileOpen(false); handleShowLogin(); }} style={{ padding: '12px', borderRadius: '10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: '#e6eef8' }}>Login</button>
+                      <button onClick={() => { setMobileOpen(false); handleShowSignup(); }} style={{ padding: '12px', borderRadius: '10px', background: 'linear-gradient(90deg,#06b6d4,#3b82f6)', border: 'none', color: 'white', fontWeight: 700 }}>Sign Up</button>
+                    </>
+                  )}
+                </div>
+              </nav>
+            </div>
+          )}
 
           {/* Hero Section */}
           <section id="home" style={heroSectionStyle}>

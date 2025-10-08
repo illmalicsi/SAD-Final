@@ -747,7 +747,58 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
               <h2 style={styles.panelTitle}>My Profile</h2>
             </div>
             <div style={styles.panelBody}>
-              {getComingSoonContent('Profile Settings', '👤')}
+              {/* Profile editor - avatar upload */}
+              <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 120, height: 120, borderRadius: 16, overflow: 'hidden', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, color: '#0b3b78' }}>
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ fontWeight: 800 }}>{getUserInitials()}</div>
+                    )}
+                  </div>
+
+                  <label style={{ display: 'inline-flex', gap: 8 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files && e.target.files[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          const base64 = String(reader.result);
+                          // Update current user in localStorage
+                          try {
+                            const stored = JSON.parse(localStorage.getItem('davaoBlueEaglesUser') || 'null');
+                            const updated = { ...(stored || {}), avatar: base64 };
+                            localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(updated));
+                            // Update users list if exists (for admin/user management)
+                            const users = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
+                            const updatedUsers = users.map(u => u.id === updated.id ? { ...u, avatar: base64 } : u);
+                            if (users.length) localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
+
+                            // Notify parent/app that user changed (so nav/menu updates)
+                            window.dispatchEvent(new CustomEvent('davaoUserUpdated', { detail: updated }));
+                          } catch (err) {
+                            console.error('Saving avatar failed', err);
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                    <button style={{ padding: '8px 12px', borderRadius: 8, background: '#0b62d6', color: 'white', border: 'none', cursor: 'pointer' }}>Upload Photo</button>
+                  </label>
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ marginTop: 0 }}>{user?.firstName} {user?.lastName}</h3>
+                  <p style={{ color: '#475569' }}>{user?.email}</p>
+                  <div style={{ marginTop: 12 }}>
+                    <p style={{ margin: 0, color: '#64748b' }}>You can upload a profile picture. It is stored locally in your browser.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         );
