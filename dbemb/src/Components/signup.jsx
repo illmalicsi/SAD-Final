@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import authService from '../services/authService';
 import {
   FaUpload,
   FaUser,
@@ -10,6 +11,7 @@ import {
   FaIdCard,
   FaCheck,
   FaTimes, // added
+  FaLock,
 } from "react-icons/fa";
 
 const Signup = ({ onSignup, onClose, onSwitchToLogin }) => { // added onSwitchToLogin prop
@@ -17,6 +19,8 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => { // added onSwitchTo
     firstName: "",
     lastName: "",
     email: "",
+    password: "",
+    confirmPassword: "",
     birthday: "",
     phone: "",
     instrument: "",
@@ -170,6 +174,9 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => { // added onSwitchTo
     if (!values.lastName.trim()) e.lastName = "Last name required";
     if (!values.email) e.email = "Email required";
     else if (!/^\S+@\S+\.\S+$/.test(values.email)) e.email = "Invalid email";
+  if (!values.password) e.password = "Password required";
+  else if (values.password.length < 6) e.password = "Password must be at least 6 characters";
+  if (values.password !== values.confirmPassword) e.confirmPassword = "Passwords do not match";
     if (!values.birthday) e.birthday = "Birthday required";
     else {
       const birth = new Date(values.birthday);
@@ -209,12 +216,33 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => { // added onSwitchTo
     if (Object.keys(e).length) return;
     setSubmitting(true);
     try {
-      // Simulate submit — replace with real API call
-      await new Promise((r) => setTimeout(r, 900));
-      setSuccess("Application submitted. We'll contact you soon.");
+      // Call backend register endpoint
+      const payload = {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        password: form.password
+      };
+
+      const res = await authService.register(payload);
+
+      // On success, auto-login the user (using the same password we sent)
+      try {
+        const loginRes = await authService.login(payload.email, payload.password);
+        if (loginRes && loginRes.success && onSignup) {
+          onSignup(loginRes.user);
+        }
+      } catch (loginErr) {
+        // ignore login error, but still show success
+        console.warn('Auto-login failed after registration:', loginErr);
+      }
+
+      setSuccess('Registration successful.');
       setForm({
         firstName: "",
         lastName: "",
+        password: "",
+        confirmPassword: "",
         email: "",
         birthday: "",
         phone: "",
@@ -223,9 +251,9 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => { // added onSwitchTo
         identityProof: null,
       });
       setFileName("");
-      if (onSignup) onSignup(form);
     } catch (err) {
-      setErrors({ submit: "Submission failed" });
+      console.error('Registration error:', err);
+      setErrors({ submit: err.message || 'Submission failed' });
     } finally {
       setSubmitting(false);
     }
@@ -318,6 +346,40 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => { // added onSwitchTo
               aria-label="Email"
             />
             {errors.email && <div style={styles.err}>{errors.email}</div>}
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.label}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <FaLock color="#9fb0c8" /> Password
+              </div>
+            </label>
+            <input
+              style={styles.input}
+              value={form.password}
+              onChange={(e) => handleChange("password", e.target.value)}
+              placeholder="Choose a password"
+              type="password"
+              aria-label="Password"
+            />
+            {errors.password && <div style={styles.err}>{errors.password}</div>}
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.label}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <FaLock color="#9fb0c8" /> Confirm password
+              </div>
+            </label>
+            <input
+              style={styles.input}
+              value={form.confirmPassword}
+              onChange={(e) => handleChange("confirmPassword", e.target.value)}
+              placeholder="Confirm password"
+              type="password"
+              aria-label="Confirm password"
+            />
+            {errors.confirmPassword && <div style={styles.err}>{errors.confirmPassword}</div>}
           </div>
 
           <div style={styles.field}>

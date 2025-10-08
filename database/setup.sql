@@ -50,9 +50,9 @@ CREATE INDEX idx_users_active ON users(is_active, is_blocked);
 
 -- Insert some sample users for testing (plain-text passwords for local/school use)
 INSERT INTO users (first_name, last_name, email, password_hash, role_id) VALUES
-  ('John', 'Doe', 'john.doe@blueeagles.com', 'password123', 2),
-  ('Jane', 'Smith', 'jane.smith@blueeagles.com', 'password123', 3),
-  ('Bob', 'Johnson', 'bob.johnson@blueeagles.com', 'password123', 3),
+  ('Harley', 'Cuba', 'hlncuba@addu.edu.ph', 'password123', 2),
+  ('Jan Aceryl', 'Futalan', 'jnfutalan@addu.edu.ph', 'password123', 3),
+  ('Ivan', 'Lim', 'ilimlouiemalicsi@gmail.com', 'password123', 3),
   ('Harley', 'Potter', 'harley.potter@blueeagles.com', 'HarleyPass123!', 3)
 ON DUPLICATE KEY UPDATE 
   password_hash = VALUES(password_hash);

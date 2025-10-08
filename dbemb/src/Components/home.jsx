@@ -8,6 +8,7 @@ import musicWorkshop from "./Assets/musicWorkshop.jpg";
 import instrumentRentals from "./Assets/instrumentRentals.jpg";
 import Login from './login'
 import Signup from './signup'
+import UserSignup from './UserSignup'
 import Dashboard from './dashboard'
 
 
@@ -1380,6 +1381,9 @@ const servicesHeaderRightStyle = {
   const [toast, setToast] = useState(null);
   const [profileFirstName, setProfileFirstName] = useState('');
   const [profileLastName, setProfileLastName] = useState('');
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
   const today = new Date();
   const [calendarYear, setCalendarYear] = useState(today.getFullYear());
   const [calendarMonth, setCalendarMonth] = useState(today.getMonth()); // 0-11
@@ -1651,6 +1655,76 @@ const servicesHeaderRightStyle = {
     };
   }, []);
 
+  // Load notifications from localStorage
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('dbeNotifications') || '[]');
+      setNotifications(Array.isArray(stored) ? stored : []);
+    } catch (err) {
+      setNotifications([]);
+    }
+  }, []);
+
+  const saveNotifications = (next) => {
+    setNotifications(next);
+    localStorage.setItem('dbeNotifications', JSON.stringify(next));
+  };
+
+  const unreadCount = () => notifications.filter(n => !n.read).length;
+
+  const markAllRead = () => {
+    const next = notifications.map(n => ({ ...n, read: true }));
+    saveNotifications(next);
+  };
+
+  const clearAllNotifications = () => {
+    saveNotifications([]);
+  };
+
+  const handleOpenNotification = (index) => {
+    // mark as read and open notifications view focused on the clicked item
+    const next = notifications.map((n, i) => i === index ? { ...n, read: true } : n);
+    saveNotifications(next);
+    setSelectedNotification(next[index]);
+    setShowNotifications(false);
+    setCurrentView('notifications');
+  };
+
+  const deleteNotification = (index) => {
+    const next = notifications.filter((_, i) => i !== index);
+    saveNotifications(next);
+    // if the deleted was selected, clear selection
+    if (selectedNotification && notifications[index] && selectedNotification.ts === notifications[index].ts) {
+      setSelectedNotification(null);
+    }
+  };
+
+  const toggleNotificationRead = (index) => {
+    const next = notifications.map((n, i) => i === index ? { ...n, read: !n.read } : n);
+    saveNotifications(next);
+  };
+
+  // Helper to add a test notification (useful while developing)
+  const addTestNotification = (title = 'Test Notification', body = 'This is a test') => {
+    const n = { title, body, ts: Date.now(), read: false };
+    const next = [...notifications, n];
+    saveNotifications(next);
+  };
+
+  // close dropdowns when clicking outside
+  useEffect(() => {
+    const onDocClick = (e) => {
+      // close notifications and user menu if click is outside their areas or toggle buttons
+      const path = e.composedPath ? e.composedPath() : (e.path || []);
+      const isNotif = path.some(p => p && (p.id === 'notification-menu' || (p.dataset && p.dataset.notifToggle)));
+      const isUser = path.some(p => p && (p.id === 'user-menu' || (p.dataset && p.dataset.userToggle)));
+      if (!isNotif) setShowNotifications(false);
+      if (!isUser) setShowUserMenu(false);
+    };
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, [notifications]);
+
   const handleLogin = (userData) => {
     console.log('Home - handleLogin called with:', userData);
     
@@ -1786,8 +1860,8 @@ const servicesHeaderRightStyle = {
 
       {/* Add this after the login view */}
       {currentView === 'signup' && (
-        <Signup
-          onBack={handleBackToHome}
+        <UserSignup
+          onClose={handleBackToHome}
           onSignup={handleSignup}
           onSwitchToLogin={handleSwitchToLogin}
         />
@@ -1883,6 +1957,40 @@ const servicesHeaderRightStyle = {
         </div>
       )}
 
+      {currentView === 'notifications' && (
+        <div style={{ padding: '28px', maxWidth: '920px', margin: '28px auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+            <h2 style={{ margin: 0 }}>Notifications</h2>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={markAllRead} style={{ padding: '8px 12px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(11,98,214,0.12)', color: '#0b62d6', fontWeight: 700 }}>Mark all read</button>
+              <button onClick={clearAllNotifications} style={{ padding: '8px 12px', borderRadius: 8, background: '#fff1f2', border: 'none', color: '#7f1d1d', fontWeight: 700 }}>Clear all</button>
+              <button onClick={() => setCurrentView('home')} style={{ padding: '8px 12px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(11,98,214,0.06)', color: '#0b62d6', fontWeight: 700 }}>Close</button>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gap: 12 }}>
+            {notifications.length === 0 ? (
+              <div style={{ padding: 18, borderRadius: 12, background: '#f8fafc', color: '#6b7280' }}>No notifications</div>
+            ) : notifications.slice().reverse().map((n, idx) => {
+              const origIndex = notifications.length - 1 - idx;
+              return (
+                <div key={n.ts || idx} style={{ padding: 16, borderRadius: 12, border: '1px solid rgba(11,59,120,0.06)', background: n.read ? '#ffffff' : '#eef6ff', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                  <div>
+                    <div style={{ fontWeight: 800, color: '#06264a' }}>{n.title}</div>
+                    <div style={{ color: '#4b5563', marginTop: 6 }}>{n.body}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 8 }}>{new Date(n.ts).toLocaleString()}</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+                    <button onClick={() => toggleNotificationRead(origIndex)} style={{ padding: '6px 10px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(11,98,214,0.08)', color: '#0b62d6', fontWeight: 700 }}>{n.read ? 'Unread' : 'Mark read'}</button>
+                    <button onClick={() => deleteNotification(origIndex)} style={{ padding: '6px 10px', borderRadius: 8, background: '#fff1f2', border: 'none', color: '#7f1d1d', fontWeight: 700 }}>Delete</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
 
 
 
@@ -1949,6 +2057,42 @@ const servicesHeaderRightStyle = {
               </button>
 
               <div style={buttonContainerStyle}>
+                {/* Notifications */}
+                <div style={{ position: 'relative' }}>
+                  <button aria-label="Notifications" data-notif-toggle="true" onClick={(e) => { e.stopPropagation(); setShowNotifications(!showNotifications); setShowUserMenu(false); }} style={{ background: 'transparent', border: 'none', color: 'rgba(240,248,255,0.95)', cursor: 'pointer', padding: '8px', position: 'relative' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 1 0-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h11z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    {unreadCount() > 0 && (
+                      <span style={{ position: 'absolute', top: 2, right: 2, background: '#ef4444', color: 'white', fontSize: 11, fontWeight: 800, padding: '2px 6px', borderRadius: 999 }}>{unreadCount()}</span>
+                    )}
+                  </button>
+
+                  {showNotifications && (
+                    <div id="notification-menu" role="menu" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, background: '#ffffff', border: '1px solid rgba(15, 76, 129, 0.08)', borderRadius: '12px', padding: '12px', minWidth: '320px', maxWidth: '360px', boxShadow: '0 12px 28px rgba(2,6,23,0.18)', zIndex: 1200 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <div style={{ fontWeight: 800, color: '#06264a' }}>Notifications</div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={markAllRead} style={{ background: 'transparent', border: 'none', color: '#0b62d6', fontWeight: 700, cursor: 'pointer' }}>Mark all</button>
+                          <button onClick={clearAllNotifications} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontWeight: 700, cursor: 'pointer' }}>Clear</button>
+                        </div>
+                      </div>
+
+                      <div style={{ maxHeight: '260px', overflowY: 'auto', display: 'grid', gap: 8 }}>
+                        {notifications.length === 0 ? (
+                          <div style={{ color: '#6b7280' }}>No notifications</div>
+                        ) : notifications.slice().reverse().map((n, idx) => {
+                          const origIndex = notifications.length - 1 - idx;
+                          return (
+                            <div key={n.ts || idx} onClick={() => handleOpenNotification(origIndex)} style={{ padding: '8px', borderRadius: 8, background: n.read ? '#f8fafc' : '#eef6ff', border: '1px solid rgba(11,59,120,0.04)', cursor: 'pointer' }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: '#06264a' }}>{n.title}</div>
+                              <div style={{ fontSize: 13, color: '#4b5563' }}>{n.body}</div>
+                              <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>{new Date(n.ts).toLocaleString()}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {user ? (
                   <div style={{ position: 'relative' }}>
                     <button
@@ -1966,7 +2110,8 @@ const servicesHeaderRightStyle = {
                         fontSize: '14px',
                         fontWeight: '700'
                       }}
-                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      onClick={(e) => { e.stopPropagation(); setShowUserMenu(!showUserMenu); }}
+                      data-user-toggle="true"
                       aria-controls="user-menu"
                       aria-expanded={showUserMenu}
                     >
@@ -2010,7 +2155,7 @@ const servicesHeaderRightStyle = {
 
                           <a href="#bookings" onClick={(e) => { e.preventDefault(); setShowMyBookings(true); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 7h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M8 3v4" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M16 3v4" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 10v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            <span>My Bookings</span>
+                            <span>Bookings</span>
                           </a>
 
                           {user.role === 'admin' && (
