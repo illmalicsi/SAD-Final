@@ -133,9 +133,11 @@
     };
 
     const handleCreateUser = () => {
+      // Generate incremental ID based on existing max ID
+      const maxId = users.reduce((max, u) => Math.max(max, u.id), 0);
       const newUserWithId = {
         ...newUser,
-        id: Date.now(), // Simple ID generation
+        id: maxId + 1,
         createdAt: new Date().toISOString().split('T')[0]
       };
       

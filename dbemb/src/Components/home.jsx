@@ -86,8 +86,6 @@ const Home = () => {
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     cursor: 'pointer',
     position: 'relative',
-    padding: '8px 16px',
-    borderRadius: '8px',
     fontFamily: 'Georgia, Times, "Times New Roman", serif'
   };
 
@@ -131,18 +129,18 @@ const Home = () => {
 
   const handleMouseEnter = (e) => {
     const t = e.currentTarget || e.target;
-    t.style.color = '#ffffff';
-    t.style.background = 'rgba(255,255,255,0.04)';
-    t.style.transform = 'translateY(-2px)';
-    t.style.boxShadow = '0 8px 24px rgba(2,6,23,0.12)';
+    t.style.color = '#60a5fa'; // Blue text on hover
   };
 
   const handleMouseLeave = (e) => {
     const t = e.currentTarget || e.target;
-    t.style.color = 'rgba(240, 248, 255, 0.95)';
-    t.style.background = 'transparent';
-    t.style.transform = 'translateY(0)';
-    t.style.boxShadow = 'none';
+    // Check if this is the active hash - if so, keep blue color
+    const hash = t.getAttribute('href');
+    if (hash === activeHash) {
+      t.style.color = '#60a5fa';
+    } else {
+      t.style.color = 'rgba(240, 248, 255, 0.95)';
+    }
   };
 
   const handleLoginHover = (e) => {
@@ -2026,7 +2024,7 @@ const servicesHeaderRightStyle = {
                       <a
                         href={hash}
                         onClick={(e) => handleNavClick(e, hash)}
-                        style={{ ...linkStyle, ...(activeHash === hash ? { boxShadow: 'inset 0 -3px 0 rgba(255,255,255,0.12)' } : {}) }}
+                        style={{ ...linkStyle, ...(activeHash === hash ? { color: '#60a5fa' } : {}) }}
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={handleMouseLeave}
                         role="menuitem"
