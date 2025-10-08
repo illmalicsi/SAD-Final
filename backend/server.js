@@ -6,6 +6,7 @@ require('dotenv').config();
 const { testConnection } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
+const billingRoutes = require('./routes/billing');
 const rolesRoutes = require('./routes/roles');
 
 const app = express();
@@ -23,6 +24,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/roles', rolesRoutes);
+// Billing routes (invoices, payments, transactions)
+app.use('/api/billing', billingRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

@@ -1,10 +1,14 @@
 import React, { useState, Suspense } from 'react';
-import { FaHome, FaBell, FaBoxOpen, FaUsers, FaClipboardList, FaChartLine, FaUser, FaQuestionCircle, FaBars, FaSignOutAlt, FaChevronLeft, FaChevronRight, FaSearch, FaCog } from 'react-icons/fa';
+import { FaHome, FaBell, FaBoxOpen, FaUsers, FaClipboardList, FaChartLine, FaUser, FaQuestionCircle, FaBars, FaSignOutAlt, FaChevronLeft, FaChevronRight, FaSearch, FaCog, FaCheckCircle, FaDollarSign, FaHistory } from 'react-icons/fa';
 
 // Import components
 const UserManagement = React.lazy(() => import('./usermanagement'));
 const Inventory = React.lazy(() => import('./inventory'));
 const CustomerManagement = React.lazy(() => import('./CustomerManagement'));
+const Invoice = React.lazy(() => import('./Invoice'));
+const TransactionHistory = React.lazy(() => import('./TransactionHistory'));
+const Approval = React.lazy(() => import('./Approval'));
+import Payment from './Payment';
 
 const Dashboard = ({ user, onBackToHome, onLogout }) => {
   const [currentView, setCurrentView] = useState('main');
@@ -43,6 +47,15 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       title: 'Administration',
       items: [
         { id: 'users', icon: <FaUsers size={18} />, text: 'Users', view: 'user-management', adminOnly: true }
+      ]
+    },
+    {
+      title: 'Finance',
+      items: [
+        { id: 'invoice', icon: <FaClipboardList size={18} />, text: 'Invoices', view: 'invoice', adminOnly: true },
+        { id: 'approval', icon: <FaCheckCircle size={18} />, text: 'Approvals', view: 'approval', adminOnly: true },
+        { id: 'payment', icon: <FaDollarSign size={18} />, text: 'Payments', view: 'payment', adminOnly: true },
+        { id: 'transactions', icon: <FaHistory size={18} />, text: 'Transactions', view: 'transactions', adminOnly: false }
       ]
     },
     {
@@ -992,6 +1005,33 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
               onLogout={onLogout}
               embedded={true}
             />
+          </Suspense>
+        );
+
+      case 'invoice':
+        return (
+          <Suspense fallback={<div>Loading Invoices...</div>}>
+            <Invoice user={user} onBackToHome={() => setCurrentView('main')} />
+          </Suspense>
+        );
+
+      case 'approval':
+        return (
+          <Suspense fallback={<div>Loading Approvals...</div>}>
+            <Approval onBackToHome={() => setCurrentView('main')} />
+          </Suspense>
+        );
+
+      case 'payment':
+        return (
+          <Suspense fallback={<div>Loading Payments...</div>}>
+            <Payment onBackToHome={() => setCurrentView('main')} />
+          </Suspense>
+        );
+      case 'transactions':
+        return (
+          <Suspense fallback={<div>Loading Transactions...</div>}>
+            <TransactionHistory onBackToHome={() => setCurrentView('main')} />
           </Suspense>
         );
 

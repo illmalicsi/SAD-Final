@@ -29,7 +29,6 @@ INSERT INTO roles (role_id, role_name) VALUES
   (1, 'admin'),
   (2, 'member'),
   (3, 'user')
-ON DUPLICATE KEY UPDATE role_name = VALUES(role_name);
 
 -- Insert a default super admin (plain-text for local/school project)
 -- Password: Admin123!
@@ -62,3 +61,37 @@ SELECT u.id, u.first_name, u.last_name, u.email, r.role_name, u.is_active, u.cre
 FROM users u
 JOIN roles r ON u.role_id = r.role_id
 ORDER BY u.created_at;
+
+-- Billing schema: invoices, payments, transactions
+CREATE TABLE IF NOT EXISTS invoices (
+  invoice_id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  description VARCHAR(255),
+  status ENUM('pending','approved','paid') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  approved_at TIMESTAMP NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+  payment_id INT PRIMARY KEY AUTO_INCREMENT,
+  invoice_id INT NOT NULL,
+  amount_paid DECIMAL(10,2) NOT NULL,
+  processed_by INT NOT NULL,
+  processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (invoice_id) REFERENCES invoices(invoice_id),
+  FOREIGN KEY (processed_by) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS transactions (
+  transaction_id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  invoice_id INT,
+  amount DECIMAL(10,2) NOT NULL,
+  transaction_type VARCHAR(50) NOT NULL,
+  status VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (invoice_id) REFERENCES invoices(invoice_id)
+);
