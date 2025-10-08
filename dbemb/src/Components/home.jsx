@@ -20,18 +20,24 @@ const Home = () => {
   const containerStyle = {
     minHeight: '100vh',
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+    position: 'relative'
   };
 
   const navStyle = {
-    backgroundColor: 'rgba(10, 25, 47, 0.95)',
-    padding: '16px 32px',
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(25px)',
+    borderBottom: '1px solid rgba(59, 130, 246, 0.1)',
+    padding: '20px 40px',
     position: 'sticky',
     top: 0,
     zIndex: 1000,
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+    transition: 'all 0.3s ease'
   };
 
   const logoStyle = {
@@ -41,19 +47,25 @@ const Home = () => {
   };
 
   const logoMainStyle = {
-    fontFamily: 'Marcellus, serif',
-    fontSize: '24px',
+    fontFamily: 'Georgia, Times, "Times New Roman", serif',
+    fontSize: '28px',
     fontWeight: 'bold',
-    background: 'linear-gradient(45deg, #60a5fa, #3b82f6)',
+    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    margin: 0
+    margin: 0,
+    letterSpacing: '0.02em'
   };
 
   const logoSubStyle = {
-    fontSize: '14px',
-    color: '#93c5fd',
-    margin: 0
+    fontSize: '12px',
+    background: 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    margin: 0,
+    fontWeight: 500,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase'
   };
 
   const ulStyle = {
@@ -66,12 +78,16 @@ const Home = () => {
   };
 
   const linkStyle = {
-    color: '#e5e7eb',
-    fontWeight: '500',
-    fontSize: '16px',
+    color: '#374151',
+    fontWeight: '600',
+    fontSize: '15px',
     textDecoration: 'none',
-    transition: 'all 0.3s ease',
-    cursor: 'pointer'
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    cursor: 'pointer',
+    position: 'relative',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    fontFamily: 'Georgia, Times, "Times New Roman", serif'
   };
 
   const buttonContainerStyle = {
@@ -80,125 +96,202 @@ const Home = () => {
   };
 
   const loginButtonStyle = {
-    backgroundColor: 'transparent',
-    border: '2px solid  #64ffda',
-    color: '#e5e7eb',
-    padding: '8px 20px',
-    borderRadius: '6px',
-    fontWeight: '500',
+    background: 'transparent',
+    border: '2px solid #3b82f6',
+    color: '#3b82f6',
+    padding: '10px 24px',
+    borderRadius: '10px',
+    fontWeight: '600',
     fontSize: '14px',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    textDecoration: 'none'
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    textDecoration: 'none',
+    fontFamily: 'Georgia, Times, "Times New Roman", serif',
+    letterSpacing: '0.01em'
   };
 
   const signUpButtonStyle = {
-    backgroundColor: '#64ffda',
-    border: '2px solid #64ffda',
-    color: 'black',
-    padding: '8px 20px',
-    borderRadius: '6px',
-    fontWeight: '500',
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+    border: 'none',
+    color: 'white',
+    padding: '12px 28px',
+    borderRadius: '10px',
+    fontWeight: '600',
     fontSize: '14px',
+    letterSpacing: '0.01em',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    textDecoration: 'none'
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    textDecoration: 'none',
+    boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2)',
+    fontFamily: 'Georgia, Times, "Times New Roman", serif',
+    position: 'relative',
+    overflow: 'hidden'
   };
 
   const handleMouseEnter = (e) => {
-    e.target.style.color = '#60a5fa';
+    e.target.style.color = '#3b82f6';
+    e.target.style.background = 'rgba(59, 130, 246, 0.08)';
+    e.target.style.transform = 'translateY(-1px)';
   };
 
   const handleMouseLeave = (e) => {
-    e.target.style.color = '#e5e7eb';
+    e.target.style.color = '#374151';
+    e.target.style.background = 'transparent';
+    e.target.style.transform = 'translateY(0)';
   };
 
-  const handleButtonHover = (e) => {
+  const handleLoginHover = (e) => {
+    e.target.style.background = '#3b82f6';
+    e.target.style.color = 'white';
     e.target.style.transform = 'translateY(-2px)';
-    e.target.style.boxShadow = '0 4px 12px rgba(96, 165, 250, 0.3)';
+    e.target.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.3)';
   };
 
-  const handleButtonLeave = (e) => {
+  const handleLoginLeave = (e) => {
+    e.target.style.background = 'transparent';
+    e.target.style.color = '#3b82f6';
     e.target.style.transform = 'translateY(0)';
     e.target.style.boxShadow = 'none';
+  };
+
+  const handleSignupHover = (e) => {
+    e.target.style.background = 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)';
+    e.target.style.transform = 'translateY(-2px) scale(1.02)';
+    e.target.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.3)';
+  };
+
+  const handleSignupLeave = (e) => {
+    e.target.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+    e.target.style.transform = 'translateY(0) scale(1)';
+    e.target.style.boxShadow = '0 4px 16px rgba(59, 130, 246, 0.2)';
   };
 
   // Hero styles
   const heroSectionStyle = {
     flex: '1 0 auto',
-    minHeight: 'calc(100vh - 64px)',
+    minHeight: '100vh',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '48px 24px',
-    backgroundImage: `linear-gradient(rgba(10, 25, 47, 0.7), rgba(10, 25, 47, 0.9)), url(${bg2})`,
+    padding: '0',
+    background: `
+      linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(15, 23, 42, 0.6) 50%, rgba(30, 41, 59, 0.4) 100%),
+      url(${bg2})
+    `,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    scrollMarginTop: '80px'
+    backgroundAttachment: 'fixed',
+    scrollMarginTop: '80px',
+    position: 'relative',
+    overflow: 'hidden'
   };
 
   const heroContentStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
     textAlign: 'center',
-    color: '#e5e7eb',
-    maxWidth: '1000px'
+    maxWidth: '1000px',
+    width: '100%',
+    padding: '60px 40px',
+    position: 'relative',
+    zIndex: 10,
+    minHeight: '80vh'
   };
 
   const taglineStyle = {
-    fontFamily: 'Marcellus, serif',
-    fontWeight: 600,
-    letterSpacing: '0.08em',
-    fontSize: 'clamp(18px, 3vw, 40px)',
+    fontFamily: 'Georgia, Times, "Times New Roman", serif',
+    fontWeight: 700,
+    letterSpacing: '-0.01em',
+    fontSize: 'clamp(28px, 5vw, 56px)',
     lineHeight: 1.1,
-    margin: '0 0 16px 0',
-    textTransform: 'uppercase',
-    color: '#e5e7eb',
-    textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    maxWidth: '100%'
+    margin: '0 0 24px 0',
+    textTransform: 'none',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 20%, #e2e8f0 40%, #cbd5e1 60%, #94a3b8 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    textShadow: '0 0 40px rgba(255, 255, 255, 0.1)',
+    animation: 'heroTextReveal 2s ease-out forwards',
+    position: 'relative',
+    whiteSpace: 'nowrap'
   };
 
-  const subTaglineStyle = {
-    color: '#93a4b2',
-    fontSize: '18px',
-    marginBottom: '28px',
-    whiteSpace: 'nowrap'
+  const translationStyle = {
+    fontFamily: 'Georgia, Times, "Times New Roman", serif',
+    color: '#fbbf24',
+    fontSize: 'clamp(20px, 3vw, 32px)',
+    fontWeight: 400,
+    marginBottom: '48px',
+    lineHeight: '1.3',
+    letterSpacing: '0.01em',
+    opacity: 0,
+    animation: 'fadeInUp 1.4s ease-out 0.8s forwards',
+    fontStyle: 'italic'
+  };
+
+
+
+  const heroButtonContainerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '30px',
+    opacity: 0,
+    animation: 'fadeInScale 1.5s ease-out 1.2s forwards'
+  };
+
+  const heroFeatureGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '40px',
+    marginTop: '60px',
+    maxWidth: '600px',
+    width: '100%',
+    opacity: 0,
+    animation: 'slideInFromBottom 1.5s ease-out 1.5s forwards'
   };
 
   // Services styles
   const servicesSectionStyle = {
-    backgroundImage: 'linear-gradient(180deg, rgba(2,6,23,0.96) 0%, rgba(2,6,23,0.98) 100%)',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
     padding: '80px 24px 88px',
     minHeight: 'calc(100vh - 64px)',
-    scrollMarginTop: '80px'
+    scrollMarginTop: '80px',
+    position: 'relative'
   };
 
   // About/Contact styles
   const aboutSectionStyle = {
-    backgroundImage: 'linear-gradient(180deg, rgba(2,6,23,0.98) 0%, rgba(2,6,23,1) 100%)',
+    background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
     padding: '80px 24px',
-    scrollMarginTop: '80px'
+    scrollMarginTop: '80px',
+    position: 'relative'
   };
 
 const aboutHeaderStyle = {
-  color: '#e5e7eb',
+  background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
   fontFamily: 'Marcellus, serif',
   fontWeight: 700,
   fontSize: '64px',
   lineHeight: 1.0,
-  margin: '0 0 8px 0',
+  margin: '0 0 16px 0',
   letterSpacing: '-0.02em',
-  textAlign: 'left',
-  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+  textAlign: 'left'
 };
 
   const aboutSubtextStyle = {
-    color: '#94a3b8',
-    fontSize: '14px',
+    color: '#6b7280',
+    fontSize: '16px',
+    fontWeight: '500',
     maxWidth: '780px',
     textAlign: 'center',
-    margin: '0 auto'
+    margin: '0 auto',
+    lineHeight: '1.6'
   };
 
   // About side-by-side layout
@@ -211,19 +304,21 @@ const aboutWrapStyle = {
 };
 
   const aboutTextCardStyle = {
-    backgroundColor: 'rgba(10, 25, 47, 0.6)',
-    border: '1px solid rgba(100, 255, 218, 0.15)',
-    borderRadius: '16px',
-    padding: '20px',
-    boxShadow: '0 10px 24px rgba(0,0,0,0.25)'
+    background: 'rgba(255, 255, 255, 0.7)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '24px',
+    padding: '32px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset'
   };
 
   const aboutStoryParagraphStyle = {
-    color: '#a8b2d1',
+    color: '#374151',
     textAlign: 'justify',
-    lineHeight: 1.9,
-    margin: '0 0 12px 0',
-    fontSize: '17px'
+    lineHeight: 1.8,
+    margin: '0 0 16px 0',
+    fontSize: '18px',
+    fontWeight: '400'
   };
 
   // Carousel styles
@@ -231,11 +326,11 @@ const carouselWrapperStyle = {
   position: 'relative',
   width: '100%',
   maxWidth: '980px',
-  margin: '0 auto 28px',
-  borderRadius: '16px',
+  margin: '0 auto 32px',
+  borderRadius: '24px',
   overflow: 'hidden',
-  border: '1px solid rgba(100, 255, 218, 0.15)',
-  boxShadow: '0 14px 30px rgba(0,0,0,0.25)',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
+  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
   height: '100%'
 };
 
@@ -258,13 +353,16 @@ const carouselImageStyle = {
   };
 
   const navButtonStyle = {
-    background: 'rgba(2,6,23,0.6)',
-    color: '#e5e7eb',
-    border: '1px solid rgba(100, 255, 218, 0.35)',
-    borderRadius: '999px',
-    width: '40px',
-    height: '40px',
-    cursor: 'pointer'
+    background: 'rgba(255, 255, 255, 0.9)',
+    backdropFilter: 'blur(10px)',
+    color: '#1e40af',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '50%',
+    width: '48px',
+    height: '48px',
+    cursor: 'pointer',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
   };
 
   const dotsStyle = {
@@ -278,51 +376,60 @@ const carouselImageStyle = {
   };
 
   const dotStyle = (active) => ({
-    width: '8px',
-    height: '8px',
-    borderRadius: '999px',
-    backgroundColor: active ? '#64ffda' : 'rgba(148,163,184,0.6)',
-    border: active ? '1px solid rgba(100, 255, 218, 0.8)' : '1px solid rgba(148,163,184,0.4)'
+    width: '10px',
+    height: '10px',
+    borderRadius: '50%',
+    backgroundColor: active ? '#1e40af' : 'rgba(255, 255, 255, 0.6)',
+    border: active ? '2px solid #06b6d4' : '2px solid rgba(255, 255, 255, 0.8)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    cursor: 'pointer'
   });
 
   // Story styles
   const storyCardStyle = {
-    backgroundColor: 'rgba(10, 25, 47, 0.6)',
-    border: '1px solid rgba(100, 255, 218, 0.15)',
-    borderRadius: '16px',
-    padding: '20px',
-    color: '#a8b2d1',
-    margin: '0 auto 28px',
+    background: 'rgba(255, 255, 255, 0.7)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '24px',
+    padding: '32px',
+    color: '#374151',
+    margin: '0 auto 32px',
     maxWidth: '980px',
-    lineHeight: 1.7
+    lineHeight: 1.8,
+    fontSize: '18px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset'
   };
 
   const contactSectionStyle = {
-    backgroundImage: 'linear-gradient(180deg, rgba(2,6,23,1) 0%, rgba(2,6,23,1) 100%)',
+    background: 'linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%)',
     padding: '80px 24px',
-    scrollMarginTop: '80px'
+    scrollMarginTop: '80px',
+    position: 'relative'
   };
 
   // Contact section styles
 
   const contactHeaderStyle = {
-  color: '#e5e7eb',
+  background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
   fontFamily: 'Marcellus, serif',
   fontWeight: 700,
   fontSize: '64px',
   lineHeight: 1.0,
-  margin: '0 0 8px 0',
+  margin: '0 0 16px 0',
   letterSpacing: '-0.02em',
-  textAlign: 'left',
-  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+  textAlign: 'left'
 };
 
 const contactSubTextStyle = {
-  color: '#94a3b8',
-  fontSize: '14px',
+  color: '#6b7280',
+  fontSize: '16px',
+  fontWeight: '500',
   maxWidth: '540px',
   textAlign: 'center',
-  margin: '0 auto'
+  margin: '0 auto',
+  lineHeight: '1.6'
 };
 
   const contactGridStyle = {
@@ -333,27 +440,31 @@ const contactSubTextStyle = {
   };
 
   const contactInfoCardStyle = {
-    backgroundColor: 'rgba(10, 25, 47, 0.6)',
-    border: '1px solid rgba(100, 255, 218, 0.15)',
-    borderRadius: '16px',
-    padding: '32px',
-    boxShadow: '0 10px 24px rgba(0,0,0,0.25)'
+    background: 'rgba(255, 255, 255, 0.7)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '24px',
+    padding: '40px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset'
   };
 
   const contactFormCardStyle = {
-    backgroundColor: 'rgba(10, 25, 47, 0.6)',
-    border: '1px solid rgba(100, 255, 218, 0.15)',
-    borderRadius: '16px',
-    padding: '32px',
-    boxShadow: '0 10px 24px rgba(0,0,0,0.25)'
+    background: 'rgba(255, 255, 255, 0.7)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '24px',
+    padding: '40px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset'
   };
 
   const contactCardTitleStyle = {
-    color: '#e5e7eb',
+    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
     fontFamily: 'Marcellus, serif',
-    fontSize: '22px',
+    fontSize: '24px',
     fontWeight: 600,
-    margin: '0 0 24px 0',
+    margin: '0 0 32px 0',
     letterSpacing: '0.04em'
   };
 
@@ -371,19 +482,22 @@ const contactSubTextStyle = {
 
   const contactIconStyle = {
     fontSize: '24px',
-    width: '40px',
-    height: '40px',
+    width: '48px',
+    height: '48px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(100, 255, 218, 0.1)',
-    borderRadius: '8px',
+    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+    borderRadius: '12px',
     flexShrink: 0,
-    color: '#e5e7eb'
+    color: 'white',
+    boxShadow: '0 4px 16px rgba(30, 64, 175, 0.3)'
   };
 
   const contactLabelStyle = {
-    color: '#64ffda',
+    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
     fontSize: '14px',
     fontWeight: 600,
     margin: '0 0 4px 0',
@@ -393,11 +507,11 @@ const contactSubTextStyle = {
   };
 
   const contactValueStyle = {
-    color: '#a8b2d1',
+    color: '#374151',
     fontSize: '16px',
+    fontWeight: '500',
     margin: 0,
-    lineHeight: 1.5,
-    whiteSpace: 'nowrap'
+    lineHeight: 1.5
   };
 
   const contactFormStyle = {
@@ -419,67 +533,74 @@ const contactSubTextStyle = {
   };
 
   const formLabelStyle = {
-    color: '#e5e7eb',
+    background: 'linear-gradient(135deg, #374151 0%, #6b7280 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
     fontSize: '14px',
-    fontWeight: 500,
+    fontWeight: 600,
     letterSpacing: '0.04em'
   };
 
   const formInputStyle = {
-    backgroundColor: 'rgba(2, 6, 23, 0.8)',
-    border: '1px solid rgba(100, 255, 218, 0.2)',
-    borderRadius: '8px',
-    padding: '12px 16px',
-    color: '#e5e7eb',
+    background: 'rgba(255, 255, 255, 0.7)',
+    backdropFilter: 'blur(10px)',
+    border: '2px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '12px',
+    padding: '14px 18px',
+    color: '#374151',
     fontSize: '16px',
-    transition: 'all 0.3s ease',
+    fontWeight: '500',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     outline: 'none',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)',
     ':focus': {
-      borderColor: 'rgba(100, 255, 218, 0.6)',
-      boxShadow: '0 0 0 3px rgba(100, 255, 218, 0.1)'
+      borderColor: '#1e40af',
+      boxShadow: '0 0 0 4px rgba(30, 64, 175, 0.1)'
     },
     ':hover': {
-      borderColor: 'rgba(100, 255, 218, 0.4)'
+      borderColor: 'rgba(30, 64, 175, 0.5)'
     }
   };
 
   const formTextareaStyle = {
-    backgroundColor: 'rgba(2, 6, 23, 0.8)',
-    border: '1px solid rgba(100, 255, 218, 0.2)',
-    borderRadius: '8px',
-    padding: '12px 16px',
-    color: '#e5e7eb',
+    background: 'rgba(255, 255, 255, 0.7)',
+    backdropFilter: 'blur(10px)',
+    border: '2px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '12px',
+    padding: '14px 18px',
+    color: '#374151',
     fontSize: '16px',
+    fontWeight: '500',
     resize: 'vertical',
-    minHeight: '120px',
-    transition: 'all 0.3s ease',
+    minHeight: '140px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     outline: 'none',
     fontFamily: 'inherit',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)',
     ':focus': {
-      borderColor: 'rgba(100, 255, 218, 0.6)',
-      boxShadow: '0 0 0 3px rgba(100, 255, 218, 0.1)'
+      borderColor: '#1e40af',
+      boxShadow: '0 0 0 4px rgba(30, 64, 175, 0.1)'
     },
     ':hover': {
-      borderColor: 'rgba(100, 255, 218, 0.4)'
+      borderColor: 'rgba(30, 64, 175, 0.5)'
     }
   };
 
   const submitButtonStyle = {
-    backgroundColor: '#64ffda',
-    border: '2px solid #64ffda',
-    color: '#0b1a2c',
-    padding: '14px 28px',
-    borderRadius: '8px',
+    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+    border: 'none',
+    color: 'white',
+    padding: '16px 32px',
+    borderRadius: '12px',
     fontWeight: 600,
     fontSize: '16px',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    marginTop: '8px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    marginTop: '12px',
+    boxShadow: '0 4px 16px rgba(30, 64, 175, 0.3)',
     ':hover': {
-      backgroundColor: 'transparent',
-      color: '#64ffda',
       transform: 'translateY(-2px)',
-      boxShadow: '0 8px 20px rgba(100, 255, 218, 0.3)'
+      boxShadow: '0 8px 24px rgba(30, 64, 175, 0.4)'
     }
   };
 
@@ -490,40 +611,44 @@ const contactSubTextStyle = {
   };
 
   const infoCardStyle = {
-    backgroundColor: 'rgba(10, 25, 47, 0.4)',
-    border: '1px solid rgba(100, 255, 218, 0.1)',
-    borderRadius: '12px',
-    padding: '24px',
+    background: 'rgba(255, 255, 255, 0.7)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '20px',
+    padding: '32px',
     textAlign: 'center',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
     ':hover': {
-      backgroundColor: 'rgba(10, 25, 47, 0.6)',
-      borderColor: 'rgba(100, 255, 218, 0.3)',
-      transform: 'translateY(-4px)',
-      boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+      transform: 'translateY(-8px)',
+      boxShadow: '0 16px 48px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.3) inset'
     }
   };
 
   const infoCardTitleStyle = {
-    color: '#64ffda',
-    fontSize: '16px',
+    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    fontSize: '18px',
     fontWeight: 600,
-    margin: '0 0 12px 0',
+    margin: '0 0 16px 0',
     letterSpacing: '0.08em',
     textTransform: 'uppercase'
   };
 
   const infoCardTextStyle = {
-    color: '#a8b2d1',
-    fontSize: '14px',
+    color: '#6b7280',
+    fontSize: '15px',
+    fontWeight: '500',
     lineHeight: 1.6,
     margin: 0
   };
 
   // Footer styles
   const footerStyle = {
-    backgroundColor: '#0a1929',
-    borderTop: '1px solid rgba(100, 255, 218, 0.1)',
+    background: 'rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(20px)',
+    borderTop: '1px solid rgba(255, 255, 255, 0.3)',
     padding: '0'
   };
 
@@ -538,7 +663,7 @@ const contactSubTextStyle = {
     gridTemplateColumns: '2fr 1fr 1fr 1fr',
     gap: '48px',
     padding: '64px 0 48px 0',
-    borderBottom: '1px solid rgba(100, 255, 218, 0.1)'
+    borderBottom: '1px solid rgba(255, 255, 255, 0.3)'
   };
 
   const footerBrandStyle = {
@@ -557,7 +682,7 @@ const contactSubTextStyle = {
     fontFamily: 'Marcellus, serif',
     fontSize: '28px',
     fontWeight: 'bold',
-    background: 'linear-gradient(45deg, #60a5fa, #3b82f6)',
+    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     margin: 0
@@ -565,14 +690,17 @@ const contactSubTextStyle = {
 
   const footerLogoSubtitleStyle = {
     fontSize: '16px',
-    color: '#93c5fd',
+    background: 'linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
     margin: 0,
     letterSpacing: '0.1em'
   };
 
   const footerDescriptionStyle = {
-    color: '#a8b2d1',
+    color: '#6b7280',
     fontSize: '16px',
+    fontWeight: '500',
     lineHeight: 1.6,
     margin: 0,
     maxWidth: '300px',
@@ -617,7 +745,9 @@ const contactSubTextStyle = {
   };
 
   const footerSectionTitleStyle = {
-    color: '#e5e7eb',
+    background: 'linear-gradient(135deg, #374151 0%, #6b7280 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
     fontFamily: 'Marcellus, serif',
     fontSize: '18px',
     fontWeight: 600,
@@ -635,13 +765,15 @@ const contactSubTextStyle = {
   };
 
   const footerLinkStyle = {
-    color: '#a8b2d1',
+    color: '#6b7280',
     textDecoration: 'none',
     fontSize: '15px',
-    transition: 'all 0.3s ease',
+    fontWeight: '500',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     cursor: 'pointer',
     ':hover': {
-      color: '#64ffda'
+      color: '#1e40af',
+      transform: 'translateX(4px)'
     }
   };
 
@@ -661,12 +793,15 @@ const contactSubTextStyle = {
     fontSize: '18px',
     width: '20px',
     flexShrink: 0,
-    color: '#e5e7eb'
+    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent'
   };
 
   const footerContactTextStyle = {
-    color: '#a8b2d1',
+    color: '#6b7280',
     fontSize: '15px',
+    fontWeight: '500',
     lineHeight: 1.4
   };
 
@@ -683,9 +818,14 @@ const contactSubTextStyle = {
   };
 
   const footerCopyrightStyle = {
-    color: '#94a3b8',
+    background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
     fontSize: '14px',
-    margin: 0
+    fontWeight: 500,
+    margin: 0,
+    letterSpacing: '0.025em'
   };
 
   const footerBottomLinksStyle = {
@@ -694,13 +834,19 @@ const contactSubTextStyle = {
   };
 
   const footerBottomLinkStyle = {
-    color: '#94a3b8',
+    background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
     textDecoration: 'none',
     fontSize: '14px',
-    transition: 'all 0.3s ease',
+    fontWeight: 500,
+    letterSpacing: '0.025em',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     cursor: 'pointer',
+    position: 'relative',
     ':hover': {
-      color: '#64ffda'
+      transform: 'translateY(-1px)'
     }
   };
 
@@ -710,13 +856,16 @@ const contactSubTextStyle = {
   };
 
 const sectionEyebrowStyle = {
-  color: '#64ffda',
+  background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
   textTransform: 'uppercase',
   letterSpacing: '0.25em',
   fontSize: '15px',
   marginBottom: '16px',
   textAlign: 'left',
-  fontWeight: 600,
+  fontWeight: 700,
 };
 
   const servicesHeaderWrapStyle = {
@@ -728,23 +877,28 @@ const sectionEyebrowStyle = {
   };
 
   const servicesSubTextStyle = {
-    color: '#94a3b8',
-    fontSize: '14px',
+    color: '#6b7280',
+    fontSize: '16px',
+    lineHeight: 1.6,
     textAlign: 'left',
     maxWidth: '540px',
+    fontWeight: 400,
+    letterSpacing: '0.025em'
   };
 
 
   const servicesHeaderStyle = {
-    color: '#e5e7eb',
-    fontFamily: 'Marcellus, serif',
-    fontWeight: 700,
+    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 50%, #8b5cf6 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+    fontWeight: 800,
     fontSize: '64px',
-    lineHeight: 1.0,
+    lineHeight: 1.1,
     margin: '0 0 8px 0',
-    letterSpacing: '-0.02em',
-    textAlign: 'left',
-    textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+    letterSpacing: '-0.025em',
+    textAlign: 'left'
   };
 
 const servicesHeaderRightStyle = {
@@ -762,12 +916,16 @@ const servicesHeaderRightStyle = {
   };
 
   const linkButtonStyle = {
-    color: '#e11d48',
+    background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
     textDecoration: 'none',
     fontWeight: 700,
     fontSize: '14px',
     letterSpacing: '0.02em',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
   };
 
   const servicesGridStyle = {
@@ -778,16 +936,25 @@ const servicesHeaderRightStyle = {
   };
 
   const cardStyle = {
-    backgroundColor: 'rgba(10, 25, 47, 0.6)',
-    border: '1px solid rgba(100, 255, 218, 0.15)',
-    borderRadius: '16px',
+    background: 'rgba(255, 255, 255, 0.1)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '20px',
     overflow: 'hidden',
-    color: '#e5e7eb',
+    color: '#1f2937',
     display: 'flex',
     flexDirection: 'column',
     minHeight: '340px',
-    transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease',
-    backdropFilter: 'blur(4px)'
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    position: 'relative',
+    cursor: 'pointer',
+    ':hover': {
+      transform: 'translateY(-8px)',
+      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+      border: '1px solid rgba(255, 255, 255, 0.3)'
+    }
   };
 
   const cardImageStyle = {
@@ -807,53 +974,75 @@ const servicesHeaderRightStyle = {
   };
 
   const cardTitleStyle = {
-    fontFamily: 'Marcellus, serif',
-    fontSize: '14px',
-    fontWeight: 600,
-    letterSpacing: '0.08em',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+    fontSize: '16px',
+    fontWeight: 700,
+    letterSpacing: '0.025em',
     textTransform: 'uppercase',
-    color: '#e5e7eb',
+    background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
     margin: 0
   };
 
   const cardBottomPillStyle = {
     alignSelf: 'flex-start',
-    marginTop: '10px',
-    background: 'rgba(2,6,23,0.85)',
-    border: '1px solid rgba(100,255,218,0.25)',
-    color: '#e5e7eb',
-    padding: '8px 12px',
-    borderRadius: '16px',
-    fontSize: '12px'
+    marginTop: '12px',
+    background: 'rgba(255, 255, 255, 0.2)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    color: '#1f2937',
+    padding: '8px 16px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: 600,
+    letterSpacing: '0.025em'
   };
 
   const cardArrowButtonStyle = {
     position: 'absolute',
-    right: '10px',
-    bottom: '10px',
-    width: '36px',
-    height: '36px',
-    borderRadius: '999px',
-    background: 'rgba(2,6,23,0.85)',
-    color: '#64ffda',
-    border: '1px solid rgba(100,255,218,0.35)',
+    right: '12px',
+    bottom: '12px',
+    width: '44px',
+    height: '44px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+    color: 'white',
+    border: 'none',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 4px 12px rgba(107, 114, 128, 0.3)',
+    ':hover': {
+      transform: 'scale(1.1)',
+      boxShadow: '0 8px 20px rgba(107, 114, 128, 0.4)'
+    }
   };
 
   const readMoreStyle = {
-    color: '#64ffda',
+    background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
     textDecoration: 'none',
     fontSize: '14px',
+    fontWeight: 600,
     marginTop: 'auto',
     cursor: 'pointer',
-    alignSelf: 'flex-start'
+    alignSelf: 'flex-start',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    letterSpacing: '0.025em'
   };
 
   const readMoreTextStyle = {
     fontSize: '14px',
-    color: '#a8b2d1'
+    color: '#6b7280',
+    fontWeight: 500,
+    letterSpacing: '0.025em'
   };
 
   const responsiveGridStyle = {
@@ -874,19 +1063,21 @@ const servicesHeaderRightStyle = {
   };
 
   const modalContentStyle = {
-    backgroundColor: '#0b1a2c',
-    border: '1px solid rgba(100,255,218,0.2)',
-    borderRadius: '12px',
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '20px',
     width: 'min(720px, 92vw)',
     maxHeight: '80vh',
     overflowY: 'auto',
-    color: '#e5e7eb',
-    boxShadow: '0 20px 50px rgba(0,0,0,0.6)'
+    color: '#1f2937',
+    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)'
   };
 
   const modalHeaderStyle = {
     padding: '16px 20px',
-    borderBottom: '1px solid rgba(100,255,218,0.15)',
+    borderBottom: '1px solid rgba(100,255,218,0.25)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between'
@@ -894,9 +1085,14 @@ const servicesHeaderRightStyle = {
 
   const modalTitleStyle = {
     margin: 0,
-    fontFamily: '"Cormorant Garamond", serif',
-    fontSize: '22px',
-    letterSpacing: '0.04em'
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+    fontSize: '24px',
+    fontWeight: 700,
+    letterSpacing: '-0.025em',
+    background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text'
   };
 
   const modalBodyStyle = {
@@ -910,46 +1106,68 @@ const servicesHeaderRightStyle = {
   };
 
   const closeButtonStyle = {
-    background: 'transparent',
-    border: '1px solid rgba(100,255,218,0.4)',
-    color: '#e5e7eb',
-    padding: '8px 16px',
-    borderRadius: '6px',
-    cursor: 'pointer'
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    color: '#6b7280',
+    padding: '10px 18px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontWeight: 500,
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    ':hover': {
+      background: 'rgba(255, 255, 255, 0.2)',
+      border: '1px solid rgba(255, 255, 255, 0.3)'
+    }
   };
 
   const bookButtonStyle = {
-    backgroundColor: '#64ffda',
-    border: '1px solid #64ffda',
-    color: '#0b1a2c',
-    padding: '8px 16px',
-    borderRadius: '6px',
+    background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
+    border: 'none',
+    color: 'white',
+    padding: '12px 20px',
+    borderRadius: '12px',
     cursor: 'pointer',
     fontWeight: 600,
-    textDecoration: 'none'
+    fontSize: '14px',
+    letterSpacing: '0.025em',
+    textDecoration: 'none',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)',
+    ':hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 8px 20px rgba(30, 64, 175, 0.4)'
+    }
   };
 
   // Booking UI helpers
   const sectionTitleStyle = {
-    color: '#e5e7eb',
-    fontFamily: 'Marcellus, serif',
+    background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
     fontSize: '18px',
-    fontWeight: 600,
+    fontWeight: 700,
     margin: '8px 0 6px 0',
-    letterSpacing: '0.02em'
+    letterSpacing: '-0.025em'
   };
 
   const helperTextStyle = {
-    color: '#94a3b8',
-    fontSize: '13px',
-    margin: '2px 0 8px 0'
+    color: '#6b7280',
+    fontSize: '14px',
+    margin: '2px 0 8px 0',
+    lineHeight: 1.5
   };
 
   const labelSmallStyle = {
-    color: '#a8b2d1',
-    fontSize: '13px',
+    color: '#374151',
+    fontSize: '14px',
+    fontWeight: 600,
     display: 'block',
-    marginBottom: '6px'
+    marginBottom: '6px',
+    letterSpacing: '0.025em'
   };
 
   const statusBadgeStyle = (status) => {
@@ -977,62 +1195,82 @@ const servicesHeaderRightStyle = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '6px',
-    padding: '6px 10px',
-    borderRadius: '999px',
-    border: '1px solid rgba(100,255,218,0.25)',
-    backgroundColor: 'rgba(10,25,47,0.4)',
-    color: '#e5e7eb',
-    fontSize: '13px'
+    padding: '8px 12px',
+    borderRadius: '20px',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    color: '#374151',
+    fontSize: '13px',
+    fontWeight: 500
   };
 
   // Dark theme booking modal (matching site theme)
   const darkLabelStyle = {
-    color: '#e5e7eb',
+    color: '#374151',
     fontSize: '14px',
     fontWeight: 600,
-    marginBottom: '6px',
-    display: 'block'
+    marginBottom: '8px',
+    display: 'block',
+    letterSpacing: '0.025em'
   };
 
   const darkInputStyle = {
     width: '100%',
-    backgroundColor: '#0f2238',
-    border: '1px solid rgba(100, 255, 218, 0.4)',
-    borderRadius: '8px',
-    padding: '12px 14px',
-    color: '#e5e7eb',
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '12px',
+    padding: '12px 16px',
+    color: '#1f2937',
     fontSize: '15px',
-    outline: 'none'
+    outline: 'none',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    ':focus': {
+      border: '1px solid rgba(6, 182, 212, 0.5)',
+      background: 'rgba(255, 255, 255, 0.15)'
+    }
   };
 
   const darkTextareaStyle = {
     width: '100%',
-    backgroundColor: '#0f2238',
-    border: '1px solid rgba(100, 255, 218, 0.4)',
-    borderRadius: '8px',
-    padding: '12px 14px',
-    color: '#e5e7eb',
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '12px',
+    padding: '12px 16px',
+    color: '#1f2937',
     fontSize: '15px',
     outline: 'none',
     minHeight: '120px',
-    resize: 'vertical'
+    resize: 'vertical',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    ':focus': {
+      border: '1px solid rgba(6, 182, 212, 0.5)',
+      background: 'rgba(255, 255, 255, 0.15)'
+    }
   };
 
   const bookingModalContentStyle = {
-    backgroundColor: '#0b1a2c',
-    border: '1px solid rgba(100,255,218,0.2)',
-    borderRadius: '16px',
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '24px',
     width: 'min(1100px, 94vw)',
     maxHeight: '92vh',
     overflowY: 'auto',
-    color: '#e5e7eb',
-    boxShadow: '0 20px 50px rgba(0,0,0,0.6)'
+    color: '#1f2937',
+    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)'
   };
 
   const bookingHeaderStyle = {
     padding: '18px 22px',
-    borderBottom: '1px solid rgba(100,255,218,0.15)',
-    backgroundColor: 'rgba(10, 25, 47, 0.6)',
+    borderBottom: '1px solid rgba(100,255,218,0.25)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -1043,10 +1281,14 @@ const servicesHeaderRightStyle = {
 
   const bookingTitleStyle = {
     margin: 0,
-    fontSize: '22px',
-    fontFamily: 'Marcellus, serif',
-    letterSpacing: '0.04em',
-    color: '#e5e7eb'
+    fontSize: '24px',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+    letterSpacing: '-0.025em',
+    fontWeight: 700,
+    background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text'
   };
 
   const bookingBodyStyle = {
@@ -1056,18 +1298,24 @@ const servicesHeaderRightStyle = {
   };
 
   const bookingSectionStyle = {
-    backgroundColor: 'rgba(10, 25, 47, 0.6)',
-    border: '1px solid rgba(100, 255, 218, 0.15)',
-    borderRadius: '12px',
-    padding: '16px 16px'
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '16px',
+    padding: '20px'
   };
 
   const bookingSectionTitleStyle = {
     margin: 0,
     fontSize: '16px',
     fontWeight: 700,
-    color: '#e5e7eb',
-    marginBottom: '12px'
+    background: 'linear-gradient(135deg, #374151, #1f2937)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    marginBottom: '12px',
+    letterSpacing: '0.025em'
   };
 
   const gridTwoStyle = {
@@ -1083,14 +1331,21 @@ const servicesHeaderRightStyle = {
   };
 
   const primaryButtonDarkStyle = {
-    backgroundColor: '#64ffda',
-    border: '1px solid #64ffda',
-    color: '#0b1a2c',
-    padding: '12px 18px',
-    borderRadius: '10px',
+    background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
+    border: 'none',
+    color: 'white',
+    padding: '14px 24px',
+    borderRadius: '12px',
     cursor: 'pointer',
     fontWeight: 700,
-    fontSize: '15px'
+    fontSize: '15px',
+    letterSpacing: '0.025em',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)',
+    ':hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 8px 20px rgba(30, 64, 175, 0.4)'
+    }
   };
 
   // Services data
@@ -1490,27 +1745,33 @@ const servicesHeaderRightStyle = {
                 <div style={{ position: 'relative' }}>
                   <button
                     style={{
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(100, 255, 218, 0.3)',
-                      color: '#e5e7eb',
-                      padding: '8px 16px',
-                      borderRadius: '6px',
+                      background: 'rgba(255, 255, 255, 0.15)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      color: '#ffffff',
+                      padding: '10px 16px',
+                      borderRadius: '12px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
                       fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'all 0.3s ease'
+                      fontWeight: '600',
+                      letterSpacing: '0.025em',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
                     }}
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)';
-                      e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
+                      e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                      e.target.style.transform = 'translateY(-1px)';
+                      e.target.style.boxShadow = '0 4px 12px rgba(255, 255, 255, 0.2)';
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = 'transparent';
-                      e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
+                      e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = 'none';
                     }}
                   >
                     <FaUser /> {user.firstName || user.email.split('@')[0]} ▼
@@ -1520,14 +1781,16 @@ const servicesHeaderRightStyle = {
                       position: 'absolute',
                       top: '100%',
                       right: 0,
-                      backgroundColor: 'rgba(10, 25, 47, 0.95)',
-                      border: '1px solid rgba(100, 255, 218, 0.2)',
-                      borderRadius: '8px',
-                      padding: '8px 0',
-                      minWidth: '180px',
-                      marginTop: '4px',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-                      backdropFilter: 'blur(10px)'
+                      background: 'rgba(255, 255, 255, 0.95)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      borderRadius: '16px',
+                      padding: '12px 0',
+                      minWidth: '200px',
+                      marginTop: '8px',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+                      zIndex: 1000
                     }}>
                       <a href="#profile" style={{
                         display: 'block',
@@ -1605,16 +1868,16 @@ const servicesHeaderRightStyle = {
                   <button
                     onClick={handleShowLogin}
                     style={loginButtonStyle}
-                    onMouseEnter={handleButtonHover}
-                    onMouseLeave={handleButtonLeave}
+                    onMouseEnter={handleLoginHover}
+                    onMouseLeave={handleLoginLeave}
                   >
                     Login
                   </button>
                   <button
                     onClick={handleShowSignup}
                     style={signUpButtonStyle}
-                    onMouseEnter={handleButtonHover}
-                    onMouseLeave={handleButtonLeave}
+                    onMouseEnter={handleSignupHover}
+                    onMouseLeave={handleSignupLeave}
                   >
                     Sign Up
                   </button>
@@ -1625,16 +1888,76 @@ const servicesHeaderRightStyle = {
 
           {/* Hero Section */}
           <section id="home" style={heroSectionStyle}>
+            {/* Ambient Light Effects */}
+            <div style={{
+              position: 'absolute',
+              top: '20%',
+              left: '10%',
+              width: '400px',
+              height: '400px',
+              background: 'radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%)',
+              borderRadius: '50%',
+              filter: 'blur(100px)',
+              animation: 'ambientGlow 8s ease-in-out infinite'
+            }}></div>
+            
+            <div style={{
+              position: 'absolute',
+              bottom: '20%',
+              right: '15%',
+              width: '300px',
+              height: '300px',
+              background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
+              borderRadius: '50%',
+              filter: 'blur(80px)',
+              animation: 'ambientGlow 6s ease-in-out infinite 2s'
+            }}></div>
+
             <div style={heroContentStyle}>
-              <h2 style={taglineStyle}>CIRVA A LA GENTE POR LA MUSICA</h2>
-              <p style={subTaglineStyle}>Serve the People through Music.</p>
+              {/* Main Tagline */}
+              <h1 style={taglineStyle}>
+                Cirva a la Gente por la Musica
+              </h1>
+              
+              {/* English Translation */}
+              <p style={translationStyle}>
+                "Serve the People Through Music"
+              </p>
+              
+              {/* Call to Action Button */}
               <button
                 onClick={handleShowSignup}
-                style={signUpButtonStyle}
-                onMouseEnter={handleButtonHover}
-                onMouseLeave={handleButtonLeave}
+                style={{
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                  border: 'none',
+                  color: '#ffffff',
+                  padding: '16px 40px',
+                  borderRadius: '12px',
+                  fontFamily: 'Georgia, Times, "Times New Roman", serif',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  letterSpacing: '0.01em',
+                  cursor: 'pointer',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  textDecoration: 'none',
+                  boxShadow: '0 8px 24px rgba(59, 130, 246, 0.3)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  opacity: 0,
+                  animation: 'slideInFromBottom 1.5s ease-out 1.2s forwards'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-4px) scale(1.05)';
+                  e.target.style.boxShadow = '0 12px 32px rgba(59, 130, 246, 0.4)';
+                  e.target.style.background = 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0) scale(1)';
+                  e.target.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.3)';
+                  e.target.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+                }}
               >
-                Register Now!
+                Register Now
               </button>
             </div>
           </section>

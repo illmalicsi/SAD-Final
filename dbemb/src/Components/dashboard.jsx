@@ -45,13 +45,13 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     container: {
       display: 'flex',
       height: '100vh',
-      backgroundColor: '#0f1419',
+      backgroundColor: 'white',
       overflow: 'hidden'
     },
     sidebar: {
       width: sidebarCollapsed ? '70px' : '260px',
-      backgroundColor: '#1a1f29',
-      borderRight: '1px solid #2d3748',
+      backgroundColor: 'white',
+      borderRight: '1px solid rgba(100, 255, 218, 0.3)',
       transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       position: 'relative',
       display: 'flex',
@@ -62,40 +62,51 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     sidebarHeader: {
       height: '72px',
       padding: '0 20px',
-      borderBottom: '1px solid #2d3748',
+      borderBottom: '1px solid rgba(100, 255, 218, 0.3)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: '#1a1f29'
+      backgroundColor: 'white'
     },
     logo: {
-      fontFamily: 'system-ui, -apple-system, sans-serif',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
       fontSize: sidebarCollapsed ? '0px' : '20px',
-      fontWeight: '700',
-      color: '#64ffda',
+      fontWeight: '800',
+      background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
       transition: 'all 0.3s ease',
       overflow: 'hidden',
       whiteSpace: 'nowrap',
-      letterSpacing: '-0.02em'
+      letterSpacing: '-0.025em'
     },
     collapseButton: {
-      width: '32px',
-      height: '32px',
-      backgroundColor: 'transparent',
-      border: '1px solid #2d3748',
-      borderRadius: '8px',
-      color: '#a0aec0',
+      width: '36px',
+      height: '36px',
+      background: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      borderRadius: '12px',
+      color: '#374151',
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      transition: 'all 0.2s ease',
-      fontSize: '14px'
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      fontSize: '14px',
+      ':hover': {
+        background: 'rgba(255, 255, 255, 0.2)',
+        transform: 'scale(1.05)'
+      }
     },
     userSection: {
-      padding: sidebarCollapsed ? '12px' : '20px',
-      borderBottom: '1px solid #2d3748',
-      backgroundColor: '#1a1f29',
+      padding: sidebarCollapsed ? '16px' : '24px',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+      background: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -104,47 +115,56 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     },
 
     userAvatar: {
-      width: sidebarCollapsed ? '40px' : '56px',
-      height: sidebarCollapsed ? '40px' : '56px',
+      width: sidebarCollapsed ? '44px' : '60px',
+      height: sidebarCollapsed ? '44px' : '60px',
       borderRadius: '50%',
-      backgroundColor: '#4a5568',
+      background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      color: '#e2e8f0',
-      fontWeight: '600',
-      fontSize: sidebarCollapsed ? '16px' : '20px',
+      color: 'white',
+      fontWeight: '700',
+      fontSize: sidebarCollapsed ? '16px' : '22px',
       marginBottom: sidebarCollapsed ? '0' : '12px',
       marginLeft: 'auto',
       marginRight: 'auto',
-      transition: 'all 0.3s ease'
+      transition: 'all 0.3s ease',
+      boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)'
     },
 
     userName: {
-      fontSize: sidebarCollapsed ? '0px' : '20px',
-      fontWeight: '600',
-      color: '#e2e8f0',
-      marginBottom: '4px',
+      fontSize: sidebarCollapsed ? '0px' : '18px',
+      fontWeight: '700',
+      background: 'linear-gradient(135deg, #374151, #1f2937)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      marginBottom: '6px',
       transition: 'all 0.3s ease',
       overflow: 'hidden',
       textAlign: 'center',
-      height: sidebarCollapsed ? '0px' : 'auto'
+      height: sidebarCollapsed ? '0px' : 'auto',
+      letterSpacing: '-0.025em'
     },
 
     userRole: {
       display: sidebarCollapsed ? 'none' : 'inline-flex',
-      padding: '2px 12px',
-      borderRadius: '12px',
+      padding: '4px 16px',
+      borderRadius: '16px',
       fontSize: '12px',
       fontWeight: '700',
-      backgroundColor: user?.role === 'admin' ? '#2d5a87' : '#2d4a5a',
-      color: user?.role === 'admin' ? '#90cdf4' : '#81e6d9',
+      background: user?.role === 'admin' 
+        ? 'linear-gradient(135deg, #8b5cf6, #06b6d4)' 
+        : 'linear-gradient(135deg, #06b6d4, #1e40af)',
+      color: 'white',
       textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      marginTop: '4px',
+      letterSpacing: '0.05em',
+      marginTop: '6px',
       textAlign: 'center',
       justifyContent: 'center',
-      height: sidebarCollapsed ? '0px' : 'auto'
+      height: sidebarCollapsed ? '0px' : 'auto',
+      boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)',
+      border: 'none'
     },
     navigation: {
       flex: 1,
@@ -156,12 +176,15 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       marginBottom: '24px'
     },
     navGroupTitle: {
-      fontSize: sidebarCollapsed ? '0px' : '16px',
-      fontWeight: '600',
-      color: '#718096',
+      fontSize: sidebarCollapsed ? '0px' : '14px',
+      fontWeight: '700',
+      background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
       textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      marginBottom: '8px',
+      letterSpacing: '0.1em',
+      marginBottom: '12px',
       paddingLeft: '20px',
       transition: 'all 0.3s ease',
       textAlign: 'left',
@@ -170,19 +193,32 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     navItem: {
       display: 'flex',
       alignItems: 'center',
-      height: '44px',
+      height: '48px',
       padding: '0 20px',
       cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      color: '#a0aec0',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      color: '#6b7280',
       position: 'relative',
-      margin: '0 8px',
-      borderRadius: '8px'
+      margin: '0 12px',
+      borderRadius: '12px',
+      fontWeight: '500',
+      ':hover': {
+        background: 'rgba(255, 255, 255, 0.1)',
+        color: '#374151',
+        transform: 'translateX(4px)'
+      }
     },
     navItemActive: {
-      backgroundColor: '#2a4365',
-      color: '#90cdf4',
-      fontWeight: '500'
+      background: 'rgba(255, 255, 255, 0.2)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.3)',
+      background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      fontWeight: '600',
+      boxShadow: '0 2px 8px rgba(30, 64, 175, 0.2)'
     },
     navIcon: {
       width: '20px',
@@ -203,28 +239,34 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     },
     sidebarFooter: {
       padding: '20px',
-      borderTop: '1px solid #2d3748',
+      borderTop: '1px solid rgba(100, 255, 218, 0.3)',
       display: 'flex',
       flexDirection: sidebarCollapsed ? 'column' : 'row',
       gap: sidebarCollapsed ? '8px' : '8px',
-      backgroundColor: '#1a1f29'
+      backgroundColor: 'white'
     },
     footerButton: {
-      height: '36px',
-      width: sidebarCollapsed ? '36px' : 'auto',
-      backgroundColor: 'transparent',
-      border: '1px solid #2d3748',
-      borderRadius: '8px',
-      color: '#a0aec0',
+      height: '40px',
+      width: sidebarCollapsed ? '40px' : 'auto',
+      background: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      borderRadius: '12px',
+      color: '#374151',
       cursor: 'pointer',
       fontSize: sidebarCollapsed ? '14px' : '13px',
-      fontWeight: '500',
-      transition: 'all 0.2s ease',
+      fontWeight: '600',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       flex: sidebarCollapsed ? 'none' : 1,
-      padding: sidebarCollapsed ? '0' : '0 8px'
+      padding: sidebarCollapsed ? '0' : '0 12px',
+      ':hover': {
+        background: 'rgba(255, 255, 255, 0.2)',
+        transform: 'scale(1.05)'
+      }
     },
     logoutButton: {
       height: '36px',
@@ -247,32 +289,40 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       flex: 1,
       display: 'flex',
       flexDirection: 'column',
-      backgroundColor: '#0f1419',
+      background: 'rgba(255, 255, 255, 0.05)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
       overflow: 'hidden'
     },
     mainHeader: {
-      height: '72px',
+      height: '80px',
       padding: '0 32px',
-      borderBottom: '1px solid #2d3748',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: '#1a1f29',
+      background: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
       flexShrink: 0
     },
     mainTitle: {
-      fontSize: '24px',
-      fontWeight: '700',
-      color: '#e2e8f0',
+      fontSize: '26px',
+      fontWeight: '800',
+      background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
       margin: 0,
-      letterSpacing: '-0.02em'
+      letterSpacing: '-0.025em'
     },
     breadcrumbs: {
       fontSize: '14px',
-      color: '#718096',
+      color: '#6b7280',
       display: 'flex',
       alignItems: 'center',
-      gap: '8px'
+      gap: '8px',
+      fontWeight: '500'
     },
     contentArea: {
       flex: 1,
@@ -281,41 +331,49 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       overflowX: 'hidden'
     },
     welcomeCard: {
-      backgroundColor: '#1a1f29',
-      border: '1px solid #2d3748',
-      borderRadius: '12px',
-      padding: '40px',
+      background: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      borderRadius: '20px',
+      padding: '48px',
       textAlign: 'center',
       maxWidth: '600px',
-      margin: '60px auto 0'
+      margin: '60px auto 0',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
     },
     welcomeIcon: {
       fontSize: '48px',
       marginBottom: '20px'
     },
     welcomeTitle: {
-      fontSize: '28px',
-      fontWeight: '700',
-      margin: '0 0 12px 0',
-      color: '#e2e8f0',
-      letterSpacing: '-0.02em'
+      fontSize: '32px',
+      fontWeight: '800',
+      margin: '0 0 16px 0',
+      background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      letterSpacing: '-0.025em'
     },
     welcomeSubtitle: {
-      fontSize: '16px',
-      color: '#a0aec0',
+      fontSize: '18px',
+      color: '#6b7280',
       lineHeight: '1.6',
-      margin: 0
+      margin: 0,
+      fontWeight: '400'
     },
     loadingContainer: {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       height: '100%',
-      color: '#a0aec0',
-      fontSize: '16px'
+      color: '#6b7280',
+      fontSize: '16px',
+      fontWeight: '500'
     },
     blockedContainer: {
-      backgroundColor: '#1a1f29',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
       border: '1px solid #e53e3e',
       borderRadius: '12px',
       padding: '40px',
@@ -336,31 +394,41 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     },
     blockedText: {
       fontSize: '16px',
-      color: '#a0aec0',
+      color: '#6b7280',
       lineHeight: '1.6',
       margin: 0
     },
     // New styles for panel content
     panelContainer: {
-      backgroundColor: '#1a1f29',
-      border: '1px solid #2d3748',
-      borderRadius: '12px',
+      background: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      borderRadius: '20px',
       height: 'calc(100vh - 136px)',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
     },
     panelHeader: {
       padding: '24px 32px',
-      borderBottom: '1px solid #2d3748',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
+      background: 'rgba(255, 255, 255, 0.05)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)'
     },
     panelTitle: {
-      fontSize: '20px',
-      fontWeight: '600',
-      color: '#e2e8f0',
-      margin: 0
+      fontSize: '22px',
+      fontWeight: '700',
+      background: 'linear-gradient(135deg, #1e40af, #06b6d4)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      margin: 0,
+      letterSpacing: '-0.025em'
     },
     panelBody: {
       flex: 1,
@@ -369,7 +437,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     },
     comingSoonContent: {
       textAlign: 'center',
-      color: '#a0aec0',
+      color: '#6b7280',
       padding: '60px 20px'
     },
     comingSoonIcon: {
@@ -377,10 +445,14 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       marginBottom: '24px'
     },
     comingSoonTitle: {
-      fontSize: '24px',
-      fontWeight: '600',
+      fontSize: '26px',
+      fontWeight: '700',
       margin: '0 0 16px 0',
-      color: '#e2e8f0'
+      background: 'linear-gradient(135deg, #374151, #1f2937)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      letterSpacing: '-0.025em'
     },
     comingSoonText: {
       fontSize: '16px',
@@ -388,8 +460,8 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     },
     // Notification styles
     notificationItem: {
-      backgroundColor: '#0f1419',
-      border: '1px solid #2d3748',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      border: '1px solid rgba(100, 255, 218, 0.3)',
       borderRadius: '8px',
       padding: '16px',
       marginBottom: '16px',

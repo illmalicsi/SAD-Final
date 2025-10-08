@@ -169,7 +169,7 @@ const Login = ({ onBack, onLogin, onSwitchToSignup, error, onClearError }) => {
         </button>
 
         <div style={sharedStyles.header}>
-          <div style={sharedStyles.logoBox}><FaUserAlt color="#031024" /></div>
+          <div style={sharedStyles.logoBox}><FaUserAlt color="#ffffff" /></div>
           <div>
             <div style={sharedStyles.title}>Welcome Back</div>
             <div style={sharedStyles.subtitle}>Login to access the website</div>
@@ -229,15 +229,15 @@ const Login = ({ onBack, onLogin, onSwitchToSignup, error, onClearError }) => {
               opacity: isLoading ? 0.6 : 1,
               cursor: isLoading ? 'not-allowed' : 'pointer'
             }}
-            onMouseEnter={e => !isLoading && (e.currentTarget.style.transform = 'translateY(-2px)')}
-            onMouseLeave={e => !isLoading && (e.currentTarget.style.transform = 'translateY(0)')}
+            onMouseEnter={e => !isLoading && (e.currentTarget.style.transform = 'translateY(-2px)') && (e.currentTarget.style.boxShadow = '0 12px 32px rgba(59, 130, 246, 0.4)')}
+            onMouseLeave={e => !isLoading && (e.currentTarget.style.transform = 'translateY(0)') && (e.currentTarget.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.3)')}
           >
-            {isLoading ? 'Logging in...' : 'Login'}
+            {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
 
           {/* Login help and signup link */}
           <div style={sharedStyles.adminNote}>
-            <div style={{...sharedStyles.adminCreds, backgroundColor: 'rgba(100,255,218,0.1)'}}>
+            <div style={sharedStyles.adminCreds}>
               <strong>Demo Login:</strong> ivanlouiemalicsi@gmail.com / Admin123!
             </div>
             <div style={sharedStyles.signupBelow}>
