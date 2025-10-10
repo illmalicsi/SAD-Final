@@ -348,7 +348,7 @@ const TransactionHistory = ({ onBackToHome }) => {
           <div style={styles.summaryLabel}>Total Transactions</div>
         </div>
         <div style={styles.summaryCard}>
-          <div style={styles.summaryValue}>${totalAmount.toFixed(2)}</div>
+          <div style={styles.summaryValue}>₱{totalAmount.toFixed(2)}</div>
           <div style={styles.summaryLabel}>Total Amount</div>
         </div>
         <div style={styles.summaryCard}>
@@ -436,7 +436,7 @@ const TransactionHistory = ({ onBackToHome }) => {
                     </td>
                     <td style={styles.td}>
                       <div style={styles.amount}>
-                        ${parseFloat(tx.amount).toFixed(2)}
+                        ₱{parseFloat(tx.amount).toFixed(2)}
                       </div>
                     </td>
                     <td style={styles.td}>
@@ -450,7 +450,7 @@ const TransactionHistory = ({ onBackToHome }) => {
                     </td>
                     <td style={styles.td}>
                       {tx.invoice_amount ? (
-                        <span>${parseFloat(tx.invoice_amount).toFixed(2)}</span>
+                        <span>₱{parseFloat(tx.invoice_amount).toFixed(2)}</span>
                       ) : (
                         <span style={{color: '#9ca3af'}}>N/A</span>
                       )}

@@ -21,7 +21,9 @@
     const [roleFilter, setRoleFilter] = useState('all');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
+    const [userToDelete, setUserToDelete] = useState(null);
     const [roles, setRoles] = useState([]);
     const [newUser, setNewUser] = useState({
       firstName: '',
@@ -173,11 +175,24 @@
     };
 
     const handleDeleteUser = (userId) => {
-      if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-        const updatedUsers = users.filter(user => user.id !== userId);
+      const user = users.find(u => u.id === userId);
+      setUserToDelete(user);
+      setShowDeleteModal(true);
+    };
+
+    const confirmDeleteUser = () => {
+      if (userToDelete) {
+        const updatedUsers = users.filter(user => user.id !== userToDelete.id);
         setUsers(updatedUsers);
         localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
+        setShowDeleteModal(false);
+        setUserToDelete(null);
       }
+    };
+
+    const cancelDeleteUser = () => {
+      setShowDeleteModal(false);
+      setUserToDelete(null);
     };
 
     const handleEditInputChange = (e) => {
@@ -509,6 +524,76 @@
         textAlign: 'center',
         padding: '40px',
         color: '#94a3b8'
+      },
+      deleteModalContent: {
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: '16px',
+        width: '400px',
+        maxWidth: '90vw',
+        border: '1px solid rgba(239, 68, 68, 0.3)',
+        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)'
+      },
+      deleteModalHeader: {
+        padding: '20px 24px 16px',
+        borderBottom: '1px solid rgba(239, 68, 68, 0.2)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      },
+      deleteModalTitle: {
+        margin: 0,
+        color: '#ef4444',
+        fontSize: '18px',
+        fontWeight: '600'
+      },
+      deleteModalBody: {
+        padding: '24px',
+        textAlign: 'center'
+      },
+      deleteWarningIcon: {
+        color: '#ef4444',
+        marginBottom: '16px',
+        opacity: 0.8
+      },
+      deleteMessage: {
+        color: '#e5e7eb',
+        fontSize: '16px',
+        marginBottom: '8px',
+        lineHeight: '1.5'
+      },
+      deleteSubMessage: {
+        color: '#94a3b8',
+        fontSize: '14px',
+        margin: 0
+      },
+      deleteModalActions: {
+        padding: '16px 24px 24px',
+        display: 'flex',
+        gap: '12px',
+        justifyContent: 'flex-end'
+      },
+      cancelButton: {
+        backgroundColor: 'transparent',
+        border: '1px solid rgba(100, 255, 218, 0.3)',
+        color: '#64ffda',
+        padding: '10px 20px',
+        borderRadius: '8px',
+        fontSize: '14px',
+        fontWeight: '500',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease'
+      },
+      deleteConfirmButton: {
+        backgroundColor: '#ef4444',
+        border: '1px solid #ef4444',
+        color: 'white',
+        padding: '10px 20px',
+        borderRadius: '8px',
+        fontSize: '14px',
+        fontWeight: '600',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease'
       }
     };
 
@@ -953,6 +1038,52 @@
                   onMouseLeave={handleCreateButtonLeave}
                 >
                   Create User
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && userToDelete && (
+          <div style={styles.modalOverlay} onClick={cancelDeleteUser}>
+            <div style={styles.deleteModalContent} onClick={(e) => e.stopPropagation()}>
+              <div style={styles.deleteModalHeader}>
+                <h2 style={styles.deleteModalTitle}>Confirm Delete</h2>
+                <button 
+                  style={styles.closeButton}
+                  onClick={cancelDeleteUser}
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div style={styles.deleteModalBody}>
+                <div style={styles.deleteWarningIcon}>
+                  <FaTrash size={48} />
+                </div>
+                <p style={styles.deleteMessage}>
+                  Are you sure you want to delete <strong>{userToDelete.firstName} {userToDelete.lastName}</strong>?
+                </p>
+                <p style={styles.deleteSubMessage}>
+                  This action cannot be undone.
+                </p>
+              </div>
+              
+              <div style={styles.deleteModalActions}>
+                <button
+                  type="button"
+                  style={styles.cancelButton}
+                  onClick={cancelDeleteUser}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  style={styles.deleteConfirmButton}
+                  onClick={confirmDeleteUser}
+                >
+                  Delete User
                 </button>
               </div>
             </div>

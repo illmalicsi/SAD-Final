@@ -12,11 +12,6 @@ import UserSignup from './UserSignup'
 import Dashboard from './dashboard'
 
 
-const ADMIN_CREDENTIALS = {
-  email: 'admin@blueeagles.com',
-  password: 'Admin123!'
-};
-
 const Home = () => {
   const containerStyle = {
     minHeight: '100vh',
@@ -1360,7 +1355,25 @@ const servicesHeaderRightStyle = {
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [activeHash, setActiveHash] = useState('#home');
-  const [currentView, setCurrentView] = useState('home');
+  const [currentView, setCurrentView] = useState(() => {
+    // Check if user was previously on dashboard
+    const savedView = localStorage.getItem('davaoBlueEaglesCurrentView');
+    const savedUser = localStorage.getItem('davaoBlueEaglesUser');
+    
+    // Only restore dashboard view if user is logged in and is admin
+    if (savedView === 'dashboard' && savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+        if (user && user.role === 'admin') {
+          return 'dashboard';
+        }
+      } catch (error) {
+        // If there's an error parsing, fallback to home
+      }
+    }
+    
+    return 'home';
+  });
   const [loginError, setLoginError] = useState('');
   const [bookings, setBookings] = useState([]);
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -1653,6 +1666,18 @@ const servicesHeaderRightStyle = {
     };
   }, []);
 
+  // Save current view to localStorage to persist dashboard state on refresh
+  useEffect(() => {
+    localStorage.setItem('davaoBlueEaglesCurrentView', currentView);
+    
+    // Update URL hash when view changes to maintain consistency
+    if (currentView === 'dashboard') {
+      window.history.replaceState(null, null, '#dashboard');
+    } else if (currentView === 'home') {
+      window.history.replaceState(null, null, '#home');
+    }
+  }, [currentView]);
+
   // Load notifications from localStorage
   useEffect(() => {
     try {
@@ -1762,6 +1787,8 @@ const servicesHeaderRightStyle = {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('davaoBlueEaglesUser');
+    localStorage.removeItem('davaoBlueEaglesCurrentView'); // Clear saved view on logout
+    setCurrentView('home'); // Reset to home view
     setShowUserMenu(false);
   };
 
@@ -1809,7 +1836,11 @@ const servicesHeaderRightStyle = {
   };
 
   const handleShowSignup = () => {
-    setCurrentView('signup');
+    setCurrentView('signup'); // This is for membership applications
+  };
+
+  const handleShowUserSignup = () => {
+    setCurrentView('userSignup'); // This is for regular user account creation
   };
 
   const handleSignup = (userData) => {
@@ -1842,7 +1873,7 @@ const servicesHeaderRightStyle = {
   };
 
   const handleSwitchToSignup = () => {
-    setCurrentView('signup');
+    setCurrentView('userSignup'); // When switching from login, show user signup
   };
 
   const handleClearLoginError = () => {
@@ -1856,9 +1887,18 @@ const servicesHeaderRightStyle = {
         <Login onBack={handleBackToHome} onLogin={handleLogin} onSwitchToSignup={handleSwitchToSignup} error={loginError} onClearError={handleClearLoginError} />
       )}
 
-      {/* Add this after the login view */}
-      {currentView === 'signup' && (
+      {/* User Signup (for booking accounts) */}
+      {currentView === 'userSignup' && (
         <UserSignup
+          onClose={handleBackToHome}
+          onSignup={handleSignup}
+          onSwitchToLogin={handleSwitchToLogin}
+        />
+      )}
+
+      {/* Membership Application */}
+      {currentView === 'signup' && (
+        <Signup
           onClose={handleBackToHome}
           onSignup={handleSignup}
           onSwitchToLogin={handleSwitchToLogin}
@@ -2173,7 +2213,7 @@ const servicesHeaderRightStyle = {
                 ) : (
                   <>
                     <button onClick={handleShowLogin} style={loginButtonStyle} onMouseEnter={handleLoginHover} onMouseLeave={handleLoginLeave}>Login</button>
-                    <button onClick={handleShowSignup} style={signUpButtonStyle} onMouseEnter={handleSignupHover} onMouseLeave={handleSignupLeave}>Sign Up</button>
+                    <button onClick={handleShowUserSignup} style={signUpButtonStyle} onMouseEnter={handleSignupHover} onMouseLeave={handleSignupLeave}>Sign Up</button>
                   </>
                 )}
               </div>

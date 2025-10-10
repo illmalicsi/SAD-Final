@@ -1,0 +1,170 @@
+{
+  "exportDate": "2025-10-10T06:54:12.885Z",
+  "databaseName": "dbemb",
+  "exports": {
+    "applicationUsers": {
+      "count": 7,
+      "data": [
+        {
+          "id": 1,
+          "firstName": "Ivan Louie",
+          "lastName": "Malicsi",
+          "email": "ivanlouiemalicsi@gmail.com",
+          "role": "admin",
+          "isActive": 1,
+          "isBlocked": 0,
+          "created_at": "2025-09-27T06:38:26.000Z",
+          "updated_at": "2025-09-27T06:38:26.000Z"
+        },
+        {
+          "id": 2,
+          "firstName": "Harley",
+          "lastName": "Cuba",
+          "email": "hlncuba@addu.edu.ph",
+          "role": "member",
+          "isActive": 1,
+          "isBlocked": 0,
+          "created_at": "2025-09-27T06:38:26.000Z",
+          "updated_at": "2025-09-27T06:38:26.000Z"
+        },
+        {
+          "id": 3,
+          "firstName": "Jan Aceryl",
+          "lastName": "Futalan",
+          "email": "jnfutalan@addu.edu.ph",
+          "role": "user",
+          "isActive": 1,
+          "isBlocked": 0,
+          "created_at": "2025-09-27T06:38:26.000Z",
+          "updated_at": "2025-09-27T06:38:26.000Z"
+        },
+        {
+          "id": 4,
+          "firstName": "Ivan",
+          "lastName": "Lim",
+          "email": "ilimlouiemalicsi@gmail.com",
+          "role": "user",
+          "isActive": 1,
+          "isBlocked": 0,
+          "created_at": "2025-09-27T06:38:26.000Z",
+          "updated_at": "2025-09-27T06:38:26.000Z"
+        },
+        {
+          "id": 5,
+          "firstName": "Harley",
+          "lastName": "Potter",
+          "email": "harley.potter@blueeagles.com",
+          "role": "user",
+          "isActive": 1,
+          "isBlocked": 0,
+          "created_at": "2025-09-27T06:38:26.000Z",
+          "updated_at": "2025-09-27T06:38:26.000Z"
+        },
+        {
+          "id": 6,
+          "firstName": "Ivan",
+          "lastName": "Lim",
+          "email": "lim@gmail.com",
+          "role": "user",
+          "isActive": 1,
+          "isBlocked": 0,
+          "created_at": "2025-10-08T06:48:39.000Z",
+          "updated_at": "2025-10-08T06:48:39.000Z"
+        },
+        {
+          "id": 7,
+          "firstName": "Christian",
+          "lastName": "Mari",
+          "email": "cvmari@gmail.com",
+          "role": "user",
+          "isActive": 1,
+          "isBlocked": 0,
+          "created_at": "2025-10-08T16:46:20.000Z",
+          "updated_at": "2025-10-08T16:46:20.000Z"
+        }
+      ]
+    },
+    "mysqlSystemUsers": {
+      "count": 4,
+      "data": [
+        {
+          "User": "mysql.infoschema",
+          "Host": "localhost",
+          "authentication_string": "$A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED",
+          "plugin": "caching_sha2_password",
+          "password_expired": "N",
+          "password_last_changed": "2025-09-20T02:38:25.000Z",
+          "password_lifetime": null,
+          "account_locked": "Y",
+          "Create_user_priv": "N",
+          "Drop_role_priv": "N",
+          "Create_role_priv": "N",
+          "Super_priv": "N"
+        },
+        {
+          "User": "mysql.session",
+          "Host": "localhost",
+          "authentication_string": "$A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED",
+          "plugin": "caching_sha2_password",
+          "password_expired": "N",
+          "password_last_changed": "2025-09-20T02:38:25.000Z",
+          "password_lifetime": null,
+          "account_locked": "Y",
+          "Create_user_priv": "N",
+          "Drop_role_priv": "N",
+          "Create_role_priv": "N",
+          "Super_priv": "Y"
+        },
+        {
+          "User": "mysql.sys",
+          "Host": "localhost",
+          "authentication_string": "$A$005$THISISACOMBINATIONOFINVALIDSALTANDPASSWORDTHATMUSTNEVERBRBEUSED",
+          "plugin": "caching_sha2_password",
+          "password_expired": "N",
+          "password_last_changed": "2025-09-20T02:38:25.000Z",
+          "password_lifetime": null,
+          "account_locked": "Y",
+          "Create_user_priv": "N",
+          "Drop_role_priv": "N",
+          "Create_role_priv": "N",
+          "Super_priv": "N"
+        },
+        {
+          "User": "root",
+          "Host": "localhost",
+          "authentication_string": "$A$005$~ \u0002]0\u000et\u0011}\u0004X_z#JYmC-!CkggNHBNEYYDN9hpxpyZSfQFa0sij47K82XH6fPpFb3",
+          "plugin": "caching_sha2_password",
+          "password_expired": "N",
+          "password_last_changed": "2025-09-20T02:38:32.000Z",
+          "password_lifetime": null,
+          "account_locked": "N",
+          "Create_user_priv": "Y",
+          "Drop_role_priv": "Y",
+          "Create_role_priv": "Y",
+          "Super_priv": "Y"
+        }
+      ]
+    },
+    "userPrivileges": {
+      "count": 2,
+      "data": [
+        {
+          "GRANTEE": "'mysql.session'@'localhost'",
+          "TABLE_CATALOG": "def",
+          "TABLE_SCHEMA": "mysql",
+          "TABLE_NAME": "user",
+          "PRIVILEGE_TYPE": "SELECT",
+          "IS_GRANTABLE": "NO"
+        },
+        {
+          "GRANTEE": "'mysql.sys'@'localhost'",
+          "TABLE_CATALOG": "def",
+          "TABLE_SCHEMA": "sys",
+          "TABLE_NAME": "sys_config",
+          "PRIVILEGE_TYPE": "SELECT",
+          "IS_GRANTABLE": "NO"
+        }
+      ]
+    }
+  }
+}
