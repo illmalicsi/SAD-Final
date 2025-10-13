@@ -1,56 +1,63 @@
 import React, { useEffect, useState } from 'react';
-import { FaCheck, FaTimes, FaArrowLeft, FaClipboardCheck, FaUser, FaDollarSign, FaClock, FaEye, FaSpinner } from 'react-icons/fa';
-import AuthService from '../services/authService';
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import { FaCheck, FaTimes, FaArrowLeft, FaMusic, FaUserFriends, FaUser } from 'react-icons/fa';
 
 const Approval = ({ onBackToHome }) => {
-  const [invoices, setInvoices] = useState([]);
+  const [borrowRequests, setBorrowRequests] = useState([]);
+  const [rentRequests, setRentRequests] = useState([]);
+  const [activeTab, setActiveTab] = useState('borrow'); // 'borrow', 'rent'
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState('');
   const [processingId, setProcessingId] = useState(null);
 
-  const fetchInvoices = async () => {
+  const fetchInstrumentRequests = () => {
     try {
-      const res = await AuthService.makeAuthenticatedRequest(
-        `${API_BASE_URL}/billing/invoices`
-      );
-      const data = await res.json();
-      if (res.ok) {
-        setInvoices(data.invoices);
-      } else {
-        setErrorMsg(data.message || 'Failed to load invoices');
-      }
+      const borrow = JSON.parse(localStorage.getItem('borrowRequests') || '[]');
+      const rent = JSON.parse(localStorage.getItem('rentRequests') || '[]');
+      setBorrowRequests(Array.isArray(borrow) ? borrow : []);
+      setRentRequests(Array.isArray(rent) ? rent : []);
     } catch (err) {
-      setErrorMsg(err.message);
+      console.error('Error loading instrument requests:', err);
+      setBorrowRequests([]);
+      setRentRequests([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchInvoices();
+    fetchInstrumentRequests();
+    
+    // Listen for new requests
+    const handleBorrowUpdate = () => fetchInstrumentRequests();
+    const handleRentUpdate = () => fetchInstrumentRequests();
+    
+    window.addEventListener('borrowRequestsUpdated', handleBorrowUpdate);
+    window.addEventListener('rentRequestsUpdated', handleRentUpdate);
+    
+    return () => {
+      window.removeEventListener('borrowRequestsUpdated', handleBorrowUpdate);
+      window.removeEventListener('rentRequestsUpdated', handleRentUpdate);
+    };
   }, []);
 
-  const handleApprove = async (invoiceId) => {
-    setProcessingId(invoiceId);
+  const handleInstrumentRequestAction = (requestId, action, type) => {
+    setProcessingId(requestId);
     try {
-      const res = await AuthService.makeAuthenticatedRequest(
-        `${API_BASE_URL}/billing/invoices/${invoiceId}/approve`,
-        { method: 'PUT' }
+      const storageKey = type === 'borrow' ? 'borrowRequests' : 'rentRequests';
+      const requests = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const updatedRequests = requests.map(req =>
+        req.id === requestId ? { ...req, status: action } : req
       );
-      const data = await res.json();
-      if (res.ok) {
-        setInvoices((prev) =>
-          prev.map((inv) =>
-            inv.invoice_id === invoiceId ? { ...inv, status: 'approved' } : inv
-          )
-        );
+      localStorage.setItem(storageKey, JSON.stringify(updatedRequests));
+      
+      if (type === 'borrow') {
+        setBorrowRequests(updatedRequests);
       } else {
-        setErrorMsg(data.message || 'Failed to approve invoice');
+        setRentRequests(updatedRequests);
       }
+      
+      window.dispatchEvent(new Event(`${type}RequestsUpdated`));
     } catch (err) {
-      setErrorMsg(err.message);
+      setErrorMsg('Failed to update request');
     } finally {
       setProcessingId(null);
     }
@@ -189,13 +196,15 @@ const Approval = ({ onBackToHome }) => {
       fontWeight: '600',
       color: '#6b7280',
       textTransform: 'uppercase',
-      letterSpacing: '0.5px'
+      letterSpacing: '0.5px',
+      verticalAlign: 'middle'
     },
     td: {
       padding: '20px 24px',
       borderBottom: '1px solid #f1f5f9',
       fontSize: '14px',
-      color: '#374151'
+      color: '#374151',
+      verticalAlign: 'middle'
     },
     invoiceRow: {
       transition: 'background-color 0.2s ease'
@@ -238,13 +247,13 @@ const Approval = ({ onBackToHome }) => {
     actionButton: {
       display: 'flex',
       alignItems: 'center',
-      gap: '8px',
-      padding: '10px 20px',
+      gap: '6px',
+      padding: '8px 16px',
       backgroundColor: '#10b981',
       color: '#fff',
       border: 'none',
-      borderRadius: '8px',
-      fontSize: '14px',
+      borderRadius: '6px',
+      fontSize: '13px',
       fontWeight: '500',
       cursor: 'pointer',
       transition: 'all 0.2s ease'
@@ -288,13 +297,40 @@ const Approval = ({ onBackToHome }) => {
       <div style={styles.container}>
         <div style={{...styles.card, padding: '64px', textAlign: 'center'}}>
           <div style={{...styles.spinner, margin: '0 auto 16px'}}></div>
-          <div>Loading pending invoices...</div>
+          <div>Loading instrument requests...</div>
         </div>
       </div>
     );
   }
 
-  const pendingInvoices = invoices.filter((inv) => inv.status === 'pending');
+  // Show all requests, sorted by status (pending first, then approved, then rejected)
+  const sortedBorrowRequests = [...borrowRequests].sort((a, b) => {
+    const statusOrder = { pending: 0, approved: 1, rejected: 2, returned: 3 };
+    return statusOrder[a.status] - statusOrder[b.status];
+  });
+  
+  const sortedRentRequests = [...rentRequests].sort((a, b) => {
+    const statusOrder = { pending: 0, approved: 1, rejected: 2, paid: 3, returned: 4 };
+    return statusOrder[a.status] - statusOrder[b.status];
+  });
+
+  const pendingBorrowCount = borrowRequests.filter(req => req.status === 'pending').length;
+  const pendingRentCount = rentRequests.filter(req => req.status === 'pending').length;
+
+  const tabStyle = (isActive) => ({
+    padding: '12px 24px',
+    backgroundColor: isActive ? '#3b82f6' : 'transparent',
+    color: isActive ? '#ffffff' : '#64748b',
+    border: 'none',
+    borderBottom: isActive ? '3px solid #3b82f6' : '3px solid transparent',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    transition: 'all 0.2s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  });
 
   return (
     <div style={styles.container}>
@@ -320,115 +356,303 @@ const Approval = ({ onBackToHome }) => {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
           }
+
+          .reject-button:hover:not(:disabled) {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+          }
+
+          .tab-button:hover {
+            background-color: #f1f5f9;
+          }
         `}
       </style>
       
       <div style={styles.header}>
         <h1 style={styles.title}>
-          <FaClipboardCheck style={styles.titleIcon} />
-          Invoice Approvals
+          <FaMusic style={styles.titleIcon} />
+          Instrument Request Approvals
         </h1>
       </div>
 
-      <div style={styles.card}>
-        <div style={styles.cardHeader}>
-          <h2 style={styles.cardTitle}>
-            Pending Invoices ({pendingInvoices.length})
-          </h2>
-        </div>
-
-        <div style={styles.cardBody}>
-          {errorMsg && (
-            <div style={styles.alert}>
-              <FaTimes />
-              {errorMsg}
-            </div>
-          )}
-
-          {pendingInvoices.length === 0 ? (
-            <div style={styles.emptyState}>
-              <FaClipboardCheck style={styles.emptyIcon} />
-              <div style={styles.emptyTitle}>No Pending Invoices</div>
-              <div style={styles.emptyDescription}>
-                All invoices have been reviewed and approved.
-              </div>
-            </div>
-          ) : (
-            <table style={styles.table}>
-              <thead style={styles.tableHeader}>
-                <tr>
-                  <th style={styles.th}>Invoice</th>
-                  <th style={styles.th}>User</th>
-                  <th style={styles.th}>Amount</th>
-                  <th style={styles.th}>Description</th>
-                  <th style={styles.th}>Created</th>
-                  <th style={styles.th}>Status</th>
-                  <th style={styles.th}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingInvoices.map((inv) => (
-                  <tr key={inv.invoice_id} style={styles.invoiceRow} className="invoice-row">
-                    <td style={styles.td}>
-                      <div style={styles.invoiceCard}>
-                        <div style={styles.invoiceId}>#{inv.invoice_id}</div>
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={styles.userInfo}>
-                        <FaUser size={12} />
-                        User ID: {inv.user_id}
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={styles.amount}>
-                        ${parseFloat(inv.amount).toFixed(2)}
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={styles.description} title={inv.description}>
-                        {inv.description || 'No description'}
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={styles.dateInfo}>
-                        <FaClock size={12} />
-                        {formatDate(inv.created_at)}
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      {getStatusBadge(inv.status)}
-                    </td>
-                    <td style={styles.td}>
-                      <button 
-                        onClick={() => handleApprove(inv.invoice_id)}
-                        disabled={processingId === inv.invoice_id}
-                        style={{
-                          ...styles.actionButton,
-                          ...(processingId === inv.invoice_id ? styles.actionButtonDisabled : {})
-                        }}
-                        className="approve-button"
-                      >
-                        {processingId === inv.invoice_id ? (
-                          <>
-                            <div style={styles.spinner}></div>
-                            Approving...
-                          </>
-                        ) : (
-                          <>
-                            <FaCheck size={12} />
-                            Approve
-                          </>
-                        )}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '1px solid #e2e8f0' }}>
+        <button 
+          onClick={() => setActiveTab('borrow')} 
+          style={tabStyle(activeTab === 'borrow')}
+          className="tab-button"
+        >
+          <FaUserFriends size={14} />
+          Borrow Requests ({borrowRequests.length})
+          {pendingBorrowCount > 0 && <span style={{ marginLeft: '4px', padding: '2px 6px', backgroundColor: '#fbbf24', color: '#78350f', borderRadius: '10px', fontSize: '11px', fontWeight: '700' }}>{pendingBorrowCount} pending</span>}
+        </button>
+        <button 
+          onClick={() => setActiveTab('rent')} 
+          style={tabStyle(activeTab === 'rent')}
+          className="tab-button"
+        >
+          <FaMusic size={14} />
+          Rent Requests ({rentRequests.length})
+          {pendingRentCount > 0 && <span style={{ marginLeft: '4px', padding: '2px 6px', backgroundColor: '#fbbf24', color: '#78350f', borderRadius: '10px', fontSize: '11px', fontWeight: '700' }}>{pendingRentCount} pending</span>}
+        </button>
       </div>
+
+      {/* Borrow Requests Tab */}
+      {activeTab === 'borrow' && (
+        <div style={styles.card}>
+          <div style={styles.cardHeader}>
+            <h2 style={styles.cardTitle}>
+              Borrow Requests ({borrowRequests.length})
+              {pendingBorrowCount > 0 && <span style={{ marginLeft: '8px', fontSize: '14px', color: '#f59e0b' }}>• {pendingBorrowCount} pending</span>}
+            </h2>
+          </div>
+
+          <div style={styles.cardBody}>
+            {borrowRequests.length === 0 ? (
+              <div style={styles.emptyState}>
+                <FaUserFriends style={styles.emptyIcon} />
+                <div style={styles.emptyTitle}>No Borrow Requests</div>
+                <div style={styles.emptyDescription}>
+                  No borrow requests have been submitted yet.
+                </div>
+              </div>
+            ) : (
+              <table style={styles.table}>
+                <thead style={styles.tableHeader}>
+                  <tr>
+                    <th style={styles.th}>Request ID</th>
+                    <th style={styles.th}>Member</th>
+                    <th style={styles.th}>Instrument</th>
+                    <th style={styles.th}>Quantity</th>
+                    <th style={styles.th}>Duration</th>
+                    <th style={styles.th}>Purpose</th>
+                    <th style={styles.th}>Status</th>
+                    <th style={styles.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedBorrowRequests.map((req) => (
+                    <tr key={req.id} style={styles.invoiceRow} className="invoice-row">
+                      <td style={styles.td}>
+                        <div style={styles.invoiceId}>#{req.id}</div>
+                      </td>
+                      <td style={styles.td}>
+                        <div>
+                          <div style={{...styles.userInfo, marginBottom: '4px'}}>
+                            <FaUser size={12} />
+                            {req.userName}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af' }}>{req.userEmail}</div>
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        <div>
+                          <div style={{ fontWeight: '600', marginBottom: '4px' }}>{req.instrumentName}</div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'capitalize' }}>{req.instrumentType}</div>
+                        </div>
+                      </td>
+                      <td style={{...styles.td, textAlign: 'center'}}>{req.quantity}</td>
+                      <td style={styles.td}>
+                        <div style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
+                          {new Date(req.startDate).toLocaleDateString()}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#64748b' }}>
+                          - {new Date(req.endDate).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ maxWidth: '200px' }}>
+                          <div style={{ textTransform: 'capitalize', marginBottom: '4px' }}>{req.purpose}</div>
+                          {req.notes && <div style={{ fontSize: '12px', color: '#9ca3af' }}>{req.notes}</div>}
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        {getStatusBadge(req.status)}
+                      </td>
+                      <td style={styles.td}>
+                        {req.status === 'pending' ? (
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <button 
+                              onClick={() => handleInstrumentRequestAction(req.id, 'approved', 'borrow')}
+                              disabled={processingId === req.id}
+                              style={{
+                                ...styles.actionButton,
+                                ...(processingId === req.id ? styles.actionButtonDisabled : {})
+                              }}
+                              className="approve-button"
+                            >
+                              {processingId === req.id ? (
+                                <>
+                                  <div style={styles.spinner}></div>
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <FaCheck size={12} />
+                                  Approve
+                                </>
+                              )}
+                            </button>
+                            <button 
+                              onClick={() => handleInstrumentRequestAction(req.id, 'rejected', 'borrow')}
+                              disabled={processingId === req.id}
+                              style={{
+                                ...styles.actionButton,
+                                backgroundColor: '#ef4444',
+                                ...(processingId === req.id ? styles.actionButtonDisabled : {})
+                              }}
+                              className="reject-button"
+                            >
+                              <FaTimes size={12} />
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
+                            {req.status === 'approved' ? '✓ Approved' : req.status === 'rejected' ? '✗ Rejected' : req.status}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Rent Requests Tab */}
+      {activeTab === 'rent' && (
+        <div style={styles.card}>
+          <div style={styles.cardHeader}>
+            <h2 style={styles.cardTitle}>
+              Rent Requests ({rentRequests.length})
+              {pendingRentCount > 0 && <span style={{ marginLeft: '8px', fontSize: '14px', color: '#f59e0b' }}>• {pendingRentCount} pending</span>}
+            </h2>
+          </div>
+
+          <div style={styles.cardBody}>
+            {rentRequests.length === 0 ? (
+              <div style={styles.emptyState}>
+                <FaMusic style={styles.emptyIcon} />
+                <div style={styles.emptyTitle}>No Rent Requests</div>
+                <div style={styles.emptyDescription}>
+                  No rent requests have been submitted yet.
+                </div>
+              </div>
+            ) : (
+              <table style={styles.table}>
+                <thead style={styles.tableHeader}>
+                  <tr>
+                    <th style={styles.th}>Request ID</th>
+                    <th style={styles.th}>Customer</th>
+                    <th style={styles.th}>Instrument</th>
+                    <th style={styles.th}>Quantity</th>
+                    <th style={styles.th}>Duration</th>
+                    <th style={styles.th}>Purpose</th>
+                    <th style={styles.th}>Status</th>
+                    <th style={styles.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedRentRequests.map((req) => (
+                    <tr key={req.id} style={styles.invoiceRow} className="invoice-row">
+                      <td style={styles.td}>
+                        <div style={styles.invoiceId}>#{req.id}</div>
+                      </td>
+                      <td style={styles.td}>
+                        <div>
+                          <div style={{...styles.userInfo, marginBottom: '4px'}}>
+                            <FaUser size={12} />
+                            {req.userName}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af' }}>{req.userEmail}</div>
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        <div>
+                          <div style={{ fontWeight: '600', marginBottom: '4px' }}>{req.instrumentName}</div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'capitalize' }}>{req.instrumentType}</div>
+                        </div>
+                      </td>
+                      <td style={{...styles.td, textAlign: 'center'}}>{req.quantity}</td>
+                      <td style={styles.td}>
+                        <div style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
+                          {new Date(req.startDate).toLocaleDateString()}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#64748b' }}>
+                          - {new Date(req.endDate).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ maxWidth: '200px' }}>
+                          <div style={{ textTransform: 'capitalize', marginBottom: '4px' }}>{req.purpose}</div>
+                          {req.notes && <div style={{ fontSize: '12px', color: '#9ca3af' }}>{req.notes}</div>}
+                        </div>
+                      </td>
+                      <td style={styles.td}>
+                        {getStatusBadge(req.status)}
+                      </td>
+                      <td style={styles.td}>
+                        {req.status === 'pending' ? (
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <button 
+                              onClick={() => handleInstrumentRequestAction(req.id, 'approved', 'rent')}
+                              disabled={processingId === req.id}
+                              style={{
+                                ...styles.actionButton,
+                                ...(processingId === req.id ? styles.actionButtonDisabled : {})
+                              }}
+                              className="approve-button"
+                            >
+                              {processingId === req.id ? (
+                                <>
+                                  <div style={styles.spinner}></div>
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <FaCheck size={12} />
+                                  Approve
+                                </>
+                              )}
+                            </button>
+                            <button 
+                              onClick={() => handleInstrumentRequestAction(req.id, 'rejected', 'rent')}
+                              disabled={processingId === req.id}
+                              style={{
+                                ...styles.actionButton,
+                                backgroundColor: '#ef4444',
+                                ...(processingId === req.id ? styles.actionButtonDisabled : {})
+                              }}
+                              className="reject-button"
+                            >
+                              <FaTimes size={12} />
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={{ 
+                            fontSize: '13px', 
+                            color: '#64748b',
+                            fontStyle: 'italic'
+                          }}>
+                            {req.status === 'approved' ? 'Request approved' : 
+                             req.status === 'rejected' ? 'Request rejected' : 
+                             'Request returned'}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

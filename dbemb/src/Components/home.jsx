@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock, FaUser } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock, FaUser, FaMusic } from 'react-icons/fa';
 import bg2 from "./Assets/bg2.jpg";
 import bandGigs from "./Assets/bandGigs.jpg";
 import musicArrangement from "./Assets/music-arrangement.jpg";
@@ -1401,6 +1401,19 @@ const servicesHeaderRightStyle = {
   const [serviceCols, setServiceCols] = useState(5);
   const [serviceCardH, setServiceCardH] = useState(240);
   const aboutImages = [bandGigs, paradeEvents, musicWorkshop, musicArrangement, instrumentRentals];
+  
+  // Instrument Request States
+  const [showInstrumentRequest, setShowInstrumentRequest] = useState(false);
+  const [availableInstruments, setAvailableInstruments] = useState([]);
+  const [instrumentRequestForm, setInstrumentRequestForm] = useState({
+    instrumentType: '',
+    instrumentName: '',
+    quantity: 1,
+    startDate: '',
+    endDate: '',
+    purpose: '',
+    notes: ''
+  });
 
   const goPrev = () => {
     setCurrentSlide((prev) => (prev === 0 ? aboutImages.length - 1 : prev - 1));
@@ -1415,6 +1428,45 @@ const servicesHeaderRightStyle = {
       setCurrentSlide((prev) => (prev === aboutImages.length - 1 ? 0 : prev + 1));
     }, 5000);
     return () => clearInterval(id);
+  }, []);
+
+  // Load available instruments
+  useEffect(() => {
+    // Default inventory - same as in inventory.jsx
+    const defaultInventory = [
+      { id: 1, name: 'Yamaha Black Snare Drum #01', category: 'percussion', subcategory: 'Snare Drums', status: 'Available', archived: false },
+      { id: 2, name: 'Yamaha Black Snare Drum #02', category: 'percussion', subcategory: 'Snare Drums', status: 'Available', archived: false },
+      { id: 3, name: 'Yamaha Black Snare Drum (Evans Drum Head) #03', category: 'percussion', subcategory: 'Snare Drums', status: 'Available', archived: false },
+      { id: 4, name: 'Pearl Snare Drum Color White #01', category: 'percussion', subcategory: 'Snare Drums', status: 'Available', archived: false },
+      { id: 5, name: 'Pearl Snare Drum Color Dirt White #02', category: 'percussion', subcategory: 'Snare Drums', status: 'Available', archived: false },
+      { id: 6, name: 'Lazer Bass Drum #01', category: 'percussion', subcategory: 'Bass Drums', status: 'Available', archived: false },
+      { id: 7, name: 'E-lance Bass Drum #02', category: 'percussion', subcategory: 'Bass Drums', status: 'Available', archived: false },
+      { id: 8, name: 'E-lance Bass Drum #03', category: 'percussion', subcategory: 'Bass Drums', status: 'Available', archived: false },
+      { id: 9, name: 'E-lance Bass Drum #04', category: 'percussion', subcategory: 'Bass Drums', status: 'Available', archived: false },
+      { id: 10, name: 'Fernando Bass Drum #002', category: 'percussion', subcategory: 'Bass Drums', status: 'Available', archived: false },
+      { id: 11, name: 'E-lance Percussion Black Tenor Drums', category: 'percussion', subcategory: 'Tenor Drums', status: 'Available', archived: false },
+      { id: 12, name: 'Century Percussion White Tenor Drums', category: 'percussion', subcategory: 'Tenor Drums', status: 'Available', archived: false },
+      { id: 13, name: 'Zildjian Marching Cymbals', category: 'percussion', subcategory: 'Cymbals', status: 'Available', archived: false },
+      { id: 14, name: 'E-lance Percussion Marching Glockenspiel #01', category: 'percussion', subcategory: 'Other Percussion', status: 'Available', archived: false },
+      { id: 15, name: 'E-lance Percussion Marching Glockenspiel #02', category: 'percussion', subcategory: 'Other Percussion', status: 'Available', archived: false },
+      { id: 16, name: 'Yamaha Clarinet', category: 'wind', subcategory: 'Woodwinds', status: 'Available', archived: false },
+      { id: 17, name: 'Fernando Tuba', category: 'wind', subcategory: 'Brass', status: 'Available', archived: false }
+    ];
+
+    // Try to get from localStorage, otherwise use default
+    try {
+      const saved = localStorage.getItem('dbeInventory');
+      if (saved) {
+        const inventory = JSON.parse(saved);
+        // Filter for available, non-archived instruments only
+        const available = inventory.filter(item => item.status === 'Available' && !item.archived);
+        setAvailableInstruments(available);
+      } else {
+        setAvailableInstruments(defaultInventory);
+      }
+    } catch (e) {
+      setAvailableInstruments(defaultInventory);
+    }
   }, []);
 
   // Load bookings from localStorage
@@ -1636,7 +1688,7 @@ const servicesHeaderRightStyle = {
       title: 'Instrument Rentals',
       img: instrumentRentals,
       description:
-        'Work with schools, LGUs, and organizations to co-host music-driven initiatives, workshops, and parades that strengthen community spirit.'
+        'Rent high-quality instruments for your performances, practice sessions, or events. Members can borrow instruments for free, while customers can rent at affordable rates. Browse our collection of percussion, brass, and woodwind instruments.'
     }
   ];
 
@@ -1878,6 +1930,73 @@ const servicesHeaderRightStyle = {
 
   const handleClearLoginError = () => {
     setLoginError('');
+  };
+
+  // Instrument Request Handlers
+  const handleOpenInstrumentRequest = () => {
+    if (!user) {
+      setToast({ type: 'error', message: 'Please login to request instruments' });
+      return;
+    }
+    setInstrumentRequestForm({
+      instrumentType: '',
+      instrumentName: '',
+      quantity: 1,
+      startDate: '',
+      endDate: '',
+      purpose: '',
+      notes: ''
+    });
+    setShowInstrumentRequest(true);
+  };
+
+  const handleSubmitInstrumentRequest = (e) => {
+    e.preventDefault();
+    const { instrumentType, instrumentName, quantity, startDate, endDate, purpose } = instrumentRequestForm;
+    
+    if (!instrumentType || !instrumentName || !quantity || !startDate || !endDate || !purpose) {
+      setToast({ type: 'error', message: 'Please fill in all required fields' });
+      return;
+    }
+
+    if (new Date(endDate) <= new Date(startDate)) {
+      setToast({ type: 'error', message: 'End date must be after start date' });
+      return;
+    }
+
+    const requestType = user.role === 'user' ? 'rent' : 'borrow';
+    
+    const newRequest = {
+      id: Date.now(),
+      userId: user.id,
+      userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+      userEmail: user.email,
+      type: requestType, // 'borrow' for members, 'rent' for customers
+      instrumentType,
+      instrumentName,
+      quantity: parseInt(quantity),
+      startDate,
+      endDate,
+      purpose,
+      notes: instrumentRequestForm.notes,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+
+    // Save to appropriate localStorage key
+    const storageKey = requestType === 'borrow' ? 'borrowRequests' : 'rentRequests';
+    const existingRequests = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    const updatedRequests = [...existingRequests, newRequest];
+    localStorage.setItem(storageKey, JSON.stringify(updatedRequests));
+
+    // Dispatch event for dashboard to update
+    window.dispatchEvent(new Event(`${requestType}RequestsUpdated`));
+
+    setToast({ 
+      type: 'success', 
+      message: `Instrument ${requestType} request submitted successfully!` 
+    });
+    setShowInstrumentRequest(false);
   };
 
   return (
@@ -2194,6 +2313,11 @@ const servicesHeaderRightStyle = {
                           <a href="#bookings" onClick={(e) => { e.preventDefault(); setShowMyBookings(true); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 7h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M8 3v4" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M16 3v4" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 10v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             <span>Bookings</span>
+                          </a>
+
+                          <a href="#instruments" onClick={(e) => { e.preventDefault(); handleOpenInstrumentRequest(); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                            <FaMusic style={{ color: '#0b62d6', minWidth: '18px' }} />
+                            <span>{user.role === 'user' ? 'Rent Instrument' : 'Borrow Instrument'}</span>
                           </a>
 
                           {user.role === 'admin' && (
@@ -2590,9 +2714,180 @@ const servicesHeaderRightStyle = {
                   </div>
                 </div>
                 <div style={{ ...modalActionsStyle, justifyContent: 'space-between' }}>
-                  <div style={{ color: '#94a3b8', fontSize: '14px' }}>Ready to proceed? Reserve a date to get started.</div>
-                  <a href="#book" style={bookButtonStyle} onClick={(e) => { e.preventDefault(); localStorage.setItem('dbeOpenBookingForService', modalService?.title || ''); const url = window.location.origin + window.location.pathname + '#/booking'; window.open(url, '_blank'); }}>Book Now</a>
+                  <div style={{ color: '#94a3b8', fontSize: '14px' }}>
+                    {modalService.title === 'Instrument Rentals' 
+                      ? 'Need an instrument? Request to borrow or rent now.'
+                      : 'Ready to proceed? Reserve a date to get started.'}
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    {modalService.title === 'Instrument Rentals' ? (
+                      <button 
+                        style={bookButtonStyle} 
+                        onClick={(e) => { 
+                          e.preventDefault(); 
+                          setModalService(null);
+                          handleOpenInstrumentRequest();
+                        }}
+                      >
+                        {user ? (user.role === 'user' ? 'Rent Instrument' : 'Borrow Instrument') : 'Request Instrument'}
+                      </button>
+                    ) : (
+                      <a href="#book" style={bookButtonStyle} onClick={(e) => { e.preventDefault(); localStorage.setItem('dbeOpenBookingForService', modalService?.title || ''); const url = window.location.origin + window.location.pathname + '#/booking'; window.open(url, '_blank'); }}>Book Now</a>
+                    )}
+                  </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Instrument Request Modal */}
+          {showInstrumentRequest && (
+            <div style={modalOverlayStyle} onClick={() => setShowInstrumentRequest(false)}>
+              <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+                <div style={modalHeaderStyle}>
+                  <h4 style={modalTitleStyle}>
+                    {user && user.role === 'user' ? 'Rent an Instrument' : 'Borrow an Instrument'}
+                  </h4>
+                  <button style={closeButtonStyle} onClick={() => setShowInstrumentRequest(false)}>×</button>
+                </div>
+                
+                <form onSubmit={handleSubmitInstrumentRequest} style={modalBodyStyle}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={darkLabelStyle}>Instrument Type *</label>
+                    <select
+                      style={darkInputStyle}
+                      value={instrumentRequestForm.instrumentType}
+                      onChange={(e) => setInstrumentRequestForm({ ...instrumentRequestForm, instrumentType: e.target.value })}
+                      required
+                    >
+                      <option value="">Select instrument type</option>
+                      <option value="percussion">Percussion</option>
+                      <option value="brass">Brass</option>
+                      <option value="woodwind">Woodwind</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={darkLabelStyle}>Instrument Name *</label>
+                    <select
+                      style={darkInputStyle}
+                      value={instrumentRequestForm.instrumentName}
+                      onChange={(e) => setInstrumentRequestForm({ ...instrumentRequestForm, instrumentName: e.target.value })}
+                      required
+                    >
+                      <option value="">Select an instrument</option>
+                      {availableInstruments
+                        .filter(item => {
+                          // Filter by selected type if one is chosen
+                          if (!instrumentRequestForm.instrumentType) return true;
+                          if (instrumentRequestForm.instrumentType === 'percussion') return item.category === 'percussion';
+                          if (instrumentRequestForm.instrumentType === 'brass') return item.category === 'wind' && item.subcategory === 'Brass';
+                          if (instrumentRequestForm.instrumentType === 'woodwind') return item.category === 'wind' && item.subcategory === 'Woodwinds';
+                          return true;
+                        })
+                        .map(instrument => (
+                          <option key={instrument.id} value={instrument.name}>
+                            {instrument.name}
+                          </option>
+                        ))
+                      }
+                    </select>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={darkLabelStyle}>Quantity *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      style={darkInputStyle}
+                      value={instrumentRequestForm.quantity}
+                      onChange={(e) => setInstrumentRequestForm({ ...instrumentRequestForm, quantity: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <div>
+                      <label style={darkLabelStyle}>Start Date *</label>
+                      <input
+                        type="date"
+                        style={darkInputStyle}
+                        value={instrumentRequestForm.startDate}
+                        onChange={(e) => setInstrumentRequestForm({ ...instrumentRequestForm, startDate: e.target.value })}
+                        min={new Date().toISOString().split('T')[0]}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label style={darkLabelStyle}>End Date *</label>
+                      <input
+                        type="date"
+                        style={darkInputStyle}
+                        value={instrumentRequestForm.endDate}
+                        onChange={(e) => setInstrumentRequestForm({ ...instrumentRequestForm, endDate: e.target.value })}
+                        min={instrumentRequestForm.startDate || new Date().toISOString().split('T')[0]}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={darkLabelStyle}>Purpose *</label>
+                    <select
+                      style={darkInputStyle}
+                      value={instrumentRequestForm.purpose}
+                      onChange={(e) => setInstrumentRequestForm({ ...instrumentRequestForm, purpose: e.target.value })}
+                      required
+                    >
+                      <option value="">Select purpose</option>
+                      <option value="practice">Practice</option>
+                      <option value="performance">Performance</option>
+                      <option value="event">Event</option>
+                      <option value="learning">Learning</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={darkLabelStyle}>Additional Notes</label>
+                    <textarea
+                      style={darkTextareaStyle}
+                      value={instrumentRequestForm.notes}
+                      onChange={(e) => setInstrumentRequestForm({ ...instrumentRequestForm, notes: e.target.value })}
+                      placeholder="Any additional information..."
+                      rows="3"
+                    />
+                  </div>
+
+                  <div style={{ 
+                    padding: '16px', 
+                    background: user && user.role === 'user' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)', 
+                    borderRadius: '12px', 
+                    marginBottom: '20px',
+                    border: user && user.role === 'user' ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid rgba(34, 197, 94, 0.2)'
+                  }}>
+                    <p style={{ margin: 0, fontSize: '14px', color: '#374151', lineHeight: 1.5 }}>
+                      {user && user.role === 'user' 
+                        ? '💵 As a customer, you can rent this instrument. Rental fees will be discussed upon approval.'
+                        : '🎵 As a member, you can borrow this instrument for free. Please ensure to return it in good condition.'}
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <button 
+                      type="button" 
+                      style={closeButtonStyle} 
+                      onClick={() => setShowInstrumentRequest(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" style={bookButtonStyle}>
+                      Submit Request
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}
@@ -2601,9 +2896,9 @@ const servicesHeaderRightStyle = {
           {toast && (
             <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 3000 }}>
               <div style={{
-                backgroundColor: toast.type === 'success' ? 'rgba(34,197,94,0.1)' : 'rgba(96,165,250,0.1)',
-                border: `1px solid ${toast.type === 'success' ? 'rgba(34,197,94,0.4)' : 'rgba(96,165,250,0.4)'}`,
-                color: toast.type === 'success' ? '#22c55e' : '#60a5fa',
+                backgroundColor: toast.type === 'success' ? 'rgba(34,197,94,0.1)' : toast.type === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(96,165,250,0.1)',
+                border: `1px solid ${toast.type === 'success' ? 'rgba(34,197,94,0.4)' : toast.type === 'error' ? 'rgba(239,68,68,0.4)' : 'rgba(96,165,250,0.4)'}`,
+                color: toast.type === 'success' ? '#22c55e' : toast.type === 'error' ? '#ef4444' : '#60a5fa',
                 padding: '12px 16px',
                 borderRadius: '10px',
                 backdropFilter: 'blur(8px)'

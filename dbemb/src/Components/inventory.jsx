@@ -1,58 +1,127 @@
 import React, { useState } from 'react';
 import { FaDrum, FaWind, FaCheckCircle, FaBoxOpen, FaTools } from 'react-icons/fa';
 
-const Inventory = ({ user, onBackToHome }) => {
+
+const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRequestRent }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [viewNote, setViewNote] = useState(null);
+  const [viewDetails, setViewDetails] = useState(null);
+  const [requestStatuses, setRequestStatuses] = useState({});
+
 
   // Initial inventory data with archived property
   const [inventory, setInventory] = useState([
-    { id: 1, name: 'Yamaha Black Snare Drum #01', category: 'percussion', subcategory: 'Snare Drums', brand: 'Yamaha', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: '', amount: 1, archived: false },
-    { id: 2, name: 'Yamaha Black Snare Drum #02', category: 'percussion', subcategory: 'Snare Drums', brand: 'Yamaha', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: '', amount: 1, archived: false },
-    { id: 3, name: 'Yamaha Black Snare Drum (Evans Drum Head) #03', category: 'percussion', subcategory: 'Snare Drums', brand: 'Yamaha', condition: 'Excellent', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Evans drum head', amount: 2, archived: false },
-    { id: 4, name: 'Pearl Snare Drum Color White #01', category: 'percussion', subcategory: 'Snare Drums', brand: 'Pearl', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'White color', amount: 0, archived: false },
-    { id: 5, name: 'Pearl Snare Drum Color Dirt White #02', category: 'percussion', subcategory: 'Snare Drums', brand: 'Pearl', condition: 'Fair', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Dirt white color', amount: 2, archived: false },
-    { id: 6, name: 'Lazer Bass Drum #01', category: 'percussion', subcategory: 'Bass Drums', brand: 'Lazer', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Size 16', amount: 2, archived: false },
-    { id: 7, name: 'E-lance Bass Drum #02', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Size 20', amount: 2, archived: false },
-    { id: 8, name: 'E-lance Bass Drum #03', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Size 22', amount: 2, archived: false },
-    { id: 9, name: 'E-lance Bass Drum #04', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Size 24', amount: 2, archived: false },
-    { id: 10, name: 'Fernando Bass Drum #002', category: 'percussion', subcategory: 'Bass Drums', brand: 'Fernando', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Size 20', amount: 1, archived: false },
-    { id: 11, name: 'E-lance Percussion Black Tenor Drums', category: 'percussion', subcategory: 'Tenor Drums', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Black color', amount: 2, archived: false },
-    { id: 12, name: 'Century Percussion White Tenor Drums', category: 'percussion', subcategory: 'Tenor Drums', brand: 'Century', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'White color', amount: 2, archived: false },
-    { id: 13, name: 'Zildjian Marching Cymbals', category: 'percussion', subcategory: 'Cymbals', brand: 'Zildjian', condition: 'Excellent', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Marching cymbals', amount: 2, archived: false },
-    { id: 14, name: 'E-lance Percussion Marching Glockenspiel #01', category: 'percussion', subcategory: 'Other Percussion', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Marching glockenspiel', amount: 2, archived: false },
-    { id: 15, name: 'E-lance Percussion Marching Glockenspiel #02', category: 'percussion', subcategory: 'Other Percussion', brand: 'E-lance', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: 'Marching glockenspiel', amount: 2, archived: false },
-    { id: 16, name: 'Yamaha Clarinet', category: 'wind', subcategory: 'Woodwinds', brand: 'Yamaha', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: '', amount: 2, archived: false },
-    { id: 17, name: 'Fernando Tuba', category: 'wind', subcategory: 'Brass', brand: 'Fernando', condition: 'Good', status: 'Available', location: 'Shrine Hills, Matina', notes: '', amount: 2, archived: false }
+    {
+      id: 1,
+      name: 'Yamaha Black Snare Drum #01',
+      category: 'percussion',
+      subcategory: 'Snare Drums',
+      brand: 'Yamaha',
+      condition: 'Good',
+      status: 'Available',
+      notes: '',
+      locations: [{ name: 'Shrine Hills, Matina', quantity: 1 }],
+      archived: false
+    },
+    { id: 2, name: 'Yamaha Black Snare Drum #02', category: 'percussion', subcategory: 'Snare Drums', brand: 'Yamaha', condition: 'Good', status: 'Available', notes: '', locations: [{ name: 'Shrine Hills, Matina', quantity: 1 }], archived: false },
+    { id: 3, name: 'Yamaha Black Snare Drum (Evans Drum Head) #03', category: 'percussion', subcategory: 'Snare Drums', brand: 'Yamaha', condition: 'Excellent', status: 'Available', notes: 'Evans drum head', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false },
+    { id: 4, name: 'Pearl Snare Drum Color White #01', category: 'percussion', subcategory: 'Snare Drums', brand: 'Pearl', condition: 'Good', status: 'Available', notes: 'White color', locations: [{ name: 'Shrine Hills, Matina', quantity: 0 }], archived: false },
+    { id: 5, name: 'Pearl Snare Drum Color Dirt White #02', category: 'percussion', subcategory: 'Snare Drums', brand: 'Pearl', condition: 'Fair', status: 'Available', notes: 'Dirt white color', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false },
+    { id: 6, name: 'Lazer Bass Drum #01', category: 'percussion', subcategory: 'Bass Drums', brand: 'Lazer', condition: 'Good', status: 'Available', notes: 'Size 16', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false },
+    { id: 7, name: 'E-lance Bass Drum #02', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', notes: 'Size 20', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false },
+    { id: 8, name: 'E-lance Bass Drum #03', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', notes: 'Size 22', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false },
+    { id: 9, name: 'E-lance Bass Drum #04', category: 'percussion', subcategory: 'Bass Drums', brand: 'E-lance', condition: 'Good', status: 'Available', notes: 'Size 24', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false },
+    { id: 10, name: 'Fernando Bass Drum #002', category: 'percussion', subcategory: 'Bass Drums', brand: 'Fernando', condition: 'Good', status: 'Available', notes: 'Size 20', locations: [{ name: 'Shrine Hills, Matina', quantity: 1 }], archived: false },
+    { id: 11, name: 'E-lance Percussion Black Tenor Drums', category: 'percussion', subcategory: 'Tenor Drums', brand: 'E-lance', condition: 'Good', status: 'Available', notes: 'Black color', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false },
+    { id: 12, name: 'Century Percussion White Tenor Drums', category: 'percussion', subcategory: 'Tenor Drums', brand: 'Century', condition: 'Good', status: 'Available', notes: 'White color', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false },
+    { id: 13, name: 'Zildjian Marching Cymbals', category: 'percussion', subcategory: 'Cymbals', brand: 'Zildjian', condition: 'Excellent', status: 'Available', notes: 'Marching cymbals', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false },
+    { id: 14, name: 'E-lance Percussion Marching Glockenspiel #01', category: 'percussion', subcategory: 'Other Percussion', brand: 'E-lance', condition: 'Good', status: 'Available', notes: 'Marching glockenspiel', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false },
+    {
+      id: 15,
+      name: 'E-lance Percussion Marching Glockenspiel #02',
+      category: 'percussion',
+      subcategory: 'Other Percussion',
+      brand: 'E-lance',
+      condition: 'Good',
+      status: 'Available',
+      notes: 'Marching glockenspiel',
+      locations: [
+        { name: 'Storage A', quantity: 10 },
+        { name: 'Storage B', quantity: 5 }
+      ],
+      archived: false
+    },
+    { id: 16, name: 'Yamaha Clarinet', category: 'wind', subcategory: 'Woodwinds', brand: 'Yamaha', condition: 'Good', status: 'Available', notes: '', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false },
+    { id: 17, name: 'Fernando Tuba', category: 'wind', subcategory: 'Brass', brand: 'Fernando', condition: 'Good', status: 'Available', notes: '', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false }
   ]);
+
+
+  // Load and monitor borrow/rent request statuses
+  React.useEffect(() => {
+    const loadRequestStatuses = () => {
+      const borrowReqs = JSON.parse(localStorage.getItem('borrowRequests') || '[]');
+      const rentReqs = JSON.parse(localStorage.getItem('rentRequests') || '[]');
+
+      const statuses = {};
+
+      // Check borrow requests for this user
+      borrowReqs.forEach(req => {
+        if (req.userId === user?.id) {
+          statuses[`borrow-${req.instrumentId}`] = req.status;
+        }
+      });
+
+      // Check rent requests for this user
+      rentReqs.forEach(req => {
+        if (req.userId === user?.id) {
+          statuses[`rent-${req.instrumentId}`] = req.status;
+        }
+      });
+
+      setRequestStatuses(statuses);
+    };
+
+    loadRequestStatuses();
+
+    // Listen for updates
+    window.addEventListener('borrowRequestsUpdated', loadRequestStatuses);
+    window.addEventListener('rentRequestsUpdated', loadRequestStatuses);
+
+    return () => {
+      window.removeEventListener('borrowRequestsUpdated', loadRequestStatuses);
+      window.removeEventListener('rentRequestsUpdated', loadRequestStatuses);
+    };
+  }, [user?.id]);
+
 
   // Styles
   const styles = {
     container: {
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, rgba(10, 25, 47, 0.95), rgba(2, 6, 23, 0.98))',
+      background: 'linear-gradient(135deg, #f8fafc, #e0e7ff)',
       padding: '28px',
-      color: '#e5e7eb',
+      color: '#0f172a',
       fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
     },
+
 
     title: {
       fontFamily: 'system-ui, -apple-system, sans-serif',
       fontSize: '28px',
       fontWeight: '600',
       margin: 0,
-      background: 'linear-gradient(45deg, #60a5fa, #3b82f6)',
+      background: 'linear-gradient(45deg, #3b82f6, #1d4ed8)',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent'
     },
     backButton: {
       backgroundColor: 'transparent',
-      border: '1px solid rgba(100, 255, 218, 0.3)',
-      color: '#e5e7eb',
+      border: '1px solid #cbd5e1',
+      color: '#0f172a',
       padding: '10px 20px',
       borderRadius: '6px',
       cursor: 'pointer',
@@ -80,8 +149,8 @@ const Inventory = ({ user, onBackToHome }) => {
       flex: '1 1 140px',
       minWidth: 120,
       maxWidth: 180,
-      backgroundColor: 'rgba(13,27,42,0.9)',
-      border: '1px solid rgba(30,41,59,0.8)',
+      backgroundColor: '#ffffff',
+      border: '1px solid #e2e8f0',
       borderRadius: 12,
       padding: '10px 12px',
       textAlign: 'left',
@@ -90,18 +159,19 @@ const Inventory = ({ user, onBackToHome }) => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'flex-start',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
     },
     statIcon: { marginBottom: 0 },
     statNumber: {
       fontSize: 18,
       fontWeight: 700,
-      color: '#fff',
+      color: '#0f172a',
       marginTop: 6
     },
     statLabel: {
       fontSize: 13,
-      color: '#94a3b8',
+      color: '#64748b',
       marginTop: 4
     },
     controls: {
@@ -119,31 +189,31 @@ const Inventory = ({ user, onBackToHome }) => {
       flexWrap: 'wrap'
     },
     searchInput: {
-      backgroundColor: 'rgba(2, 6, 23, 0.6)',
-      border: '1px solid rgba(100, 255, 218, 0.2)',
+      backgroundColor: '#ffffff',
+      border: '1px solid #cbd5e1',
       borderRadius: '8px',
       padding: '10px 16px',
-      color: '#e5e7eb',
+      color: '#0f172a',
       fontSize: '16px',
       outline: 'none',
       transition: 'all 0.3s ease',
       minWidth: '250px'
     },
     filterSelect: {
-      backgroundColor: 'rgba(2, 6, 23, 0.6)',
-      border: '1px solid rgba(100, 255, 218, 0.2)',
+      backgroundColor: '#ffffff',
+      border: '1px solid #cbd5e1',
       borderRadius: '8px',
       padding: '10px 16px',
-      color: '#e5e7eb',
+      color: '#0f172a',
       fontSize: '16px',
       outline: 'none',
       transition: 'all 0.3s ease',
       minWidth: '150px'
     },
     createButton: {
-      backgroundColor: '#64ffda',
-      border: '2px solid #64ffda',
-      color: '#0b1a2c',
+      backgroundColor: '#3b82f6',
+      border: '2px solid #3b82f6',
+      color: '#ffffff',
       padding: '10px 20px',
       borderRadius: '8px',
       fontWeight: '600',
@@ -157,21 +227,22 @@ const Inventory = ({ user, onBackToHome }) => {
       gap: '20px'
     },
     inventoryCard: {
-      backgroundColor: 'rgba(10, 25, 47, 0.6)',
-      border: '1px solid rgba(100, 255, 218, 0.15)',
+      backgroundColor: '#ffffff',
+      border: '1px solid #e2e8f0',
       borderRadius: '12px',
       padding: '20px',
-      transition: 'all 0.3s ease'
+      transition: 'all 0.3s ease',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
     },
     cardTitle: {
       fontFamily: 'system-ui, -apple-system, sans-serif',
       fontSize: '16px',
       fontWeight: '600',
       margin: '0 0 10px 0',
-      color: '#e5e7eb'
+      color: '#0f172a'
     },
     cardDetail: {
-      color: '#a8b2d1',
+      color: '#64748b',
       fontSize: '14px',
       margin: '5px 0',
       display: 'flex',
@@ -226,8 +297,8 @@ const Inventory = ({ user, onBackToHome }) => {
     },
     editButton: {
       backgroundColor: 'transparent',
-      border: '1px solid rgba(59, 130, 246, 0.5)',
-      color: '#60a5fa',
+      border: '1px solid #3b82f6',
+      color: '#3b82f6',
       padding: '8px 16px',
       borderRadius: '6px',
       cursor: 'pointer',
@@ -239,7 +310,7 @@ const Inventory = ({ user, onBackToHome }) => {
     },
     deleteButton: {
       backgroundColor: 'transparent',
-      border: '1px solid rgba(239, 68, 68, 0.5)',
+      border: '1px solid #ef4444',
       color: '#ef4444',
       padding: '8px 16px',
       borderRadius: '6px',
@@ -255,21 +326,21 @@ const Inventory = ({ user, onBackToHome }) => {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.7)',
+      backgroundColor: 'rgba(0,0,0,0.5)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 1000
     },
     modalContent: {
-      backgroundColor: 'rgba(10, 25, 47, 0.95)',
-      border: '1px solid rgba(100, 255, 218, 0.2)',
+      backgroundColor: '#ffffff',
+      border: '1px solid #e2e8f0',
       borderRadius: '12px',
       padding: '30px',
       width: '100%',
       maxWidth: '500px',
       backdropFilter: 'blur(10px)',
-      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
+      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)'
     },
     modalHeader: {
       display: 'flex',
@@ -277,18 +348,19 @@ const Inventory = ({ user, onBackToHome }) => {
       alignItems: 'center',
       marginBottom: '20px',
       paddingBottom: '15px',
-      borderBottom: '1px solid rgba(100, 255, 218, 0.2)'
+      borderBottom: '1px solid #e2e8f0'
     },
     modalTitle: {
       fontFamily: 'system-ui, -apple-system, sans-serif',
       fontSize: '22px',
       fontWeight: '600',
-      margin: 0
+      margin: 0,
+      color: '#0f172a'
     },
     closeButton: {
       backgroundColor: 'transparent',
       border: 'none',
-      color: '#e5e7eb',
+      color: '#64748b',
       fontSize: '20px',
       cursor: 'pointer'
     },
@@ -308,36 +380,36 @@ const Inventory = ({ user, onBackToHome }) => {
       gap: '8px'
     },
     formLabel: {
-      color: '#e5e7eb',
+      color: '#0f172a',
       fontSize: '14px',
       fontWeight: '500'
     },
     formInput: {
-      backgroundColor: 'rgba(2, 6, 23, 0.6)',
-      border: '1px solid rgba(100, 255, 218, 0.2)',
+      backgroundColor: '#f8fafc',
+      border: '1px solid #cbd5e1',
       borderRadius: '8px',
       padding: '10px 14px',
-      color: '#e5e7eb',
+      color: '#0f172a',
       fontSize: '14px',
       outline: 'none',
       transition: 'all 0.3s ease'
     },
     formSelect: {
-      backgroundColor: 'rgba(2, 6, 23, 0.6)',
-      border: '1px solid rgba(100, 255, 218, 0.2)',
+      backgroundColor: '#f8fafc',
+      border: '1px solid #cbd5e1',
       borderRadius: '8px',
       padding: '10px 14px',
-      color: '#e5e7eb',
+      color: '#0f172a',
       fontSize: '14px',
       outline: 'none',
       transition: 'all 0.3s ease'
     },
     formTextarea: {
-      backgroundColor: 'rgba(2, 6, 23, 0.6)',
-      border: '1px solid rgba(100, 255, 218, 0.2)',
+      backgroundColor: '#f8fafc',
+      border: '1px solid #cbd5e1',
       borderRadius: '8px',
       padding: '10px 14px',
-      color: '#e5e7eb',
+      color: '#0f172a',
       fontSize: '14px',
       outline: 'none',
       transition: 'all 0.3s ease',
@@ -345,9 +417,9 @@ const Inventory = ({ user, onBackToHome }) => {
       resize: 'vertical'
     },
     submitButton: {
-      backgroundColor: '#64ffda',
-      border: '2px solid #64ffda',
-      color: '#0b1a2c',
+      backgroundColor: '#3b82f6',
+      border: '2px solid #3b82f6',
+      color: '#ffffff',
       padding: '12px 24px',
       borderRadius: '8px',
       fontWeight: '600',
@@ -359,44 +431,45 @@ const Inventory = ({ user, onBackToHome }) => {
     emptyState: {
       textAlign: 'center',
       padding: '40px',
-      color: '#94a3b8'
+      color: '#64748b'
     },
     // Add these for table/list view and archive
     table: {
       width: '100%',
       borderCollapse: 'collapse',
       marginTop: '20px',
-      background: 'rgba(10, 25, 47, 0.6)',
+      background: '#ffffff',
       borderRadius: '12px',
       overflow: 'hidden',
+      border: '1px solid #e2e8f0',
     },
     th: {
-      background: 'rgba(2, 6, 23, 0.9)',
-      color: '#64ffda',
+      background: '#f8fafc',
+      color: '#3b82f6',
       fontWeight: 600,
       fontSize: '15px',
       padding: '12px 8px',
-      borderBottom: '1px solid rgba(100,255,218,0.15)',
+      borderBottom: '1px solid #e2e8f0',
       textAlign: 'left',
     },
     td: {
-      color: '#e5e7eb',
+      color: '#0f172a',
       fontSize: '14px',
       padding: '10px 8px',
-      borderBottom: '1px solid rgba(100,255,218,0.08)',
+      borderBottom: '1px solid #f1f5f9',
       verticalAlign: 'middle',
     },
     archivedRow: {
       opacity: 0.5,
-      background: 'rgba(100,255,218,0.04)'
+      background: '#f8fafc'
     },
     categoryHeader: {
-      background: 'rgba(59,130,246,0.08)',
-      color: '#60a5fa',
+      background: '#eff6ff',
+      color: '#3b82f6',
       fontWeight: 700,
       fontSize: '18px',
       padding: '12px 8px',
-      borderBottom: '2px solid #60a5fa',
+      borderBottom: '2px solid #3b82f6',
     },
     archiveButton: {
       backgroundColor: 'transparent',
@@ -423,71 +496,92 @@ const Inventory = ({ user, onBackToHome }) => {
       marginRight: '6px',
       transition: 'all 0.3s ease',
       minWidth: '80px'
+    },
+    borrowButton: {
+      backgroundColor: 'transparent',
+      border: '1px solid #3b82f6',
+      color: '#3b82f6',
+      padding: '6px 14px',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontSize: '12px',
+      fontWeight: '500',
+      transition: 'all 0.3s ease',
+      minWidth: '100px'
     }
   };
 
+
   // Hover effect handlers
   const handleButtonHover = (e) => {
-    e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)';
-    e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
+    e.target.style.backgroundColor = '#f1f5f9';
+    e.target.style.borderColor = '#94a3b8';
     e.target.style.transform = 'translateY(-2px)';
   };
+
 
   const handleButtonLeave = (e) => {
     e.target.style.backgroundColor = 'transparent';
-    e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
+    e.target.style.borderColor = '#cbd5e1';
     e.target.style.transform = 'translateY(0)';
   };
+
 
   const handleCreateButtonHover = (e) => {
-    e.target.style.backgroundColor = 'transparent';
-    e.target.style.color = '#64ffda';
+    e.target.style.backgroundColor = '#1d4ed8';
     e.target.style.transform = 'translateY(-2px)';
-    e.target.style.boxShadow = '0 8px 20px rgba(100, 255, 218, 0.3)';
+    e.target.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.3)';
   };
 
+
   const handleCreateButtonLeave = (e) => {
-    e.target.style.backgroundColor = '#64ffda';
-    e.target.style.color = '#0b1a2c';
+    e.target.style.backgroundColor = '#3b82f6';
     e.target.style.transform = 'translateY(0)';
     e.target.style.boxShadow = 'none';
   };
 
+
   const handleInputFocus = (e) => {
-    e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
-    e.target.style.boxShadow = '0 0 0 3px rgba(100, 255, 218, 0.1)';
+    e.target.style.borderColor = '#3b82f6';
+    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
   };
 
+
   const handleInputBlur = (e) => {
-    e.target.style.borderColor = 'rgba(100, 255, 218, 0.2)';
+    e.target.style.borderColor = '#cbd5e1';
     e.target.style.boxShadow = 'none';
   };
+
 
   const handleStatCardHover = (e) => {
     e.target.style.transform = 'translateY(-4px)';
-    e.target.style.boxShadow = '0 8px 20px rgba(100, 255, 218, 0.15)';
-    e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
+    e.target.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.1)';
+    e.target.style.borderColor = '#cbd5e1';
   };
+
 
   const handleStatCardLeave = (e) => {
     e.target.style.transform = 'translateY(0)';
-    e.target.style.boxShadow = 'none';
-    e.target.style.borderColor = 'rgba(100, 255, 218, 0.15)';
+    e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+    e.target.style.borderColor = '#e2e8f0';
   };
+
 
   const handleEditButtonHover = (e) => {
     e.target.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
-    e.target.style.borderColor = 'rgba(59, 130, 246, 0.8)';
+    e.target.style.borderColor = '#1d4ed8';
     e.target.style.transform = 'translateY(-2px)';
     e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.2)';
   };
 
+
   const handleEditButtonLeave = (e) => {
     e.target.style.backgroundColor = 'transparent';
-    e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+    e.target.style.borderColor = '#3b82f6';
     e.target.style.transform = 'translateY(0)';
     e.target.style.boxShadow = 'none';
   };
+
 
   const handleDeleteButtonHover = (e) => {
     e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
@@ -496,6 +590,7 @@ const Inventory = ({ user, onBackToHome }) => {
     e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
   };
 
+
   const handleDeleteButtonLeave = (e) => {
     e.target.style.backgroundColor = 'transparent';
     e.target.style.borderColor = 'rgba(239, 68, 68, 0.5)';
@@ -503,16 +598,20 @@ const Inventory = ({ user, onBackToHome }) => {
     e.target.style.boxShadow = 'none';
   };
 
+
   // Filter inventory based on search, category, and archived toggle
   const filteredInventory = inventory.filter(item => {
     // Show only archived if toggled, otherwise only unarchived
     if (showArchived ? !item.archived : item.archived) return false;
+    // If user is a member, show only available instruments
+    if (user?.role !== 'admin' && item.status !== 'Available') return false;
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.subcategory.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
 
   // Group by category
   const groupedByCategory = filteredInventory.reduce((acc, item) => {
@@ -522,15 +621,17 @@ const Inventory = ({ user, onBackToHome }) => {
     return acc;
   }, {});
 
+
   // Stats (only count unarchived items)
   const stats = {
     total: inventory.filter(item => !item.archived).length,
-    totalAmount: inventory.filter(item => !item.archived).reduce((sum, item) => sum + (item.amount || 0), 0),
+    totalQuantity: inventory.filter(item => !item.archived).reduce((sum, item) => sum + (item.quantity || 0), 0),
     available: inventory.filter(item => item.status === 'Available' && !item.archived).length,
     percussion: inventory.filter(item => item.category === 'percussion' && !item.archived).length,
     wind: inventory.filter(item => item.category === 'wind' && !item.archived).length,
     maintenance: inventory.filter(item => item.status === 'Maintenance' && !item.archived).length
   };
+
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -540,6 +641,7 @@ const Inventory = ({ user, onBackToHome }) => {
       default: return styles.statusBadge;
     }
   };
+
 
   const getConditionStyle = (condition) => {
     switch (condition) {
@@ -551,7 +653,9 @@ const Inventory = ({ user, onBackToHome }) => {
     }
   };
 
+
   const handleEdit = (item) => setEditingItem({ ...item });
+
 
   const handleArchive = (id) => {
     setInventory(inventory.map(item =>
@@ -559,11 +663,13 @@ const Inventory = ({ user, onBackToHome }) => {
     ));
   };
 
+
   const handleUnarchive = (id) => {
     setInventory(inventory.map(item =>
       item.id === id ? { ...item, archived: false } : item
     ));
   };
+
 
   const handleSave = () => {
     if (editingItem.id) {
@@ -582,6 +688,7 @@ const Inventory = ({ user, onBackToHome }) => {
     setShowAddModal(false);
   };
 
+
   const handleAddNew = () => {
     setEditingItem({
       name: '',
@@ -590,19 +697,25 @@ const Inventory = ({ user, onBackToHome }) => {
       brand: '',
       condition: 'Good',
       status: 'Available',
-      location: '',
       notes: '',
-      amount: '',
+      locations: [{ name: '', quantity: '' }],
       archived: false
     });
     setShowAddModal(true);
   };
+
 
   // Category display names
   const categoryNames = {
     percussion: 'Percussion',
     wind: 'Wind Instruments'
   };
+
+
+  // Helper to get total quantity
+  const getTotalQuantity = (item) =>
+    item.locations?.reduce((sum, loc) => sum + (loc.quantity || 0), 0);
+
 
   return (
     <div style={styles.container}>
@@ -638,11 +751,12 @@ const Inventory = ({ user, onBackToHome }) => {
           </div>
           <div style={styles.statCard}>
             <FaBoxOpen size={28} color="#64ffda" style={{ marginBottom: 8 }} />
-            <div style={{ ...styles.statNumber, color: '#64ffda' }}>{stats.totalAmount}</div>
+            <div style={{ ...styles.statNumber, color: '#64ffda' }}>{stats.totalQuantity}</div>
             <div style={styles.statLabel}>Total Units</div>
           </div>
         </div>
       )}
+
 
       {/* Controls Section */}
       <div style={styles.controls}>
@@ -668,27 +782,35 @@ const Inventory = ({ user, onBackToHome }) => {
             <option value="wind">Wind Instruments</option>
           </select>
         </div>
-        <button
-          style={styles.createButton}
-          onClick={handleAddNew}
-          onMouseEnter={handleCreateButtonHover}
-          onMouseLeave={handleCreateButtonLeave}
-        >
-          + Add Instrument
-        </button>
+        <div style={styles.buttonContainer}>
+          {!viewOnly && (
+            <button
+              style={styles.createButton}
+              onClick={handleAddNew}
+              onMouseEnter={handleCreateButtonHover}
+              onMouseLeave={handleCreateButtonLeave}
+            >
+              + Add Instrument
+            </button>
+          )}
+        </div>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ fontSize: 15, color: '#94a3b8', marginRight: 8 }}>
-          <input
-            type="checkbox"
-            checked={showArchived}
-            onChange={() => setShowArchived(!showArchived)}
-            style={{ marginRight: 6 }}
-          />
-          Show Archived Instruments
-        </label>
-      </div>
+
+      {!viewOnly && (
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 15, color: '#94a3b8', marginRight: 8 }}>
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={() => setShowArchived(!showArchived)}
+              style={{ marginRight: 6 }}
+            />
+            Show Archived Instruments
+          </label>
+        </div>
+      )}
+
 
       {Object.keys(groupedByCategory).length === 0 && (
         <div style={styles.emptyState}>
@@ -699,6 +821,7 @@ const Inventory = ({ user, onBackToHome }) => {
           </h3>
         </div>
       )}
+
 
       {Object.entries(groupedByCategory).map(([cat, items]) => (
         <div key={cat} style={{ marginBottom: 32 }}>
@@ -720,8 +843,7 @@ const Inventory = ({ user, onBackToHome }) => {
                 <th style={{ ...styles.th, textAlign: 'center' }}>Brand</th>
                 <th style={{ ...styles.th, textAlign: 'center' }}>Status</th>
                 <th style={{ ...styles.th, textAlign: 'center' }}>Condition</th>
-                <th style={{ ...styles.th, textAlign: 'center' }}>Location</th>
-                <th style={{ ...styles.th, textAlign: 'center' }}>Amount</th>
+                <th style={{ ...styles.th, textAlign: 'center' }}>Quantity</th>
                 <th style={{ ...styles.th, textAlign: 'center' }}>Notes</th>
                 <th style={{ ...styles.th, textAlign: 'center' }}>Actions</th>
               </tr>
@@ -738,9 +860,8 @@ const Inventory = ({ user, onBackToHome }) => {
                   <td style={{ ...styles.td, textAlign: 'center' }}>
                     <span style={getConditionStyle(item.condition)}>{item.condition}</span>
                   </td>
-                  <td style={{ ...styles.td, textAlign: 'center' }}>{item.location}</td>
                   <td style={{ ...styles.td, textAlign: 'center' }}>
-                    <span style={{ fontWeight: '600', color: '#64ffda' }}>{item.amount}</span>
+                    <span style={{ fontWeight: '600', color: '#64ffda' }}>{getTotalQuantity(item)}</span>
                   </td>
                   <td style={{ ...styles.td, textAlign: 'center', maxWidth: 160, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     <span title={item.notes}>{item.notes}</span>
@@ -763,7 +884,13 @@ const Inventory = ({ user, onBackToHome }) => {
                   </td>
                   <td style={{ ...styles.td, textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                      {!showArchived && (
+                      <button
+                        style={styles.editButton}
+                        onClick={() => setViewDetails(item)}
+                      >
+                        View Details
+                      </button>
+                      {!viewOnly && !showArchived && (
                         <button
                           style={styles.editButton}
                           onClick={() => handleEdit(item)}
@@ -772,7 +899,82 @@ const Inventory = ({ user, onBackToHome }) => {
                           Edit
                         </button>
                       )}
-                      {showArchived ? (
+                      {viewOnly && item.status === 'Available' && (onRequestBorrow || onRequestRent) && (() => {
+                        const requestType = onRequestBorrow ? 'borrow' : 'rent';
+                        const statusKey = `${requestType}-${item.id}`;
+                        const currentStatus = requestStatuses[statusKey];
+
+                        // Determine button text and style based on status
+                        let buttonText = onRequestBorrow ? 'Request Borrow' : 'Request Rent';
+                        let buttonStyle = { ...styles.borrowButton };
+                        let isDisabled = false;
+
+                        if (currentStatus === 'pending') {
+                          buttonText = 'Pending';
+                          buttonStyle = {
+                            ...styles.borrowButton,
+                            borderColor: '#fbbf24',
+                            color: '#fbbf24',
+                            cursor: 'not-allowed'
+                          };
+                          isDisabled = true;
+                        } else if (currentStatus === 'approved') {
+                          buttonText = 'Approved';
+                          buttonStyle = {
+                            ...styles.borrowButton,
+                            borderColor: '#22c55e',
+                            color: '#22c55e',
+                            cursor: 'not-allowed'
+                          };
+                          isDisabled = true;
+                        } else if (currentStatus === 'rejected') {
+                          buttonText = 'Rejected';
+                          buttonStyle = {
+                            ...styles.borrowButton,
+                            borderColor: '#ef4444',
+                            color: '#ef4444',
+                            cursor: 'default'
+                          };
+                          isDisabled = false; // Allow re-request after rejection
+                        }
+
+                        return (
+                          <button
+                            style={buttonStyle}
+                            disabled={isDisabled}
+                            onClick={() => {
+                              if (isDisabled) return;
+
+                              if (onRequestBorrow) {
+                                onRequestBorrow(item.id, item.name);
+                              } else if (onRequestRent) {
+                                onRequestRent(item.id, item.name);
+                              }
+
+                              // Immediately update local state to show pending
+                              setRequestStatuses(prev => ({
+                                ...prev,
+                                [statusKey]: 'pending'
+                              }));
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isDisabled) {
+                                e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)';
+                                e.target.style.borderColor = 'rgba(100, 255, 218, 0.8)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isDisabled) {
+                                e.target.style.backgroundColor = 'transparent';
+                                e.target.style.borderColor = '#64ffda';
+                              }
+                            }}
+                          >
+                            {buttonText}
+                          </button>
+                        );
+                      })()}
+                      {!viewOnly && (showArchived ? (
                         <button
                           style={styles.unarchiveButton}
                           onClick={() => handleUnarchive(item.id)}
@@ -788,7 +990,7 @@ const Inventory = ({ user, onBackToHome }) => {
                         >
                           Archive
                         </button>
-                      )}
+                      ))}
                     </div>
                   </td>
                 </tr>
@@ -797,6 +999,7 @@ const Inventory = ({ user, onBackToHome }) => {
           </table>
         </div>
       ))}
+
 
       {/* Edit/Add Modal */}
       {(editingItem || showAddModal) && (
@@ -863,19 +1066,19 @@ const Inventory = ({ user, onBackToHome }) => {
                   />
                 </div>
                 <div style={styles.formField}>
-                  <label style={styles.formLabel}>Amount</label>
+                  <label style={styles.formLabel}>Quantity</label>
                   <input
                     type="number"
                     style={styles.formInput}
-                    value={editingItem?.amount || ''}
+                    value={editingItem?.quantity || ''}
                     onChange={(e) => {
                       const value = e.target.value === '' ? '' : parseFloat(e.target.value);
                       if (value < 0) return;
-                      setEditingItem({ ...editingItem, amount: value || '' });
+                      setEditingItem({ ...editingItem, quantity: value || '' });
                     }}
                     min="0"
                     step="0.1"
-                    placeholder="Enter amount"
+                    placeholder="Enter quantity"
                   />
                 </div>
               </div>
@@ -907,16 +1110,6 @@ const Inventory = ({ user, onBackToHome }) => {
                 </div>
               </div>
               <div style={styles.formField}>
-                <label style={styles.formLabel}>Location</label>
-                <input
-                  type="text"
-                  style={styles.formInput}
-                  value={editingItem?.location || ''}
-                  onChange={(e) => setEditingItem({ ...editingItem, location: e.target.value })}
-                  placeholder="e.g., Storage A, Band Room, etc."
-                />
-              </div>
-              <div style={styles.formField}>
                 <label style={styles.formLabel}>Notes</label>
                 <textarea
                   style={styles.formTextarea}
@@ -924,6 +1117,72 @@ const Inventory = ({ user, onBackToHome }) => {
                   onChange={(e) => setEditingItem({ ...editingItem, notes: e.target.value })}
                   placeholder="Additional notes about the instrument..."
                 />
+              </div>
+              <div style={styles.formField}>
+                <label style={styles.formLabel}>Locations</label>
+                {editingItem?.locations?.map((loc, index) => (
+                  <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                    <input
+                      type="text"
+                      style={{ ...styles.formInput, flex: 1 }}
+                      value={loc.name}
+                      onChange={(e) => {
+                        const newLocations = [...editingItem.locations];
+                        newLocations[index].name = e.target.value;
+                        setEditingItem({ ...editingItem, locations: newLocations });
+                      }}
+                      placeholder="Location name"
+                    />
+                    <input
+                      type="number"
+                      style={{ ...styles.formInput, width: '120px' }}
+                      value={loc.quantity}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? '' : parseFloat(e.target.value);
+                        if (value < 0) return;
+                        const newLocations = [...editingItem.locations];
+                        newLocations[index].quantity = value || '';
+                        setEditingItem({ ...editingItem, locations: newLocations });
+                      }}
+                      min="0"
+                      step="0.1"
+                      placeholder="Qty"
+                    />
+                    <button
+                      style={{
+                        ...styles.deleteButton,
+                        padding: '8px 12px',
+                        minWidth: '40px',
+                        display: loc.name ? 'flex' : 'none',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      onClick={() => {
+                        const newLocations = editingItem.locations.filter((_, i) => i !== index);
+                        setEditingItem({ ...editingItem, locations: newLocations });
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  style={{
+                    ...styles.createButton,
+                    padding: '10px 20px',
+                    marginTop: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    justifyContent: 'center'
+                  }}
+                  onClick={() => {
+                    const newLocation = { name: '', quantity: '' };
+                    setEditingItem({ ...editingItem, locations: [...editingItem.locations, newLocation] });
+                  }}
+                >
+                  + Add Location
+                </button>
               </div>
               <button
                 type="button"
@@ -936,6 +1195,7 @@ const Inventory = ({ user, onBackToHome }) => {
           </div>
         </div>
       )}
+
 
       {viewNote && (
         <div style={styles.modalOverlay} onClick={() => setViewNote(null)}>
@@ -950,8 +1210,42 @@ const Inventory = ({ user, onBackToHome }) => {
           </div>
         </div>
       )}
+
+
+      {viewDetails && (
+        <div style={styles.modalOverlay} onClick={() => setViewDetails(null)}>
+          <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>Instrument Details</h2>
+              <button style={styles.closeButton} onClick={() => setViewDetails(null)}>×</button>
+            </div>
+            <div style={{ color: '#e5e7eb', fontSize: 15 }}>
+              <div><strong>Name:</strong> {viewDetails.name}</div>
+              <div><strong>Category:</strong> {categoryNames[viewDetails.category] || viewDetails.category}</div>
+              <div><strong>Subcategory:</strong> {viewDetails.subcategory}</div>
+              <div><strong>Brand:</strong> {viewDetails.brand}</div>
+              <div><strong>Condition:</strong> {viewDetails.condition}</div>
+              <div><strong>Status:</strong> {viewDetails.status}</div>
+              <div><strong>Notes:</strong> {viewDetails.notes}</div>
+              <div style={{ marginTop: 12 }}>
+                <strong>Locations:</strong>
+                <ul>
+                  {viewDetails.locations.map((loc, idx) => (
+                    <li key={idx}>{loc.name}: {loc.quantity}</li>
+                  ))}
+                </ul>
+                <div><strong>Total Quantity:</strong> {getTotalQuantity(viewDetails)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
+
 export default Inventory;
+
+
+

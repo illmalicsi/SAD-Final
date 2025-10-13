@@ -442,9 +442,9 @@ const CustomerManagement = ({ bookingsData = [] }) => {
   const styles = {
     container: {
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #0a192f, #020617)",
+      background: "linear-gradient(135deg, #f0f9ff, #e0f2fe)",
       padding: "20px",
-      color: "#e5e7eb",
+      color: "#1e293b",
       fontFamily: "system-ui, sans-serif",
     },
     header: {
@@ -458,7 +458,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
     title: {
       fontSize: "28px",
       fontWeight: "700",
-      color: "#64ffda",
+      color: "#0369a1",
       margin: 0,
       display: "flex",
       alignItems: "center",
@@ -469,8 +469,8 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       alignItems: "center",
       gap: "8px",
       backgroundColor: "transparent",
-      border: "1px solid rgba(100, 255, 218, 0.3)",
-      color: "#e5e7eb",
+      border: "1px solid rgba(3, 105, 161, 0.3)",
+      color: "#1e293b",
       padding: "8px 16px",
       borderRadius: "8px",
       cursor: "pointer",
@@ -497,8 +497,8 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       flex: '1 1 0',     // equal distribution and shrink
       minWidth: 0,       // allow heavy shrinking when space is tight
       margin: '0 6px',
-      backgroundColor: 'rgba(10, 25, 47, 0.6)',
-      border: '1px solid rgba(100, 255, 218, 0.15)',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      border: '1px solid rgba(3, 105, 161, 0.2)',
       borderRadius: '12px',
       padding: '12px 14px',
       textAlign: 'left',
@@ -522,17 +522,17 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       width: '100%',
       borderCollapse: 'collapse',
       minWidth: 800,
-      color: '#e5e7eb'
+      color: '#1e293b'
     },
     th: {
       textAlign: 'left',
       padding: '10px',
-      color: '#64ffda',
-      borderBottom: '1px solid rgba(100,255,218,0.08)'
+      color: '#0369a1',
+      borderBottom: '1px solid rgba(3, 105, 161, 0.15)'
     },
     td: {
       padding: '10px',
-      borderBottom: '1px solid rgba(255,255,255,0.03)'
+      borderBottom: '1px solid rgba(0, 0, 0, 0.05)'
     },
     filterBar: {
       display: "flex",
@@ -540,27 +540,27 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       marginBottom: "25px",
       alignItems: "center",
       flexWrap: "wrap",
-      background: "rgba(10, 25, 47, 0.4)",
+      background: "rgba(255, 255, 255, 0.7)",
       padding: "20px",
       borderRadius: "12px",
-      border: "1px solid rgba(100, 255, 218, 0.1)"
+      border: "1px solid rgba(3, 105, 161, 0.15)"
     },
     input: {
       flex: 1,
       minWidth: "200px",
       padding: "12px 16px",
       borderRadius: "8px",
-      border: "1px solid rgba(100,255,218,0.2)",
-      backgroundColor: "rgba(15,30,60,0.7)",
-      color: "#e5e7eb",
+      border: "1px solid rgba(3, 105, 161, 0.3)",
+      backgroundColor: "rgba(255, 255, 255, 0.9)",
+      color: "#1e293b",
       fontSize: "14px"
     },
     select: {
       padding: "12px",
       borderRadius: "8px",
-      border: "1px solid rgba(100,255,218,0.2)",
-      backgroundColor: "rgba(15,30,60,0.7)",
-      color: "#e5e7eb",
+      border: "1px solid rgba(3, 105, 161, 0.3)",
+      backgroundColor: "rgba(255, 255, 255, 0.9)",
+      color: "#1e293b",
       minWidth: "120px"
     },
     cardGrid: {
@@ -569,8 +569,8 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       gap: "20px",
     },
     customerCard: {
-      background: "rgba(15, 30, 60, 0.8)",
-      border: "1px solid rgba(100, 255, 218, 0.15)",
+      background: "rgba(255, 255, 255, 0.9)",
+      border: "1px solid rgba(3, 105, 161, 0.2)",
       borderRadius: "14px",
       padding: "20px",
       transition: "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
@@ -594,7 +594,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
     modalOverlay: {
       position: "fixed",
       inset: 0,
-      background: "rgba(0,0,0,0.7)",
+      background: "rgba(0,0,0,0.5)",
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
@@ -602,15 +602,15 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       backdropFilter: "blur(4px)"
     },
     modal: {
-      background: "rgba(10, 25, 47, 0.95)",
+      background: "rgba(255, 255, 255, 0.98)",
       padding: "32px",
       borderRadius: "16px",
       width: "600px",
       maxWidth: "90vw",
-      color: "#e5e7eb",
+      color: "#1e293b",
       maxHeight: "85vh",
       overflowY: "auto",
-      border: "1px solid rgba(100, 255, 218, 0.2)"
+      border: "1px solid rgba(3, 105, 161, 0.2)"
     },
     actionBtn: {
       padding: "8px 16px",
@@ -644,33 +644,33 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       color: "#fff",
     },
     bookingItem: {
-      background: "rgba(30, 41, 59, 0.5)",
+      background: "rgba(241, 245, 249, 0.8)",
       padding: "16px",
       borderRadius: "10px",
       marginBottom: "12px",
-      border: "1px solid rgba(100, 255, 218, 0.1)",
+      border: "1px solid rgba(3, 105, 161, 0.15)",
     },
     viewToggle: {
       display: "flex",
       gap: "4px",
-      background: "rgba(15, 30, 60, 0.8)",
+      background: "rgba(255, 255, 255, 0.9)",
       padding: "4px",
       borderRadius: "8px",
-      border: "1px solid rgba(100, 255, 218, 0.2)"
+      border: "1px solid rgba(3, 105, 161, 0.2)"
     },
     toggleBtn: {
       padding: "8px 16px",
       background: "transparent",
       border: "none",
-      color: "#94a3b8",
+      color: "#64748b",
       cursor: "pointer",
       borderRadius: "6px",
       transition: "all 0.2s ease",
       fontSize: "14px"
     },
     activeToggle: {
-      background: "#64ffda",
-      color: "#0a192f",
+      background: "#0369a1",
+      color: "#ffffff",
       fontWeight: "600"
     }
   };
@@ -703,37 +703,6 @@ const CustomerManagement = ({ bookingsData = [] }) => {
           <FaUsers /> Customer Management
         </h1>
         <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
-          <button
-            onClick={handleManualRefresh}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#10b981",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: "600",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              transition: "all 0.3s ease"
-            }}
-            onMouseOver={(e) => e.target.style.backgroundColor = "#059669"}
-            onMouseOut={(e) => e.target.style.backgroundColor = "#10b981"}
-          >
-            <FaSpinner /> Refresh Data
-          </button>
-          <div style={{
-            padding: "4px 12px",
-            backgroundColor: "rgba(100, 255, 218, 0.1)",
-            color: "#64ffda",
-            borderRadius: "6px",
-            fontSize: "12px",
-            fontWeight: "600"
-          }}>
-            {allBookingsData.length} bookings loaded
-          </div>
           <div style={styles.viewToggle}>
             <button
               style={{
@@ -767,57 +736,57 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       <div style={styles.statsContainer}>
         <div style={styles.statCard}>
           <FaUsers size={28} color="#60a5fa" />
-          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#fff" }}>
+          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
             {stats.total}
           </div>
-          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Total Customers</div>
+          <div style={{ color: "#64748b", fontSize: "14px" }}>Total Customers</div>
         </div>
         
         <div style={styles.statCard}>
           <FaUserCheck size={28} color="#22c55e" />
-          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#fff" }}>
+          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
             {stats.active}
           </div>
-          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Active Customers</div>
+          <div style={{ color: "#64748b", fontSize: "14px" }}>Active Customers</div>
         </div>
         
         <div style={styles.statCard}>
           <FaClock size={28} color="#f59e0b" />
-          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#fff" }}>
+          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
             {stats.pending}
           </div>
-          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Pending Approval</div>
+          <div style={{ color: "#64748b", fontSize: "14px" }}>Pending Approval</div>
         </div>
         
         <div style={styles.statCard}>
           <FaArchive size={28} color="#6b7280" />
-          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#fff" }}>
+          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
             {stats.archived}
           </div>
-          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Archived</div>
+          <div style={{ color: "#64748b", fontSize: "14px" }}>Archived</div>
         </div>
         
         <div style={styles.statCard}>
-          <FaBookOpen size={28} color="#64ffda" />
-          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#fff" }}>
+          <FaBookOpen size={28} color="#0369a1" />
+          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
             {stats.totalBookings}
           </div>
-          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Total Bookings</div>
+          <div style={{ color: "#64748b", fontSize: "14px" }}>Total Bookings</div>
         </div>
         
         <div style={styles.statCard}>
           <FaChartBar size={28} color="#8b5cf6" />
-          <div style={{ fontSize: "20px", fontWeight: "700", marginTop: "8px", color: "#fff" }}>
+          <div style={{ fontSize: "20px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
             {formatCurrency(stats.totalRevenue)}
           </div>
-          <div style={{ color: "#94a3b8", fontSize: "14px" }}>Total Revenue</div>
+          <div style={{ color: "#64748b", fontSize: "14px" }}>Total Revenue</div>
         </div>
       </div>
 
       {/* Enhanced Filter Bar */}
       <div style={styles.filterBar}>
         <div style={{ display: "flex", alignItems: "center", flex: 1, gap: "12px" }}>
-          <FaSearch size={18} style={{ color: "#64ffda" }} />
+          <FaSearch size={18} style={{ color: "#0369a1" }} />
           <input
             type="text"
             placeholder="Search customers by name, email, phone, or address..."
@@ -828,7 +797,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         </div>
         
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          <FaFilter size={18} style={{ color: "#64ffda" }} />
+          <FaFilter size={18} style={{ color: "#0369a1" }} />
           
           <select
             value={statusFilter}
@@ -883,21 +852,21 @@ const CustomerManagement = ({ bookingsData = [] }) => {
           {filteredCustomers.map((c) => (
             <div key={c.id} style={styles.customerCard}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
-                <h3 style={{ display: "flex", alignItems: "center", gap: "10px", margin: 0, color: "#fff", fontSize: "18px" }}>
-                  <FaUser size={16} color="#64ffda" /> {c.name}
+                <h3 style={{ display: "flex", alignItems: "center", gap: "10px", margin: 0, color: "#1e293b", fontSize: "18px" }}>
+                  <FaUser size={16} color="#0369a1" /> {c.name}
                 </h3>
                 {getStatusBadge(c.status)}
               </div>
               
-              <div style={{ color: "#94a3b8", fontSize: "14px", lineHeight: "1.6", marginBottom: "16px" }}>
+              <div style={{ color: "#64748b", fontSize: "14px", lineHeight: "1.6", marginBottom: "16px" }}>
                 <p style={{ margin: "6px 0", display: "flex", alignItems: "center", gap: "10px" }}>
-                  <FaEnvelope size={12} color="#64ffda" /> {c.email}
+                  <FaEnvelope size={12} color="#0369a1" /> {c.email}
                 </p>
                 <p style={{ margin: "6px 0", display: "flex", alignItems: "center", gap: "10px" }}>
-                  <FaPhone size={12} color="#64ffda" /> {c.phone}
+                  <FaPhone size={12} color="#0369a1" /> {c.phone}
                 </p>
                 <p style={{ margin: "6px 0", display: "flex", alignItems: "center", gap: "10px" }}>
-                  <FaMapMarkerAlt size={12} color="#64ffda" /> {c.address}
+                  <FaMapMarkerAlt size={12} color="#0369a1" /> {c.address}
                 </p>
                 <p style={{ margin: "6px 0", display: "flex", alignItems: "center", gap: "10px" }}>
                   <FaCalendarAlt size={12} color="#64ffda" /> Last: {formatDate(c.lastBooking)}
@@ -910,21 +879,21 @@ const CustomerManagement = ({ bookingsData = [] }) => {
                 gap: "12px",
                 marginBottom: "16px",
                 padding: "12px",
-                background: "rgba(100, 255, 218, 0.05)",
+                background: "rgba(3, 105, 161, 0.05)",
                 borderRadius: "8px",
-                border: "1px solid rgba(100, 255, 218, 0.1)"
+                border: "1px solid rgba(3, 105, 161, 0.1)"
               }}>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "18px", fontWeight: "700", color: "#64ffda" }}>
+                  <div style={{ fontSize: "18px", fontWeight: "700", color: "#0369a1" }}>
                     {c.totalBookings}
                   </div>
-                  <div style={{ fontSize: "12px", color: "#94a3b8" }}>Bookings</div>
+                  <div style={{ fontSize: "12px", color: "#64748b" }}>Bookings</div>
                 </div>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "16px", fontWeight: "700", color: "#64ffda" }}>
+                  <div style={{ fontSize: "16px", fontWeight: "700", color: "#0369a1" }}>
                     {formatCurrency(c.totalRevenue)}
                   </div>
-                  <div style={{ fontSize: "12px", color: "#94a3b8" }}>Revenue</div>
+                  <div style={{ fontSize: "12px", color: "#64748b" }}>Revenue</div>
                 </div>
               </div>
               
@@ -1007,12 +976,12 @@ const CustomerManagement = ({ bookingsData = [] }) => {
           textAlign: "center", 
           color: "#94a3b8", 
           padding: "60px 40px",
-          background: "rgba(15, 30, 60, 0.6)",
+          background: "rgba(255, 255, 255, 0.8)",
           borderRadius: "12px",
-          border: "1px solid rgba(100, 255, 218, 0.1)"
+          border: "1px solid rgba(3, 105, 161, 0.2)"
         }}>
-          <FaUser size={48} style={{ marginBottom: "20px", opacity: 0.5, color: "#64ffda" }} />
-          <h3 style={{ color: "#fff", marginBottom: "8px" }}>No customers found</h3>
+          <FaUser size={48} style={{ marginBottom: "20px", opacity: 0.5, color: "#0369a1" }} />
+          <h3 style={{ color: "#1e293b", marginBottom: "8px" }}>No customers found</h3>
           <p>Try adjusting your search criteria or filters.</p>
         </div>
       )}
@@ -1023,12 +992,12 @@ const CustomerManagement = ({ bookingsData = [] }) => {
           <div style={styles.modal}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
               <div>
-                <h2 style={{ margin: "0 0 8px 0", color: "#64ffda", fontSize: "24px" }}>
+                <h2 style={{ margin: "0 0 8px 0", color: "#0369a1", fontSize: "24px" }}>
                   {selectedCustomer.name}
                 </h2>
                 <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "8px" }}>
                   {getStatusBadge(selectedCustomer.status)}
-                  <span style={{ color: "#94a3b8", fontSize: "14px" }}>
+                  <span style={{ color: "#64748b", fontSize: "14px" }}>
                     Customer since {formatDate(selectedCustomer.joinDate)}
                   </span>
                 </div>
@@ -1047,59 +1016,59 @@ const CustomerManagement = ({ bookingsData = [] }) => {
               gap: "16px",
               marginBottom: "24px",
               padding: "16px",
-              background: "rgba(100, 255, 218, 0.05)",
+              background: "rgba(3, 105, 161, 0.05)",
               borderRadius: "12px",
-              border: "1px solid rgba(100, 255, 218, 0.1)"
+              border: "1px solid rgba(3, 105, 161, 0.1)"
             }}>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "20px", fontWeight: "700", color: "#64ffda" }}>
+                <div style={{ fontSize: "20px", fontWeight: "700", color: "#0369a1" }}>
                   {selectedCustomer.totalBookings}
                 </div>
-                <div style={{ fontSize: "12px", color: "#94a3b8" }}>Total Bookings</div>
+                <div style={{ fontSize: "12px", color: "#64748b" }}>Total Bookings</div>
               </div>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "18px", fontWeight: "700", color: "#fbbf24" }}>
+                <div style={{ fontSize: "18px", fontWeight: "700", color: "#f59e0b" }}>
                   {formatCurrency(selectedCustomer.totalRevenue)}
                 </div>
-                <div style={{ fontSize: "12px", color: "#94a3b8" }}>Total Revenue</div>
+                <div style={{ fontSize: "12px", color: "#64748b" }}>Total Revenue</div>
               </div>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "16px", fontWeight: "700", color: "#22c55e" }}>
                   {selectedCustomer.preferredServices[0] || 'N/A'}
                 </div>
-                <div style={{ fontSize: "12px", color: "#94a3b8" }}>Preferred Service</div>
+                <div style={{ fontSize: "12px", color: "#64748b" }}>Preferred Service</div>
               </div>
             </div>
             
             <div style={{ marginBottom: "24px" }}>
-              <h3 style={{ color: "#64ffda", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <h3 style={{ color: "#0369a1", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
                 <FaUser /> Contact Information
               </h3>
               <div style={{
-                background: "rgba(30, 41, 59, 0.4)",
+                background: "rgba(241, 245, 249, 0.8)",
                 borderRadius: "12px",
                 padding: "20px",
-                border: "1px solid rgba(100, 255, 218, 0.1)"
+                border: "1px solid rgba(3, 105, 161, 0.15)"
               }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   <div>
                     <p style={{ margin: "8px 0", display: "flex", alignItems: "center", gap: "10px" }}>
-                      <FaEnvelope size={14} color="#64ffda" /> 
-                      <span style={{ color: "#fff" }}>{selectedCustomer.email}</span>
+                      <FaEnvelope size={14} color="#0369a1" /> 
+                      <span style={{ color: "#1e293b" }}>{selectedCustomer.email}</span>
                     </p>
                     <p style={{ margin: "8px 0", display: "flex", alignItems: "center", gap: "10px" }}>
-                      <FaPhone size={14} color="#64ffda" /> 
-                      <span style={{ color: "#fff" }}>{selectedCustomer.phone}</span>
+                      <FaPhone size={14} color="#0369a1" /> 
+                      <span style={{ color: "#1e293b" }}>{selectedCustomer.phone}</span>
                     </p>
                   </div>
                   <div>
                     <p style={{ margin: "8px 0", display: "flex", alignItems: "center", gap: "10px" }}>
-                      <FaMapMarkerAlt size={14} color="#64ffda" /> 
-                      <span style={{ color: "#fff" }}>{selectedCustomer.address}</span>
+                      <FaMapMarkerAlt size={14} color="#0369a1" /> 
+                      <span style={{ color: "#1e293b" }}>{selectedCustomer.address}</span>
                     </p>
                     <p style={{ margin: "8px 0", display: "flex", alignItems: "center", gap: "10px" }}>
-                      <FaCalendarAlt size={14} color="#64ffda" /> 
-                      <span style={{ color: "#fff" }}>Last booking: {formatDate(selectedCustomer.lastBooking)}</span>
+                      <FaCalendarAlt size={14} color="#0369a1" /> 
+                      <span style={{ color: "#1e293b" }}>Last booking: {formatDate(selectedCustomer.lastBooking)}</span>
                     </p>
                   </div>
                 </div>
@@ -1107,7 +1076,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
             </div>
             
             <div>
-              <h3 style={{ color: "#64ffda", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <h3 style={{ color: "#0369a1", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
                 <FaBookOpen /> Booking History ({selectedCustomer.totalBookings})
               </h3>
               <div style={{ maxHeight: "350px", overflowY: "auto" }}>
@@ -1124,8 +1093,8 @@ const CustomerManagement = ({ bookingsData = [] }) => {
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
                       <div>
-                        <strong style={{ color: "#fff", fontSize: "16px" }}>{booking.service}</strong>
-                        <p style={{ margin: "4px 0", fontSize: "13px", color: "#64ffda", fontWeight: "600" }}>
+                        <strong style={{ color: "#1e293b", fontSize: "16px" }}>{booking.service}</strong>
+                        <p style={{ margin: "4px 0", fontSize: "13px", color: "#0369a1", fontWeight: "600" }}>
                           Booking #{booking.id}
                         </p>
                       </div>
@@ -1133,15 +1102,15 @@ const CustomerManagement = ({ bookingsData = [] }) => {
                     </div>
                     
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
-                      <p style={{ margin: "4px 0", fontSize: "14px", color: "#94a3b8", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <p style={{ margin: "4px 0", fontSize: "14px", color: "#64748b", display: "flex", alignItems: "center", gap: "8px" }}>
                         <FaCalendarAlt size={12} /> {formatDate(booking.date)}
                       </p>
-                      <p style={{ margin: "4px 0", fontSize: "14px", color: "#94a3b8", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <p style={{ margin: "4px 0", fontSize: "14px", color: "#64748b", display: "flex", alignItems: "center", gap: "8px" }}>
                         <FaClock size={12} /> {booking.startTime} - {booking.endTime}
                       </p>
                     </div>
                     
-                    <p style={{ margin: "4px 0", fontSize: "14px", color: "#94a3b8", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <p style={{ margin: "4px 0", fontSize: "14px", color: "#64748b", display: "flex", alignItems: "center", gap: "8px" }}>
                       <FaMapMarkerAlt size={12} /> {booking.location}
                     </p>
                     
@@ -1149,12 +1118,12 @@ const CustomerManagement = ({ bookingsData = [] }) => {
                       <div style={{ 
                         marginTop: "12px", 
                         padding: "8px", 
-                        background: "rgba(100, 255, 218, 0.05)", 
+                        background: "rgba(3, 105, 161, 0.05)", 
                         borderRadius: "6px",
-                        border: "1px solid rgba(100, 255, 218, 0.1)"
+                        border: "1px solid rgba(3, 105, 161, 0.1)"
                       }}>
-                        <p style={{ margin: 0, fontSize: "14px", color: "#cbd5e1", fontStyle: "italic" }}>
-                          <strong style={{ color: "#64ffda" }}>Notes:</strong> "{booking.notes}"
+                        <p style={{ margin: 0, fontSize: "14px", color: "#475569", fontStyle: "italic" }}>
+                          <strong style={{ color: "#0369a1" }}>Notes:</strong> "{booking.notes}"
                         </p>
                       </div>
                     )}

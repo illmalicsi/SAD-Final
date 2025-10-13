@@ -1,5 +1,6 @@
 import React, { useState, Suspense } from 'react';
-import { FaHome, FaBell, FaBoxOpen, FaUsers, FaClipboardList, FaChartLine, FaUser, FaQuestionCircle, FaBars, FaSignOutAlt, FaChevronLeft, FaChevronRight, FaSearch, FaCog, FaCheckCircle, FaDollarSign, FaHistory } from 'react-icons/fa';
+import { FaHome, FaBell, FaBoxOpen, FaUsers, FaClipboardList, FaChartLine, FaUser, FaQuestionCircle, FaBars, FaSignOutAlt, FaChevronLeft, FaChevronRight, FaSearch, FaCog, FaCheckCircle, FaDollarSign, FaHistory, FaUserCircle, FaLock, FaClipboard, FaMusic, FaMapMarkerAlt, FaCrown } from 'react-icons/fa';
+import AuthService from '../services/authService';
 
 // Import components
 const UserManagement = React.lazy(() => import('./usermanagement'));
@@ -13,6 +14,7 @@ import Payment from './Payment';
 const Dashboard = ({ user, onBackToHome, onLogout }) => {
   const [currentView, setCurrentView] = useState('main');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [myInstrumentRequests, setMyInstrumentRequests] = useState([]);
 
   // Add loading spinner animation
   React.useEffect(() => {
@@ -27,6 +29,61 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     return () => document.head.removeChild(style);
   }, []);
 
+  // Load user's instrument requests
+  React.useEffect(() => {
+    const loadMyRequests = async () => {
+      try {
+        const response = await AuthService.makeAuthenticatedRequest(
+          'http://localhost:5000/api/instruments/my-requests'
+        );
+        const data = await response.json();
+        
+        if (data.success) {
+          setMyInstrumentRequests(data.allRequests || []);
+        } else {
+          // Fallback to localStorage if API fails
+          const borrowRequests = JSON.parse(localStorage.getItem('borrowRequests') || '[]');
+          const rentRequests = JSON.parse(localStorage.getItem('rentRequests') || '[]');
+          
+          const myRequests = [
+            ...borrowRequests.filter(req => req.userId === user?.id).map(req => ({ ...req, type: 'borrow' })),
+            ...rentRequests.filter(req => req.userId === user?.id).map(req => ({ ...req, type: 'rent' }))
+          ].sort((a, b) => new Date(b.requestDate || b.request_date) - new Date(a.requestDate || a.request_date));
+          
+          setMyInstrumentRequests(myRequests);
+        }
+      } catch (error) {
+        console.error('Error loading requests:', error);
+        // Fallback to localStorage
+        const borrowRequests = JSON.parse(localStorage.getItem('borrowRequests') || '[]');
+        const rentRequests = JSON.parse(localStorage.getItem('rentRequests') || '[]');
+        
+        const myRequests = [
+          ...borrowRequests.filter(req => req.userId === user?.id).map(req => ({ ...req, type: 'borrow' })),
+          ...rentRequests.filter(req => req.userId === user?.id).map(req => ({ ...req, type: 'rent' }))
+        ].sort((a, b) => new Date(b.requestDate || b.request_date) - new Date(a.requestDate || a.request_date));
+        
+        setMyInstrumentRequests(myRequests);
+      }
+    };
+
+    if (user) {
+      loadMyRequests();
+    }
+
+    // Listen for updates
+    const handleBorrowUpdate = () => loadMyRequests();
+    const handleRentUpdate = () => loadMyRequests();
+    
+    window.addEventListener('borrowRequestsUpdated', handleBorrowUpdate);
+    window.addEventListener('rentRequestsUpdated', handleRentUpdate);
+    
+    return () => {
+      window.removeEventListener('borrowRequestsUpdated', handleBorrowUpdate);
+      window.removeEventListener('rentRequestsUpdated', handleRentUpdate);
+    };
+  }, [user]);
+
   const navigationGroups = [
     {
       title: 'Main',
@@ -40,7 +97,8 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       items: [
         { id: 'inventory', icon: <FaBoxOpen size={18} />, text: 'Equipments', view: 'inventory-management', adminOnly: false },
         { id: 'customers', icon: <FaUsers size={18} />, text: 'Customers', view: 'customer-management', adminOnly: false },
-        { id: 'performances', icon: <FaChartLine size={18} />, text: 'Performances', view: 'performance-history', adminOnly: false }
+        { id: 'performances', icon: <FaChartLine size={18} />, text: 'Performances', view: 'performance-history', adminOnly: false },
+        { id: 'approval', icon: <FaCheckCircle size={18} />, text: 'Approval', view: 'approval', adminOnly: false }
       ]
     },
     {
@@ -53,7 +111,6 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       title: 'Finance',
       items: [
         { id: 'invoice', icon: <FaClipboardList size={18} />, text: 'Invoices', view: 'invoice', adminOnly: true },
-        { id: 'approval', icon: <FaCheckCircle size={18} />, text: 'Approvals', view: 'approval', adminOnly: true },
         { id: 'payment', icon: <FaDollarSign size={18} />, text: 'Payments', view: 'payment', adminOnly: true },
         { id: 'transactions', icon: <FaHistory size={18} />, text: 'Transactions', view: 'transactions', adminOnly: false }
       ]
@@ -838,6 +895,109 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             </div>
           ))}
         </div>
+
+        {/* My Instrument Requests Section */}
+        {myInstrumentRequests.length > 0 && (
+          <div style={{ marginTop: '32px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#0f172a', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FaMusic style={{ color: '#3b82f6' }} />
+              My Instrument Requests
+            </h3>
+            <div style={{ display: 'grid', gap: '16px' }}>
+              {myInstrumentRequests.map((request) => (
+                <div 
+                  key={request.id || request.request_id} 
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.06)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.04)';
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    <div>
+                      <h4 style={{ fontSize: '16px', fontWeight: '600', color: '#0f172a', marginBottom: '4px' }}>
+                        {request.instrumentName || request.instrument_name}
+                      </h4>
+                      <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '8px' }}>
+                        {(request.instrumentType || request.instrument_type).charAt(0).toUpperCase() + (request.instrumentType || request.instrument_type).slice(1)}
+                      </p>
+                    </div>
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      backgroundColor: 
+                        request.status === 'approved' ? '#dcfce7' :
+                        request.status === 'rejected' ? '#fee2e2' :
+                        '#fef3c7',
+                      color:
+                        request.status === 'approved' ? '#16a34a' :
+                        request.status === 'rejected' ? '#dc2626' :
+                        '#f59e0b'
+                    }}>
+                      {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                    <div>
+                      <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Type</p>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: '#0f172a' }}>
+                        {request.type === 'borrow' ? '🆓 Borrow' : '💰 Rent'}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Quantity</p>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: '#0f172a' }}>{request.quantity}</p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Start Date</p>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: '#0f172a' }}>
+                        {new Date(request.startDate || request.start_date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>End Date</p>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: '#0f172a' }}>
+                        {new Date(request.endDate || request.end_date).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div style={{ marginBottom: '8px' }}>
+                    <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Purpose</p>
+                    <p style={{ fontSize: '14px', color: '#0f172a' }}>{request.purpose}</p>
+                  </div>
+                  
+                  {request.notes && (
+                    <div style={{ marginBottom: '8px' }}>
+                      <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Notes</p>
+                      <p style={{ fontSize: '14px', color: '#0f172a' }}>{request.notes}</p>
+                    </div>
+                  )}
+                  
+                  <div style={{ paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
+                    <p style={{ fontSize: '12px', color: '#94a3b8' }}>
+                      Requested on {new Date(request.requestDate || request.request_date).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </>
     );
   };
@@ -1052,57 +1212,324 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
           <div style={styles.panelContainer}>
             <div style={styles.panelHeader}>
               <h2 style={styles.panelTitle}>My Profile</h2>
+              <p style={{ color: '#64748b', margin: '8px 0 0 0', fontSize: '14px' }}>
+                Manage your personal information and account settings
+              </p>
             </div>
             <div style={styles.panelBody}>
-              {/* Profile editor - avatar upload */}
-              <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 120, height: 120, borderRadius: 16, overflow: 'hidden', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, color: '#0b3b78' }}>
+              {/* Profile Content */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 32, alignItems: 'start' }}>
+                
+                {/* Left Column - Profile Picture */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                  <div style={{ 
+                    width: 160, 
+                    height: 160, 
+                    borderRadius: 20, 
+                    overflow: 'hidden', 
+                    background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    fontSize: 48, 
+                    color: '#0b3b78',
+                    border: '4px solid #ffffff',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+                  }}>
                     {user?.avatar ? (
-                      <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <div style={{ fontWeight: 800 }}>{getUserInitials()}</div>
+                      <div style={{ fontWeight: 800, letterSpacing: '2px' }}>{getUserInitials()}</div>
                     )}
                   </div>
 
-                  <label style={{ display: 'inline-flex', gap: 8 }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        const file = e.target.files && e.target.files[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                          const base64 = String(reader.result);
-                          // Update current user in localStorage
-                          try {
-                            const stored = JSON.parse(localStorage.getItem('davaoBlueEaglesUser') || 'null');
-                            const updated = { ...(stored || {}), avatar: base64 };
-                            localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(updated));
-                            // Update users list if exists (for admin/user management)
-                            const users = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
-                            const updatedUsers = users.map(u => u.id === updated.id ? { ...u, avatar: base64 } : u);
-                            if (users.length) localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
-
-                            // Notify parent/app that user changed (so nav/menu updates)
-                            window.dispatchEvent(new CustomEvent('davaoUserUpdated', { detail: updated }));
-                          } catch (err) {
-                            console.error('Saving avatar failed', err);
+                  <div style={{ textAlign: 'center' }}>
+                    <label style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '12px 20px',
+                      borderRadius: 12,
+                      background: 'linear-gradient(135deg, #0b62d6 0%, #0b3b78 100%)',
+                      color: 'white',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 4px 16px rgba(11, 98, 214, 0.3)'
+                    }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={async (e) => {
+                          const file = e.target.files && e.target.files[0];
+                          if (!file) return;
+                          
+                          // Check file size (limit to 5MB)
+                          if (file.size > 5 * 1024 * 1024) {
+                            alert('File size too large. Please choose an image under 5MB.');
+                            return;
                           }
-                        };
-                        reader.readAsDataURL(file);
-                      }}
-                    />
-                    <button style={{ padding: '8px 12px', borderRadius: 8, background: '#0b62d6', color: 'white', border: 'none', cursor: 'pointer' }}>Upload Photo</button>
-                  </label>
+
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            const base64 = String(reader.result);
+                            // Update current user in localStorage
+                            try {
+                              const stored = JSON.parse(localStorage.getItem('davaoBlueEaglesUser') || 'null');
+                              const updated = { ...(stored || {}), avatar: base64 };
+                              localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(updated));
+                              
+                              // Update users list if exists (for admin/user management)
+                              const users = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
+                              const updatedUsers = users.map(u => u.id === updated.id ? { ...u, avatar: base64 } : u);
+                              if (users.length) localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
+
+                              // Notify parent/app that user changed (so nav/menu updates)
+                              window.dispatchEvent(new CustomEvent('davaoUserUpdated', { detail: updated }));
+                            } catch (err) {
+                              console.error('Saving avatar failed', err);
+                              alert('Failed to save profile picture. Please try again.');
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                      📷 Change Photo
+                    </label>
+                    <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '12px' }}>
+                      JPG, PNG or GIF (max 5MB)
+                    </p>
+                  </div>
                 </div>
 
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ marginTop: 0 }}>{user?.firstName} {user?.lastName}</h3>
-                  <p style={{ color: '#475569' }}>{user?.email}</p>
-                  <div style={{ marginTop: 12 }}>
-                    <p style={{ margin: 0, color: '#64748b' }}>You can upload a profile picture. It is stored locally in your browser.</p>
+                {/* Right Column - User Information */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  
+                  {/* Basic Information Card */}
+                  <div style={{
+                    background: '#ffffff',
+                    borderRadius: 16,
+                    padding: 24,
+                    border: '1px solid #e2e8f0',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)'
+                  }}>
+                    <h3 style={{ 
+                      margin: '0 0 20px 0', 
+                      color: '#0f172a', 
+                      fontSize: '18px', 
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8
+                    }}>
+                      <FaUserCircle /> Basic Information
+                    </h3>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          First Name
+                        </label>
+                        <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', color: '#0f172a', fontWeight: 500 }}>
+                          {user?.firstName || 'Not provided'}
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Last Name
+                        </label>
+                        <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', color: '#0f172a', fontWeight: 500 }}>
+                          {user?.lastName || 'Not provided'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Email Address
+                      </label>
+                      <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', color: '#0f172a', fontWeight: 500 }}>
+                        {user?.email || 'Not provided'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Account Information Card */}
+                  <div style={{
+                    background: '#ffffff',
+                    borderRadius: 16,
+                    padding: 24,
+                    border: '1px solid #e2e8f0',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)'
+                  }}>
+                    <h3 style={{ 
+                      margin: '0 0 20px 0', 
+                      color: '#0f172a', 
+                      fontSize: '18px', 
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8
+                    }}>
+                      <FaLock /> Account Details
+                    </h3>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Role
+                        </label>
+                        <div style={{ 
+                          padding: '12px 16px', 
+                          background: user?.role === 'admin' ? '#fef3c7' : '#e0f2fe', 
+                          borderRadius: 8, 
+                          border: user?.role === 'admin' ? '1px solid #fbbf24' : '1px solid #0ea5e9', 
+                          color: user?.role === 'admin' ? '#92400e' : '#0c4a6e', 
+                          fontWeight: 600,
+                          textTransform: 'capitalize',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8
+                        }}>
+                          {user?.role === 'admin' ? <FaCrown /> : <FaUserCircle />} {user?.role || 'user'}
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          User ID
+                        </label>
+                        <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', color: '#64748b', fontFamily: 'monospace', fontSize: '14px' }}>
+                          #{user?.id || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Member Since
+                      </label>
+                      <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', color: '#0f172a', fontWeight: 500 }}>
+                        {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        }) : 'Not available'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Information Card (if available) */}
+                  {(user?.phone || user?.birthday || user?.instrument || user?.address) && (
+                    <div style={{
+                      background: '#ffffff',
+                      borderRadius: 16,
+                      padding: 24,
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)'
+                    }}>
+                      <h3 style={{ 
+                        margin: '0 0 20px 0', 
+                        color: '#0f172a', 
+                        fontSize: '18px', 
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8
+                      }}>
+                        <FaClipboard /> Additional Information
+                      </h3>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        {user?.phone && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              Phone Number
+                            </label>
+                            <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', color: '#0f172a', fontWeight: 500 }}>
+                              {user.phone}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {user?.birthday && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              Date of Birth
+                            </label>
+                            <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', color: '#0f172a', fontWeight: 500 }}>
+                              {new Date(user.birthday).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {user?.instrument && (
+                        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Primary Instrument
+                          </label>
+                          <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', color: '#0f172a', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <FaMusic /> {user.instrument}
+                          </div>
+                        </div>
+                      )}
+
+                      {user?.address && (
+                        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Address
+                          </label>
+                          <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', color: '#0f172a', fontWeight: 500, lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <FaMapMarkerAlt /> {user.address}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Account Status */}
+                  <div style={{
+                    background: user?.isBlocked ? '#fef2f2' : '#f0fdf4',
+                    borderRadius: 16,
+                    padding: 20,
+                    border: user?.isBlocked ? '1px solid #fecaca' : '1px solid #bbf7d0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12
+                  }}>
+                    <div style={{ 
+                      fontSize: '24px',
+                      filter: user?.isBlocked ? 'grayscale(1)' : 'none'
+                    }}>
+                      {user?.isBlocked ? '🚫' : '✅'}
+                    </div>
+                    <div>
+                      <div style={{ 
+                        fontWeight: 600, 
+                        color: user?.isBlocked ? '#dc2626' : '#16a34a',
+                        marginBottom: 4
+                      }}>
+                        Account Status: {user?.isBlocked ? 'Blocked' : 'Active'}
+                      </div>
+                      <div style={{ 
+                        fontSize: '14px', 
+                        color: user?.isBlocked ? '#991b1b' : '#15803d'
+                      }}>
+                        {user?.isBlocked 
+                          ? 'Your account has been restricted. Please contact support for assistance.'
+                          : 'Your account is active and in good standing.'
+                        }
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

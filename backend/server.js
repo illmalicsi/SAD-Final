@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
 const billingRoutes = require('./routes/billing');
 const rolesRoutes = require('./routes/roles');
+const instrumentsRoutes = require('./routes/instruments');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +27,8 @@ app.use('/api/users', usersRoutes);
 app.use('/api/roles', rolesRoutes);
 // Billing routes (invoices, payments, transactions)
 app.use('/api/billing', billingRoutes);
+// Instrument requests routes (borrow, rent, instruments)
+app.use('/api/instruments', instrumentsRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

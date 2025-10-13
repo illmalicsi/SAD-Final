@@ -249,48 +249,55 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
   const styles = {
     container: {
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+      background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%)',
       padding: '2rem 1rem',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
     },
     wrapper: {
-      maxWidth: '1200px',
+      maxWidth: '1400px',
       margin: '0 auto'
     },
     header: {
       textAlign: 'center',
-      marginBottom: '3rem'
+      marginBottom: '2rem',
+      padding: '0'
     },
     title: {
       fontSize: 'clamp(2rem, 5vw, 3.5rem)',
       fontWeight: '800',
-      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
+      color: '#0369a1',
       marginBottom: '1rem',
-      letterSpacing: '-0.02em'
+      letterSpacing: '-0.02em',
+      padding: '0'
     },
     subtitle: {
-      color: '#94a3b8',
+      color: '#64748b',
       fontSize: '1.125rem',
       maxWidth: '600px',
       margin: '0 auto',
-      lineHeight: '1.6'
+      lineHeight: '1.6',
+      padding: '0'
+    },
+    mainContent: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 350px',
+      gap: '2rem',
+      alignItems: 'start'
     },
     formContainer: {
-      background: 'rgba(15, 23, 42, 0.8)',
+      background: 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(20px)',
       borderRadius: '24px',
       padding: '2.5rem',
-      border: '1px solid rgba(59, 130, 246, 0.1)',
-      boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)'
+      border: '1px solid rgba(3, 105, 161, 0.1)',
+      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)'
     },
     formTitle: {
       display: 'flex',
       alignItems: 'center',
       gap: '0.75rem',
       marginBottom: '2rem',
-      color: '#ffffff',
+      color: '#0f172a',
       fontSize: '1.5rem',
       fontWeight: '700'
     },
@@ -304,7 +311,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       gap: '0.5rem'
     },
     label: {
-      color: '#e2e8f0',
+      color: '#334155',
       fontSize: '0.875rem',
       fontWeight: '600',
       display: 'flex',
@@ -317,10 +324,10 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
     input: {
       width: '100%',
       padding: '1rem 1.25rem',
-      background: 'rgba(30, 41, 59, 0.6)',
-      border: '2px solid rgba(100, 116, 139, 0.3)',
+      background: 'rgba(248, 250, 252, 0.8)',
+      border: '2px solid rgba(203, 213, 225, 0.5)',
       borderRadius: '12px',
-      color: '#ffffff',
+      color: '#0f172a',
       fontSize: '1rem',
       fontFamily: 'inherit',
       transition: 'all 0.3s ease',
@@ -328,8 +335,8 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       boxSizing: 'border-box'
     },
     inputFocus: {
-      borderColor: '#3b82f6',
-      boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
+      borderColor: '#0369a1',
+      boxShadow: '0 0 0 3px rgba(3, 105, 161, 0.1)'
     },
     textarea: {
       minHeight: '120px',
@@ -339,9 +346,9 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       width: '100%',
       padding: '1.25rem 2rem',
       background: isFormValid
-        ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
-        : 'rgba(100, 116, 139, 0.3)',
-      color: isFormValid ? '#ffffff' : '#64748b',
+        ? 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)'
+        : 'rgba(203, 213, 225, 0.5)',
+      color: isFormValid ? '#ffffff' : '#94a3b8',
       border: 'none',
       borderRadius: '16px',
       fontSize: '1.125rem',
@@ -353,7 +360,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       justifyContent: 'center',
       gap: '0.5rem',
       boxShadow: isFormValid
-        ? '0 10px 30px rgba(59, 130, 246, 0.3)'
+        ? '0 10px 30px rgba(3, 105, 161, 0.2)'
         : 'none'
     },
     successMessage: {
@@ -382,39 +389,40 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       gap: '1.5rem'
     },
     calendarContainer: {
-      background: 'rgba(15, 23, 42, 0.8)',
+      background: 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(20px)',
       borderRadius: '24px',
-      padding: '2rem',
-      border: '1px solid rgba(59, 130, 246, 0.1)',
-      boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
-      marginTop: '2rem'
+      padding: '1.5rem',
+      border: '1px solid rgba(3, 105, 161, 0.1)',
+      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
+      position: 'sticky',
+      top: '2rem'
     },
     calendarHeader: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: '1.5rem'
+      marginBottom: '1rem'
     },
     calendarTitle: {
-      color: '#ffffff',
-      fontSize: '1.25rem',
+      color: '#0f172a',
+      fontSize: '1.125rem',
       fontWeight: '700',
       display: 'flex',
       alignItems: 'center',
-      gap: '0.5rem'
+      gap: '0.5rem',
+      marginBottom: '0.75rem'
     },
     calendarNav: {
       display: 'flex',
       alignItems: 'center',
-      gap: '1rem'
+      justifyContent: 'center',
+      gap: '0.5rem',
+      marginBottom: '1rem'
     },
     navButton: {
-      background: 'rgba(59, 130, 246, 0.1)',
-      border: '1px solid rgba(59, 130, 246, 0.3)',
+      background: 'rgba(3, 105, 161, 0.1)',
+      border: '1px solid rgba(3, 105, 161, 0.2)',
       borderRadius: '8px',
       padding: '0.5rem',
-      color: '#3b82f6',
+      color: '#0369a1',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
       display: 'flex',
@@ -422,33 +430,33 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       justifyContent: 'center'
     },
     monthYear: {
-      color: '#e2e8f0',
-      fontSize: '1.125rem',
+      color: '#334155',
+      fontSize: '0.875rem',
       fontWeight: '600',
-      minWidth: '120px',
+      minWidth: '100px',
       textAlign: 'center'
     },
     calendarGrid: {
       display: 'grid',
       gridTemplateColumns: 'repeat(7, 1fr)',
-      gap: '0.5rem'
+      gap: '0.25rem'
     },
     dayHeader: {
-      color: '#94a3b8',
-      fontSize: '0.875rem',
+      color: '#64748b',
+      fontSize: '0.75rem',
       fontWeight: '600',
       textAlign: 'center',
-      padding: '0.75rem 0.5rem'
+      padding: '0.5rem 0.25rem'
     },
     dayCell: {
       aspectRatio: '1',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: '8px',
+      borderRadius: '6px',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
-      fontSize: '0.875rem',
+      fontSize: '0.75rem',
       fontWeight: '500',
       position: 'relative'
     },
@@ -469,34 +477,34 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       cursor: 'not-allowed'
     },
     dayPast: {
-      background: 'rgba(100, 116, 139, 0.1)',
-      color: '#64748b',
+      background: 'rgba(203, 213, 225, 0.3)',
+      color: '#94a3b8',
       cursor: 'not-allowed'
     },
     daySelected: {
-      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+      background: 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)',
       color: '#ffffff',
-      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+      boxShadow: '0 4px 12px rgba(3, 105, 161, 0.3)'
     },
     legend: {
       display: 'flex',
       flexWrap: 'wrap',
-      gap: '1rem',
-      marginTop: '1.5rem',
-      padding: '1rem',
-      background: 'rgba(30, 41, 59, 0.5)',
+      gap: '0.75rem',
+      marginTop: '1.25rem',
+      padding: '0.75rem',
+      background: 'rgba(248, 250, 252, 0.8)',
       borderRadius: '12px'
     },
     legendItem: {
       display: 'flex',
       alignItems: 'center',
-      gap: '0.5rem',
-      fontSize: '0.875rem',
-      color: '#e2e8f0'
+      gap: '0.375rem',
+      fontSize: '0.75rem',
+      color: '#475569'
     },
     legendDot: {
-      width: '12px',
-      height: '12px',
+      width: '10px',
+      height: '10px',
       borderRadius: '50%'
     }
   };
@@ -511,23 +519,33 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
           }
           
           input:focus, select:focus, textarea:focus {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+            border-color: #0369a1 !important;
+            box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1) !important;
           }
           
           select option {
-            background: #1e293b;
-            color: #ffffff;
+            background: #ffffff;
+            color: #0f172a;
           }
           
           .calendar-day:hover:not(.day-past):not(.day-approved) {
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 12px rgba(3, 105, 161, 0.2);
           }
           
           .nav-button:hover {
-            background: rgba(59, 130, 246, 0.2) !important;
+            background: rgba(3, 105, 161, 0.2) !important;
             transform: scale(1.05);
+          }
+
+          @media (max-width: 1024px) {
+            .main-content {
+              grid-template-columns: 1fr !important;
+            }
+            .calendar-container {
+              position: relative !important;
+              top: 0 !important;
+            }
           }
         `}
       </style>
@@ -542,7 +560,6 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       <div style={styles.wrapper}>
         <div style={styles.header}>
           <h1 style={styles.title}>
-            <FaMusic style={{ marginRight: '1rem' }} />
             Book Your Session
           </h1>
           <p style={styles.subtitle}>
@@ -551,11 +568,13 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
           </p>
         </div>
 
-        <div style={styles.formContainer}>
-          <div style={styles.formTitle}>
-            <FaCalendarAlt />
-            Booking Details
-          </div>
+        <div className="main-content" style={styles.mainContent}>
+          {/* Form Section */}
+          <div style={styles.formContainer}>
+            <div style={styles.formTitle}>
+              <FaCalendarAlt />
+              Booking Details
+            </div>
 
           <form onSubmit={handleSubmit} style={styles.formGrid}>
             {/* Service Selection */}
@@ -766,24 +785,24 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
           </form>
         </div>
 
-        {/* Calendar Section */}
-        <div style={styles.calendarContainer}>
+        {/* Calendar Section - Now on the side */}
+        <div className="calendar-container" style={styles.calendarContainer}>
           <div style={styles.calendarHeader}>
             <div style={styles.calendarTitle}>
-              <FaCalendarAlt />
-              Availability Calendar
+              <FaCalendarAlt size={16} />
+              Availability
             </div>
-            <div style={styles.calendarNav}>
-              <button className="nav-button" style={styles.navButton} onClick={prevMonth}>
-                <FaChevronLeft />
-              </button>
-              <div style={styles.monthYear}>
-                {new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-              </div>
-              <button className="nav-button" style={styles.navButton} onClick={nextMonth}>
-                <FaChevronRight />
-              </button>
+          </div>
+          <div style={styles.calendarNav}>
+            <button className="nav-button" style={styles.navButton} onClick={prevMonth}>
+              <FaChevronLeft size={12} />
+            </button>
+            <div style={styles.monthYear}>
+              {new Date(year, month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
             </div>
+            <button className="nav-button" style={styles.navButton} onClick={nextMonth}>
+              <FaChevronRight size={12} />
+            </button>
           </div>
 
           <div style={styles.calendarGrid}>
@@ -871,6 +890,8 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
             </div>
           </div>
         </div>
+        {/* End of mainContent grid */}
+      </div>
       </div>
 
       <style>
