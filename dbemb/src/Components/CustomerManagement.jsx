@@ -24,8 +24,11 @@ import {
   FaSortDown,
   FaDownload,
   FaArchive,
-  FaUndo
+  FaUndo,
+  FaCheck,
+  FaBell
 } from "react-icons/fa";
+import NotificationService from '../services/notificationService';
 
 const CustomerManagement = ({ bookingsData = [] }) => {
   const [customers, setCustomers] = useState([]);
@@ -92,15 +95,45 @@ const CustomerManagement = ({ bookingsData = [] }) => {
   // State to hold all booking data
   const [allBookingsData, setAllBookingsData] = useState([]);
 
-  // Load bookings from localStorage
-  const getStoredBookings = () => {
+  // Load bookings from API ONLY (no localStorage)
+  const getStoredBookings = async () => {
     try {
-      const stored = localStorage.getItem('dbeBookings');
-      if (stored && stored !== 'undefined' && stored !== 'null') {
-        return JSON.parse(stored);
+      console.log('CustomerManagement: Fetching bookings from API...');
+      const response = await fetch('http://localhost:5000/api/bookings', {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('CustomerManagement: API Response:', data);
+        if (data.success && Array.isArray(data.bookings)) {
+          // Convert database format to frontend format
+          const bookings = data.bookings.map(b => ({
+            id: b.booking_id,
+            customerName: b.customer_name,
+            name: b.customer_name,
+            email: b.email,
+            phone: b.phone,
+            service: b.service,
+            date: b.date ? b.date.split('T')[0] : b.date,
+            startTime: b.start_time,
+            endTime: b.end_time,
+            location: b.location,
+            estimatedValue: parseFloat(b.estimated_value || 5000),
+            status: b.status,
+            notes: b.notes,
+            createdAt: b.created_at
+          }));
+          console.log('CustomerManagement: Loaded', bookings.length, 'bookings from API');
+          return bookings;
+        }
+      } else {
+        console.error('CustomerManagement: API request failed:', response.status);
       }
     } catch (error) {
-      console.error('Error loading bookings from localStorage:', error);
+      console.error('CustomerManagement: Error loading bookings from API:', error);
     }
     return [];
   };
@@ -114,26 +147,26 @@ const CustomerManagement = ({ bookingsData = [] }) => {
 
   // Load and combine all booking data
   useEffect(() => {
-    const loadAllBookings = () => {
-      const storedBookings = getStoredBookings();
-      console.log('CustomerManagement: Raw stored bookings:', storedBookings);
+    const loadAllBookings = async () => {
+      console.log('CustomerManagement: Loading bookings...');
+      const apiBookings = await getStoredBookings();
+      console.log('CustomerManagement: API returned:', apiBookings.length, 'bookings');
       
-      // Always use stored bookings if they exist, otherwise use default data
-      const combinedData = storedBookings.length > 0 ? storedBookings : defaultBookingsData;
-      setAllBookingsData(combinedData);
-      console.log('CustomerManagement: Final bookings data:', combinedData.length, 'bookings');
+      // Use API data only (no localStorage, no default data)
+      setAllBookingsData(apiBookings);
+      console.log('CustomerManagement: Set bookings data:', apiBookings.length, 'bookings');
     };
 
     // Load data initially
     loadAllBookings();
 
     const handleStorageChange = () => {
-      console.log('CustomerManagement: Storage change detected');
+      console.log('CustomerManagement: Storage change detected, reloading from API...');
       loadAllBookings();
     };
 
     const handleBookingsUpdated = () => {
-      console.log('CustomerManagement: Received bookingsUpdated event');
+      console.log('CustomerManagement: Received bookingsUpdated event, reloading from API...');
       loadAllBookings();
     };
 
@@ -165,7 +198,10 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         const existing = customerMap.get(customerKey);
         existing.bookings.push(booking);
         existing.totalBookings += 1;
-        existing.totalRevenue += booking.estimatedValue || 5000;
+        // Only count revenue from approved bookings
+        if (booking.status === 'approved') {
+          existing.totalRevenue += booking.estimatedValue || 5000;
+        }
         
         if (new Date(booking.date) > new Date(existing.lastBooking)) {
           existing.lastBooking = booking.date;
@@ -200,7 +236,8 @@ const CustomerManagement = ({ bookingsData = [] }) => {
           lastBooking: booking.date,
           lastService: booking.service,
           joinDate: booking.createdAt.split('T')[0],
-          totalRevenue: booking.estimatedValue || 5000,
+          // Only count revenue from approved bookings
+          totalRevenue: booking.status === 'approved' ? (booking.estimatedValue || 5000) : 0,
           preferredServices: [booking.service],
           notes: booking.notes || ''
         });
@@ -291,25 +328,30 @@ const CustomerManagement = ({ bookingsData = [] }) => {
   }, [customers, searchTerm, statusFilter, serviceFilter, sortBy, sortOrder]);
 
   const stats = useMemo(
-    () => ({
-      total: customers.length,
-      active: customers.filter((c) => c.status === "active").length,
-      pending: customers.filter((c) => c.status === "pending").length,
-      rejected: customers.filter((c) => c.status === "rejected").length,
-      cancelled: customers.filter((c) => c.status === "cancelled").length,
-      archived: customers.filter((c) => c.status === "archived").length,
-      totalBookings: customers.reduce((a, c) => a + c.totalBookings, 0),
-      totalRevenue: customers.reduce((a, c) => a + c.totalRevenue, 0),
-      avgBookingsPerCustomer:
-        customers.length > 0
-          ? (customers.reduce((a, c) => a + c.totalBookings, 0) / customers.length).toFixed(1)
-          : 0,
-      avgRevenuePerCustomer:
-        customers.length > 0
-          ? (customers.reduce((a, c) => a + c.totalRevenue, 0) / customers.length).toFixed(0)
-          : 0,
-    }),
-    [customers]
+    () => {
+      const pendingBookingsCount = allBookingsData.filter(b => b.status === 'pending').length;
+      
+      return {
+        total: customers.length,
+        active: customers.filter((c) => c.status === "active").length,
+        pending: customers.filter((c) => c.status === "pending").length,
+        rejected: customers.filter((c) => c.status === "rejected").length,
+        cancelled: customers.filter((c) => c.status === "cancelled").length,
+        archived: customers.filter((c) => c.status === "archived").length,
+        totalBookings: customers.reduce((a, c) => a + c.totalBookings, 0),
+        pendingBookings: pendingBookingsCount,
+        totalRevenue: customers.reduce((a, c) => a + c.totalRevenue, 0),
+        avgBookingsPerCustomer:
+          customers.length > 0
+            ? (customers.reduce((a, c) => a + c.totalBookings, 0) / customers.length).toFixed(1)
+            : 0,
+        avgRevenuePerCustomer:
+          customers.length > 0
+            ? (customers.reduce((a, c) => a + c.totalRevenue, 0) / customers.length).toFixed(0)
+            : 0,
+      };
+    },
+    [customers, allBookingsData]
   );
 
   const services = [...new Set(allBookingsData.map(b => b.service))];
@@ -375,6 +417,101 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       setIsProcessing(false);
       showNotification(`${customer.name} unarchived successfully!`, "success");
     }, 500);
+  };
+
+  // Booking approval/rejection handlers
+  const handleApproveBooking = async (booking) => {
+    setIsProcessing(true);
+    try {
+      console.log('CustomerManagement: Approving booking', booking.id);
+      
+      // Get auth token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
+      // Update booking status via API
+      const response = await fetch(`http://localhost:5000/api/bookings/${booking.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'approved' })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        console.log('CustomerManagement: Booking approved successfully');
+        
+        // Send notification to customer
+        NotificationService.notifyBookingConfirmed(booking);
+        
+        // Dispatch event to update other components
+        window.dispatchEvent(new CustomEvent('bookingsUpdated', {
+          detail: { reload: true }
+        }));
+        
+        setRefreshTrigger(prev => prev + 1);
+        showNotification(`Booking #${booking.id} approved and customer notified!`, "success");
+      } else {
+        throw new Error(data.message || 'Failed to approve booking');
+      }
+    } catch (error) {
+      console.error('Error approving booking:', error);
+      showNotification(error.message || "Failed to approve booking", "error");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRejectBooking = async (booking) => {
+    setIsProcessing(true);
+    try {
+      console.log('CustomerManagement: Rejecting booking', booking.id);
+      
+      // Get auth token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
+      // Update booking status via API
+      const response = await fetch(`http://localhost:5000/api/bookings/${booking.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'rejected' })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        console.log('CustomerManagement: Booking rejected successfully');
+        
+        // Send notification to customer
+        NotificationService.notifyBookingRejected(booking);
+        
+        // Dispatch event to update other components
+        window.dispatchEvent(new CustomEvent('bookingsUpdated', {
+          detail: { reload: true }
+        }));
+        
+        setRefreshTrigger(prev => prev + 1);
+        showNotification(`Booking #${booking.id} rejected and customer notified.`, "info");
+      } else {
+        throw new Error(data.message || 'Failed to reject booking');
+      }
+    } catch (error) {
+      console.error('Error rejecting booking:', error);
+      showNotification(error.message || "Failed to reject booking", "error");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleExportData = () => {
@@ -615,7 +752,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
     actionBtn: {
       padding: "8px 16px",
       borderRadius: "8px",
-      border: "none",
+      border: "1px solid",
       cursor: "pointer",
       fontWeight: "600",
       fontSize: "13px",
@@ -623,17 +760,18 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       alignItems: "center",
       gap: "6px",
       marginRight: "8px",
-      background: "#1e293b",
-      color: "#fff",
+      background: "#fff",
       transition: "all 0.2s",
     },
     rejectBtn: {
-      background: "#ef4444",
-      color: "#fff",
+      background: "#fff",
+      color: "#ef4444",
+      borderColor: "#ef4444",
     },
     approveBtn: {
-      background: "#22c55e",
-      color: "#fff",
+      background: "#fff",
+      color: "#3b82f6",
+      borderColor: "#3b82f6",
     },
     archiveBtn: {
       background: "#6b7280",
@@ -773,6 +911,31 @@ const CustomerManagement = ({ bookingsData = [] }) => {
           </div>
           <div style={{ color: "#64748b", fontSize: "14px" }}>Total Bookings</div>
         </div>
+
+        {stats.pendingBookings > 0 && (
+          <div style={{
+            ...styles.statCard,
+            border: "2px solid #f59e0b",
+            position: "relative"
+          }}>
+            <FaBell size={28} color="#f59e0b" />
+            <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
+              {stats.pendingBookings}
+            </div>
+            <div style={{ color: "#f59e0b", fontSize: "14px", fontWeight: "600" }}>
+              Pending Bookings
+            </div>
+            <div style={{
+              position: "absolute",
+              top: "8px",
+              right: "8px",
+              width: "12px",
+              height: "12px",
+              borderRadius: "50%",
+              backgroundColor: "#f59e0b"
+            }}></div>
+          </div>
+        )}
         
         <div style={styles.statCard}>
           <FaChartBar size={28} color="#8b5cf6" />
@@ -896,6 +1059,26 @@ const CustomerManagement = ({ bookingsData = [] }) => {
                   <div style={{ fontSize: "12px", color: "#64748b" }}>Revenue</div>
                 </div>
               </div>
+
+              {/* Pending Bookings Alert */}
+              {c.bookings.filter(b => b.status === 'pending').length > 0 && (
+                <div style={{
+                  padding: "8px 12px",
+                  marginBottom: "12px",
+                  backgroundColor: "#fef3c7",
+                  border: "1px solid #f59e0b",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "13px",
+                  color: "#92400e",
+                  fontWeight: "600"
+                }}>
+                  <FaBell size={14} color="#f59e0b" />
+                  {c.bookings.filter(b => b.status === 'pending').length} Pending Booking{c.bookings.filter(b => b.status === 'pending').length > 1 ? 's' : ''}
+                </div>
+              )}
               
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                 <button
@@ -1150,7 +1333,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
                       setShowCustomerDetails(false);
                     }}
                   >
-                    <FaThumbsUp /> Approve Customer
+                    <FaThumbsUp /> Approve
                   </button>
                   <button
                     style={{ ...styles.button, ...styles.rejectBtn, flex: 1, justifyContent: "center", padding: "12px" }}
@@ -1159,7 +1342,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
                       setShowCustomerDetails(false);
                     }}
                   >
-                    <FaThumbsDown /> Reject Customer
+                    <FaThumbsDown /> Reject
                   </button>
                 </>
               )}
@@ -1217,8 +1400,21 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         }
         
         @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+          0%, 100% { 
+            opacity: 1; 
+            transform: scale(1);
+          }
+          50% { 
+            opacity: 0.8; 
+            transform: scale(1.02);
+          }
+        }
+
+        @keyframes ping {
+          75%, 100% {
+            transform: scale(2);
+            opacity: 0;
+          }
         }
         
         @media (max-width: 768px) {

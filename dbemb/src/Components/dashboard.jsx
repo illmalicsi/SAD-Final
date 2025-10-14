@@ -1,5 +1,5 @@
 import React, { useState, Suspense } from 'react';
-import { FaHome, FaBell, FaBoxOpen, FaUsers, FaClipboardList, FaChartLine, FaUser, FaQuestionCircle, FaBars, FaSignOutAlt, FaChevronLeft, FaChevronRight, FaSearch, FaCog, FaCheckCircle, FaDollarSign, FaHistory, FaUserCircle, FaLock, FaClipboard, FaMusic, FaMapMarkerAlt, FaCrown } from 'react-icons/fa';
+import { FaHome, FaBell, FaBoxOpen, FaUsers, FaClipboardList, FaChartLine, FaUser, FaQuestionCircle, FaBars, FaSignOutAlt, FaChevronLeft, FaChevronRight, FaSearch, FaCog, FaCheckCircle, FaDollarSign, FaHistory, FaUserCircle, FaLock, FaClipboard, FaMusic, FaMapMarkerAlt, FaCrown, FaUserPlus } from 'react-icons/fa';
 import AuthService from '../services/authService';
 
 // Import components
@@ -9,12 +9,17 @@ const CustomerManagement = React.lazy(() => import('./CustomerManagement'));
 const Invoice = React.lazy(() => import('./Invoice'));
 const TransactionHistory = React.lazy(() => import('./TransactionHistory'));
 const Approval = React.lazy(() => import('./Approval'));
+const MembershipApproval = React.lazy(() => import('./MembershipApproval'));
+const BookingManagement = React.lazy(() => import('./BookingManagement'));
 import Payment from './Payment';
+import NotificationService from '../services/notificationService';
 
 const Dashboard = ({ user, onBackToHome, onLogout }) => {
   const [currentView, setCurrentView] = useState('main');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [myInstrumentRequests, setMyInstrumentRequests] = useState([]);
+  const [userNotifications, setUserNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Add loading spinner animation
   React.useEffect(() => {
@@ -84,6 +89,32 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     };
   }, [user]);
 
+  // Load user notifications
+  React.useEffect(() => {
+    const loadNotifications = () => {
+      if (user && user.email) {
+        const notifications = NotificationService.getUserNotifications(user.email);
+        setUserNotifications(notifications);
+        const unread = notifications.filter(n => !n.read).length;
+        setUnreadCount(unread);
+      }
+    };
+
+    loadNotifications();
+
+    // Listen for notification updates
+    const handleNotificationsUpdate = () => loadNotifications();
+    window.addEventListener('notificationsUpdated', handleNotificationsUpdate);
+
+    // Poll for updates every 10 seconds
+    const interval = setInterval(loadNotifications, 10000);
+
+    return () => {
+      window.removeEventListener('notificationsUpdated', handleNotificationsUpdate);
+      clearInterval(interval);
+    };
+  }, [user]);
+
   const navigationGroups = [
     {
       title: 'Main',
@@ -96,7 +127,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       title: 'Management',
       items: [
         { id: 'inventory', icon: <FaBoxOpen size={18} />, text: 'Equipments', view: 'inventory-management', adminOnly: false },
-        { id: 'customers', icon: <FaUsers size={18} />, text: 'Customers', view: 'customer-management', adminOnly: false },
+        { id: 'customers', icon: <FaUsers size={18} />, text: 'Customers & Bookings', view: 'customer-management', adminOnly: false },
         { id: 'performances', icon: <FaChartLine size={18} />, text: 'Performances', view: 'performance-history', adminOnly: false },
         { id: 'approval', icon: <FaCheckCircle size={18} />, text: 'Approval', view: 'approval', adminOnly: false }
       ]
@@ -104,7 +135,8 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     {
       title: 'Administration',
       items: [
-        { id: 'users', icon: <FaUsers size={18} />, text: 'Users', view: 'user-management', adminOnly: true }
+        { id: 'users', icon: <FaUsers size={18} />, text: 'Users', view: 'user-management', adminOnly: true },
+        { id: 'membership', icon: <FaUserPlus size={18} />, text: 'Membership Approval', view: 'membership-approval', adminOnly: true }
       ]
     },
     {
@@ -1003,83 +1035,238 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
   };
 
   const getNotificationsContent = () => {
-    const sampleNotifications = [
-      {
-        id: 1,
-        icon: '📅',
-        title: 'Upcoming Performance',
-        text: 'You have a performance scheduled for tomorrow at Central Park.',
-        time: '2 hours ago',
-        bgColor: '#dbeafe',
-        iconColor: '#3b82f6'
-      },
-      {
-        id: 2,
-        icon: '👥',
-        title: 'New Booking Request',
-        text: 'A new customer has requested your services for a wedding ceremony.',
-        time: '1 day ago',
-        bgColor: '#dcfce7',
-        iconColor: '#16a34a'
-      },
-      {
-        id: 3,
-        icon: '⚠️',
-        title: 'Inventory Alert',
-        text: 'Some instruments need maintenance check before next performance.',
-        time: '2 days ago',
-        bgColor: '#fef3c7',
-        iconColor: '#f59e0b'
-      },
-      {
-        id: 4,
-        icon: '💰',
-        title: 'Payment Received',
-        text: 'Payment for the corporate event has been processed successfully.',
-        time: '3 days ago',
-        bgColor: '#dcfce7',
-        iconColor: '#16a34a'
-      },
-      {
-        id: 5,
-        icon: '🎵',
-        title: 'New Equipment Added',
-        text: '5 new trumpets have been added to the inventory system.',
-        time: '4 days ago',
-        bgColor: '#e0e7ff',
-        iconColor: '#6366f1'
+    const handleMarkAsRead = (notificationId) => {
+      NotificationService.markAsRead(notificationId);
+    };
+
+    const handleMarkAllAsRead = () => {
+      if (user && user.email) {
+        NotificationService.markAllAsRead(user.email);
       }
-    ];
+    };
+
+    const handleDeleteNotification = (notificationId) => {
+      NotificationService.deleteNotification(notificationId);
+    };
+
+    const getTimeAgo = (dateString) => {
+      const now = new Date();
+      const created = new Date(dateString);
+      const diffMs = now - created;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    };
+
+    const getNotificationIcon = (type) => {
+      switch (type) {
+        case 'success': return '✅';
+        case 'error': return '❌';
+        case 'warning': return '⚠️';
+        default: return 'ℹ️';
+      }
+    };
+
+    const getNotificationColor = (type) => {
+      switch (type) {
+        case 'success': return { bg: '#dcfce7', color: '#16a34a' };
+        case 'error': return { bg: '#fee2e2', color: '#dc2626' };
+        case 'warning': return { bg: '#fef3c7', color: '#f59e0b' };
+        default: return { bg: '#dbeafe', color: '#3b82f6' };
+      }
+    };
+
+    if (userNotifications.length === 0) {
+      return (
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <FaBell size={48} color="#cbd5e1" style={{ marginBottom: '16px' }} />
+          <p style={{ color: '#64748b', fontSize: '16px', marginBottom: '8px' }}>No notifications yet</p>
+          <p style={{ color: '#94a3b8', fontSize: '14px' }}>When you receive notifications, they'll appear here</p>
+        </div>
+      );
+    }
 
     return (
       <div>
-        {sampleNotifications.map(notification => (
-          <div 
-            key={notification.id} 
-            style={styles.notificationItem}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
-              e.currentTarget.style.transform = 'translateX(4px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = 'none';
-              e.currentTarget.style.transform = 'translateX(0)';
-            }}
-          >
-            <div style={{ 
-              ...styles.notificationIcon, 
-              backgroundColor: notification.bgColor,
-              color: notification.iconColor
-            }}>
-              {notification.icon}
-            </div>
-            <div style={styles.notificationContent}>
-              <div style={styles.notificationTitle}>{notification.title}</div>
-              <div style={styles.notificationText}>{notification.text}</div>
-              <div style={styles.notificationTime}>{notification.time}</div>
-            </div>
+        {unreadCount > 0 && (
+          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p style={{ color: '#64748b', fontSize: '14px' }}>
+              {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}
+            </p>
+            <button
+              onClick={handleMarkAllAsRead}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                backgroundColor: '#ffffff',
+                color: '#0369a1',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f8fafc';
+                e.currentTarget.style.borderColor = '#0369a1';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#ffffff';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
+            >
+              Mark all as read
+            </button>
           </div>
-        ))}
+        )}
+        
+        {userNotifications
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .map(notification => {
+            const colors = getNotificationColor(notification.type);
+            return (
+              <div 
+                key={notification.id} 
+                style={{
+                  ...styles.notificationItem,
+                  backgroundColor: notification.read ? '#ffffff' : '#f8fafc',
+                  opacity: notification.read ? 0.7 : 1
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+                  e.currentTarget.style.transform = 'translateX(4px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                }}
+                onClick={() => !notification.read && handleMarkAsRead(notification.id)}
+              >
+                <div style={{ 
+                  ...styles.notificationIcon, 
+                  backgroundColor: colors.bg,
+                  color: colors.color
+                }}>
+                  {getNotificationIcon(notification.type)}
+                </div>
+                <div style={{ ...styles.notificationContent, flex: 1 }}>
+                  <div style={styles.notificationTitle}>{notification.title}</div>
+                  <div style={styles.notificationText}>{notification.message}</div>
+                  
+                  {/* Payment Details Section */}
+                  {notification.data?.paymentDetails && (
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '12px',
+                      backgroundColor: '#f0f9ff',
+                      borderRadius: '8px',
+                      border: '1px solid #bae6fd'
+                    }}>
+                      <div style={{ 
+                        fontWeight: '600', 
+                        color: '#0369a1', 
+                        marginBottom: '8px',
+                        fontSize: '14px'
+                      }}>
+                        💳 Payment Information
+                      </div>
+                      
+                      {/* Payment Options */}
+                      <div style={{ marginBottom: '10px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '6px' }}>
+                          Payment Options:
+                        </div>
+                        {notification.data.paymentDetails.paymentOptions.map((option, idx) => (
+                          <div key={idx} style={{ 
+                            fontSize: '13px', 
+                            color: '#475569',
+                            marginBottom: '4px',
+                            paddingLeft: '8px'
+                          }}>
+                            • {option.type}: <strong>₱{option.amount.toLocaleString()}</strong>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Bank Transfer Details */}
+                      <div style={{ 
+                        marginBottom: '10px',
+                        paddingBottom: '10px',
+                        borderBottom: '1px solid #e0f2fe'
+                      }}>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '4px' }}>
+                          🏦 Bank Transfer:
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#475569', lineHeight: '1.6' }}>
+                          <div><strong>Bank:</strong> {notification.data.paymentDetails.bankName}</div>
+                          <div><strong>Account Name:</strong> {notification.data.paymentDetails.accountName}</div>
+                          <div><strong>Account #:</strong> {notification.data.paymentDetails.accountNumber}</div>
+                        </div>
+                      </div>
+
+                      {/* GCash Details */}
+                      <div style={{ marginBottom: '10px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '4px' }}>
+                          📱 GCash:
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#475569', lineHeight: '1.6' }}>
+                          <div><strong>Name:</strong> {notification.data.paymentDetails.gcashName}</div>
+                          <div><strong>Number:</strong> {notification.data.paymentDetails.gcashNumber}</div>
+                        </div>
+                      </div>
+
+                      {/* Instructions */}
+                      <div style={{
+                        fontSize: '12px',
+                        color: '#0369a1',
+                        fontStyle: 'italic',
+                        backgroundColor: '#ffffff',
+                        padding: '8px',
+                        borderRadius: '6px',
+                        marginTop: '8px'
+                      }}>
+                        📝 {notification.data.paymentDetails.instructions}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div style={styles.notificationTime}>{getTimeAgo(notification.createdAt)}</div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteNotification(notification.id);
+                  }}
+                  style={{
+                    padding: '8px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#fee2e2';
+                    e.currentTarget.style.color = '#dc2626';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#94a3b8';
+                  }}
+                  title="Delete notification"
+                >
+                  <FaTimes size={14} />
+                </button>
+              </div>
+            );
+          })
+        }
       </div>
     );
   };
@@ -1124,6 +1311,26 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
               </div>
             }>
               <UserManagement
+                user={user}
+                onBackToHome={() => setCurrentView('main')}
+                onLogout={onLogout}
+                embedded={true}
+              />
+            </Suspense>
+          );
+        }
+        break;
+
+      case 'membership-approval':
+        if (user?.role === 'admin') {
+          return (
+            <Suspense fallback={
+              <div style={styles.loadingContainer}>
+                <div style={styles.loadingSpinner}></div>
+                <div>Loading Membership Approval...</div>
+              </div>
+            }>
+              <MembershipApproval
                 user={user}
                 onBackToHome={() => setCurrentView('main')}
                 onLogout={onLogout}
@@ -1695,7 +1902,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
               title="Notifications"
             >
               <FaBell size={18} />
-              <span style={styles.notificationBadge}>3</span>
+              {unreadCount > 0 && <span style={styles.notificationBadge}>{unreadCount}</span>}
             </button>
             <button 
               style={styles.headerButton}
@@ -1725,3 +1932,5 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
 };
 
 export default Dashboard;
+
+

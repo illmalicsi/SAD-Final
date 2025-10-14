@@ -10,7 +10,7 @@ router.get('/', authenticateToken, requireMember, async (req, res) => {
       SELECT u.id, u.first_name, u.last_name, u.email, u.is_active, u.is_blocked, r.role_name, u.created_at
       FROM users u
       JOIN roles r ON u.role_id = r.role_id
-      ORDER BY u.created_at DESC
+      ORDER BY u.id ASC
     `);
 
     const users = rows.map(u => ({

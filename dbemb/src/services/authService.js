@@ -35,13 +35,28 @@ class AuthService {
   // Register new user
   async register(userData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      // Check if userData is FormData
+      const isFormData = userData instanceof FormData;
+      
+      console.log('AuthService register called');
+      console.log('userData type:', userData.constructor.name);
+      console.log('isFormData:', isFormData);
+      
+      const options = {
         method: 'POST',
-        headers: {
+        body: isFormData ? userData : JSON.stringify(userData),
+      };
+
+      // Only set Content-Type for JSON, not for FormData
+      if (!isFormData) {
+        options.headers = {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
+        };
+      }
+
+      console.log('Request options:', options);
+
+      const response = await fetch(`${API_BASE_URL}/auth/register`, options);
 
       const data = await response.json();
 
@@ -151,6 +166,57 @@ class AuthService {
     }
 
     return response;
+  }
+
+  // HTTP helper methods
+  async get(endpoint) {
+    try {
+      const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}${endpoint}`, {
+        method: 'GET'
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('GET request error:', error);
+      throw error;
+    }
+  }
+
+  async post(endpoint, data) {
+    try {
+      const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}${endpoint}`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('POST request error:', error);
+      throw error;
+    }
+  }
+
+  async put(endpoint, data) {
+    try {
+      const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}${endpoint}`, {
+        method: 'PUT',
+        body: data ? JSON.stringify(data) : undefined
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('PUT request error:', error);
+      throw error;
+    }
+  }
+
+  async delete(endpoint) {
+    try {
+      const response = await this.makeAuthenticatedRequest(`${API_BASE_URL}${endpoint}`, {
+        method: 'DELETE'
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('DELETE request error:', error);
+      throw error;
+    }
   }
 }
 

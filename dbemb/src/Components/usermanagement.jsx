@@ -42,8 +42,8 @@
           const token = localStorage.getItem('authToken');
           if (!token) {
             // Not authenticated: set empty users list
+            console.log('No auth token found');
             setUsers([]);
-            setFilteredUsers([]);
             return;
           }
 
@@ -55,23 +55,25 @@
               }
             });
 
-            if (!res.ok) throw new Error('Failed to fetch users from API');
+            if (!res.ok) {
+              console.error('API response not OK:', res.status, res.statusText);
+              throw new Error('Failed to fetch users from API');
+            }
 
             const data = await res.json();
+            console.log('Fetched users data:', data);
             if (data && data.users) {
               setUsers(data.users);
-              setFilteredUsers(data.users);
               return;
             }
 
             // No data returned: set empty
+            console.log('No users in response');
             setUsers([]);
-            setFilteredUsers([]);
           } catch (error) {
             console.error('Error fetching users from API:', error);
             // API error: set empty
             setUsers([]);
-            setFilteredUsers([]);
           }
         };
 
@@ -98,15 +100,26 @@
         fetchRoles();
     }, []);
 
+    // Helper function to format date
+    const formatDate = (dateString) => {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     useEffect(() => {
       // Filter users based on search term and role filter
+      console.log('Filtering effect running. Users count:', users.length, 'Search:', searchTerm, 'Role filter:', roleFilter);
       let filtered = users;
       
       if (searchTerm) {
         filtered = filtered.filter(user => 
-          user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase())
+          (user.firstName && user.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (user.lastName && user.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
         );
       }
       
@@ -114,6 +127,7 @@
         filtered = filtered.filter(user => user.role === roleFilter);
       }
       
+      console.log('Filtered users count:', filtered.length);
       setFilteredUsers(filtered);
     }, [searchTerm, roleFilter, users]);
 
@@ -215,28 +229,29 @@
     const styles = {
       container: {
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, rgba(10, 25, 47, 0.95), rgba(2, 6, 23, 0.98))',
-        padding: '12px',
-        color: '#e5e7eb'
+        background: '#f8fafc',
+        padding: '2.5rem',
+        color: '#0f172a',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
       },
       title: {
-        fontFamily: 'Msystem-ui, -apple-system, sans-serif',
-        fontSize: '20px',
-        fontWeight: '600',
+        fontFamily: "'Inter', -apple-system, sans-serif",
+        fontSize: '2.25rem',
+        fontWeight: '700',
         margin: 0,
-        background: 'linear-gradient(45deg, #60a5fa, #3b82f6)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent'
+        color: '#0f172a',
+        letterSpacing: '-0.02em'
       },
       backButton: {
-        backgroundColor: 'transparent',
-        border: '1px solid rgba(100, 255, 218, 0.3)',
-        color: '#e5e7eb',
-        padding: '10px 20px',
-        borderRadius: '6px',
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        color: '#475569',
+        padding: '0.625rem 1.25rem',
+        borderRadius: '8px',
         cursor: 'pointer',
-        fontSize: '14px',
-        transition: 'all 0.3s ease'
+        fontSize: '0.875rem',
+        fontWeight: '500',
+        transition: 'all 0.2s ease'
       },
       buttonContainer: {
         display: 'flex',
@@ -244,177 +259,207 @@
       },
       statsContainer: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '20px',
-        marginBottom: '30px'
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '1.5rem',
+        marginBottom: '2.5rem'
       },
       statCard: {
-        backgroundColor: 'rgba(10, 25, 47, 0.6)',
-        border: '1px solid rgba(100, 255, 218, 0.15)',
-        borderRadius: '10px',
-        padding: '12px',
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '2rem',
         textAlign: 'center',
-        transition: 'all 0.2s ease'
+        transition: 'all 0.2s ease',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
       },
       statNumber: {
-        fontSize: '20px',
+        fontSize: '2rem',
         fontWeight: '700',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        margin: '0 0 6px 0'
+        fontFamily: "'Inter', -apple-system, sans-serif",
+        margin: '0 0 0.5rem 0',
+        color: '#0f172a',
+        letterSpacing: '-0.02em'
       },
       statLabel: {
-        fontSize: '12px',
-        color: '#94a3b8',
-        fontWeight: '500'
+        fontSize: '0.875rem',
+        color: '#64748b',
+        fontWeight: '500',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em'
       },
       controls: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '12px',
-        gap: '12px',
+        marginBottom: '1.5rem',
+        gap: '1rem',
         flexWrap: 'wrap'
       },
       filterSection: {
         display: 'flex',
         alignItems: 'center',
-        gap: '15px',
+        gap: '1rem',
         flexWrap: 'wrap'
       },
       searchInput: {
-        backgroundColor: 'rgba(2, 6, 23, 0.6)',
-        border: '1px solid rgba(100, 255, 218, 0.2)',
-        borderRadius: '6px',
-        padding: '6px 10px',
-        color: '#e5e7eb',
-        fontSize: '14px',
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: '8px',
+        padding: '0.625rem 1rem',
+        color: '#0f172a',
+        fontSize: '0.875rem',
         outline: 'none',
         transition: 'all 0.2s ease',
-        minWidth: '180px'
+        minWidth: '200px'
       },
       filterSelect: {
-        backgroundColor: 'rgba(2, 6, 23, 0.6)',
-        border: '1px solid rgba(100, 255, 218, 0.2)',
-        borderRadius: '6px',
-        padding: '6px 10px',
-        color: '#e5e7eb',
-        fontSize: '14px',
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: '8px',
+        padding: '0.625rem 1rem',
+        color: '#0f172a',
+        fontSize: '0.875rem',
         outline: 'none',
         transition: 'all 0.2s ease',
-        minWidth: '120px'
+        minWidth: '150px',
+        fontWeight: '500'
       },
       createButton: {
-        backgroundColor: '#64ffda',
-        border: '2px solid #64ffda',
-        color: '#0b1a2c',
-        padding: '6px 12px',
-        borderRadius: '6px',
+        backgroundColor: '#3b82f6',
+        border: '1px solid #3b82f6',
+        color: 'white',
+        padding: '0.625rem 1.25rem',
+        borderRadius: '8px',
         fontWeight: '600',
-        fontSize: '13px',
+        fontSize: '0.875rem',
         cursor: 'pointer',
         transition: 'all 0.2s ease'
       },
       table: {
         width: '100%',
         borderCollapse: 'collapse',
-        backgroundColor: 'rgba(10, 25, 47, 0.6)',
-        border: '1px solid rgba(100, 255, 218, 0.15)',
-        borderRadius: '12px',
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
         overflow: 'hidden',
-        tableLayout: 'fixed'
+        tableLayout: 'auto',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
       },
       tableHeader: {
-        backgroundColor: 'rgba(100, 255, 218, 0.1)',
-        padding: '10px',
+        backgroundColor: '#f8fafc',
+        padding: '0.75rem 1rem',
         textAlign: 'center',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontSize: '14px',
-        fontWeight: '600'
+        fontFamily: "'Inter', -apple-system, sans-serif",
+        fontSize: '0.6875rem',
+        fontWeight: '600',
+        color: '#475569',
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em',
+        borderBottom: '1px solid #e2e8f0'
       },
       tableCell: {
-        padding: '10px',
-        borderBottom: '1px solid rgba(100, 255, 218, 0.1)',
+        padding: '1rem 1.25rem',
+        borderBottom: '1px solid #f1f5f9',
         textAlign: 'center',
-        verticalAlign: 'middle'
+        verticalAlign: 'middle',
+        color: '#334155',
+        fontSize: '0.875rem'
       },
       nameCell: {
         textAlign: 'left',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        maxWidth: '160px',
-        fontSize: '13px'
+        whiteSpace: 'normal',
+        wordWrap: 'break-word',
+        minWidth: '140px',
+        fontSize: '0.875rem',
+        fontWeight: '600',
+        color: '#0f172a'
       },
       emailCell: {
         textAlign: 'left',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        maxWidth: '200px',
-        fontSize: '13px'
+        whiteSpace: 'normal',
+        wordWrap: 'break-word',
+        minWidth: '180px',
+        fontSize: '0.8125rem',
+        color: '#64748b'
       },
       statusBadge: {
-        padding: '4px 8px',
-        borderRadius: '16px',
-        fontSize: '11px',
-        fontWeight: '600'
+        padding: '0.375rem 0.75rem',
+        borderRadius: '100px',
+        fontSize: '0.6875rem',
+        fontWeight: '600',
+        letterSpacing: '0.025em',
+        textTransform: 'uppercase',
+        display: 'inline-block',
+        whiteSpace: 'nowrap'
       },
       actionButton: {
-        backgroundColor: 'transparent',
-        border: '1px solid rgba(100, 255, 218, 0.3)',
-        color: '#e5e7eb',
-        padding: '6px 10px',
-        borderRadius: '6px',
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        color: '#475569',
+        padding: '0.5rem 0.875rem',
+        borderRadius: '8px',
         cursor: 'pointer',
-        fontSize: '12px',
+        fontSize: '0.8125rem',
         fontWeight: '500',
         transition: 'all 0.2s ease',
-        marginRight: '6px',
-        minWidth: '56px'
+        marginRight: '0.5rem',
+        minWidth: '60px'
       },
       editButton: {
-        backgroundColor: 'transparent',
-        border: '1px solid rgba(59, 130, 246, 0.5)',
-        color: '#60a5fa',
-        padding: '6px 10px',
+        backgroundColor: 'white',
+        border: '1px solid #3b82f6',
+        color: '#3b82f6',
+        padding: '0.375rem 0.5rem',
         borderRadius: '6px',
         cursor: 'pointer',
-        fontSize: '12px',
+        fontSize: '0.75rem',
         fontWeight: '500',
         transition: 'all 0.2s ease',
-        marginRight: '6px',
-        minWidth: '56px'
+        marginRight: '0',
+        minWidth: '48px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        whiteSpace: 'nowrap'
       },
       blockButton: {
-        backgroundColor: 'transparent',
-        border: '1px solid rgba(245, 158, 11, 0.5)',
+        backgroundColor: 'white',
+        border: '1px solid #f59e0b',
         color: '#f59e0b',
-        padding: '6px 10px',
+        padding: '0.375rem 0.5rem',
         borderRadius: '6px',
         cursor: 'pointer',
-        fontSize: '12px',
+        fontSize: '0.75rem',
         fontWeight: '500',
         transition: 'all 0.2s ease',
-        marginRight: '6px',
-        minWidth: '56px'
+        marginRight: '0',
+        minWidth: '48px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        whiteSpace: 'nowrap'
       },
       deleteButton: {
-        backgroundColor: 'transparent',
-        border: '1px solid rgba(239, 68, 68, 0.5)',
+        backgroundColor: 'white',
+        border: '1px solid #ef4444',
         color: '#ef4444',
-        padding: '6px 10px',
+        padding: '0.375rem 0.5rem',
         borderRadius: '6px',
         cursor: 'pointer',
-        fontSize: '12px',
+        fontSize: '0.75rem',
         fontWeight: '500',
         transition: 'all 0.2s ease',
-        minWidth: '56px'
+        minWidth: '48px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        whiteSpace: 'nowrap'
       },
       actionsCell: {
         display: 'flex',
         justifyContent: 'flex-end',
         alignItems: 'center',
-        gap: '8px',
+        gap: '0.25rem',
         flexWrap: 'nowrap'
       },
       modalOverlay: {
@@ -423,120 +468,117 @@
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.7)',
+        backgroundColor: 'rgba(0,0,0,0.4)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1000
+        zIndex: 1000,
+        backdropFilter: 'blur(4px)'
       },
       modalContent: {
-        backgroundColor: 'rgba(10, 25, 47, 0.95)',
-        border: '1px solid rgba(100, 255, 218, 0.2)',
-        borderRadius: '10px',
-        padding: '18px',
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '2rem',
         width: '100%',
-        maxWidth: '420px',
-        backdropFilter: 'blur(8px)',
-        boxShadow: '0 12px 28px rgba(0, 0, 0, 0.25)'
+        maxWidth: '500px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05)'
       },
       emptyState: {
-        backgroundColor: 'rgba(10, 25, 47, 0.6)',
-        border: '1px solid rgba(100, 255, 218, 0.1)',
-        borderRadius: '12px',
-        padding: '40px',
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: '16px',
+        padding: '4rem 2rem',
         textAlign: 'center',
-        color: '#94a3b8'
+        color: '#64748b',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
       },
       modalHeader: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '20px',
-        paddingBottom: '15px',
-        borderBottom: '1px solid rgba(100, 255, 218, 0.2)'
+        marginBottom: '1.5rem',
+        paddingBottom: '1rem',
+        borderBottom: '1px solid #e2e8f0'
       },
       modalTitle: {
-        fontFamily: 'Msystem-ui, -apple-system, sans-serif',
-        fontSize: '16px',
+        fontFamily: "'Inter', -apple-system, sans-serif",
+        fontSize: '1.25rem',
         fontWeight: '600',
-        margin: 0
+        margin: 0,
+        color: '#0f172a'
       },
       closeButton: {
         backgroundColor: 'transparent',
         border: 'none',
-        color: '#e5e7eb',
-        fontSize: '20px',
-        cursor: 'pointer'
+        color: '#64748b',
+        fontSize: '1.5rem',
+        cursor: 'pointer',
+        transition: 'color 0.2s'
       },
       form: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '10px'
+        gap: '1.25rem'
       },
       formRow: {
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '10px'
+        gap: '1rem'
       },
       formField: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px'
+        gap: '0.5rem'
       },
       formLabel: {
-        color: '#e5e7eb',
-        fontSize: '13px',
-        fontWeight: '500'
+        color: '#334155',
+        fontSize: '0.875rem',
+        fontWeight: '600'
       },
       formInput: {
-        backgroundColor: 'rgba(2, 6, 23, 0.6)',
-        border: '1px solid rgba(100, 255, 218, 0.2)',
-        borderRadius: '6px',
-        padding: '8px 10px',
-        color: '#e5e7eb',
-        fontSize: '13px',
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: '8px',
+        padding: '0.625rem 0.875rem',
+        color: '#0f172a',
+        fontSize: '0.875rem',
         outline: 'none',
         transition: 'all 0.2s ease'
       },
       formSelect: {
-        backgroundColor: 'rgba(2, 6, 23, 0.6)',
-        border: '1px solid rgba(100, 255, 218, 0.2)',
-        borderRadius: '6px',
-        padding: '8px 10px',
-        color: '#e5e7eb',
-        fontSize: '13px',
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: '8px',
+        padding: '0.625rem 0.875rem',
+        color: '#0f172a',
+        fontSize: '0.875rem',
         outline: 'none',
         transition: 'all 0.2s ease'
       },
       submitButton: {
-        backgroundColor: '#64ffda',
-        border: '2px solid #64ffda',
-        color: '#0b1a2c',
-        padding: '8px 14px',
-        borderRadius: '6px',
+        backgroundColor: '#3b82f6',
+        border: '1px solid #3b82f6',
+        color: 'white',
+        padding: '0.75rem 1.25rem',
+        borderRadius: '8px',
         fontWeight: '600',
-        fontSize: '14px',
+        fontSize: '0.875rem',
         cursor: 'pointer',
         transition: 'all 0.2s ease',
-        marginTop: '8px'
-      },
-      emptyState: {
-        textAlign: 'center',
-        padding: '40px',
-        color: '#94a3b8'
+        marginTop: '0.5rem'
       },
       deleteModalContent: {
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-        backdropFilter: 'blur(20px)',
+        backgroundColor: 'white',
         borderRadius: '16px',
         width: '400px',
         maxWidth: '90vw',
-        border: '1px solid rgba(239, 68, 68, 0.3)',
-        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)'
+        border: '1px solid #fee2e2',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05)'
       },
       deleteModalHeader: {
-        padding: '20px 24px 16px',
-        borderBottom: '1px solid rgba(239, 68, 68, 0.2)',
+        padding: '1.5rem 2rem 1rem',
+        borderBottom: '1px solid #fee2e2',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
@@ -544,42 +586,43 @@
       deleteModalTitle: {
         margin: 0,
         color: '#ef4444',
-        fontSize: '18px',
+        fontSize: '1.25rem',
         fontWeight: '600'
       },
       deleteModalBody: {
-        padding: '24px',
+        padding: '2rem',
         textAlign: 'center'
       },
       deleteWarningIcon: {
         color: '#ef4444',
-        marginBottom: '16px',
+        marginBottom: '1rem',
         opacity: 0.8
       },
       deleteMessage: {
-        color: '#e5e7eb',
-        fontSize: '16px',
-        marginBottom: '8px',
-        lineHeight: '1.5'
+        color: '#0f172a',
+        fontSize: '1rem',
+        marginBottom: '0.5rem',
+        lineHeight: '1.5',
+        fontWeight: '500'
       },
       deleteSubMessage: {
-        color: '#94a3b8',
-        fontSize: '14px',
+        color: '#64748b',
+        fontSize: '0.875rem',
         margin: 0
       },
       deleteModalActions: {
-        padding: '16px 24px 24px',
+        padding: '1rem 2rem 2rem',
         display: 'flex',
-        gap: '12px',
+        gap: '0.75rem',
         justifyContent: 'flex-end'
       },
       cancelButton: {
-        backgroundColor: 'transparent',
-        border: '1px solid rgba(100, 255, 218, 0.3)',
-        color: '#64ffda',
-        padding: '10px 20px',
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        color: '#475569',
+        padding: '0.625rem 1.25rem',
         borderRadius: '8px',
-        fontSize: '14px',
+        fontSize: '0.875rem',
         fontWeight: '500',
         cursor: 'pointer',
         transition: 'all 0.2s ease'
@@ -588,9 +631,9 @@
         backgroundColor: '#ef4444',
         border: '1px solid #ef4444',
         color: 'white',
-        padding: '10px 20px',
+        padding: '0.625rem 1.25rem',
         borderRadius: '8px',
-        fontSize: '14px',
+        fontSize: '0.875rem',
         fontWeight: '600',
         cursor: 'pointer',
         transition: 'all 0.2s ease'
@@ -599,92 +642,90 @@
 
     // Add specific hover effects for different button types
     const handleEditButtonHover = (e) => {
-      e.target.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
-      e.target.style.borderColor = 'rgba(59, 130, 246, 0.8)';
+      e.target.style.backgroundColor = '#eff6ff';
+      e.target.style.borderColor = '#3b82f6';
       e.target.style.transform = 'translateY(-2px)';
       e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.2)';
     };
 
     const handleEditButtonLeave = (e) => {
-      e.target.style.backgroundColor = 'transparent';
-      e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+      e.target.style.backgroundColor = 'white';
+      e.target.style.borderColor = '#3b82f6';
       e.target.style.transform = 'translateY(0)';
       e.target.style.boxShadow = 'none';
     };
 
     const handleBlockButtonHover = (e) => {
-      e.target.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
-      e.target.style.borderColor = 'rgba(245, 158, 11, 0.8)';
+      e.target.style.backgroundColor = '#fef3c7';
+      e.target.style.borderColor = '#f59e0b';
       e.target.style.transform = 'translateY(-2px)';
       e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.2)';
     };
 
     const handleBlockButtonLeave = (e) => {
-      e.target.style.backgroundColor = 'transparent';
-      e.target.style.borderColor = 'rgba(245, 158, 11, 0.5)';
+      e.target.style.backgroundColor = 'white';
+      e.target.style.borderColor = '#f59e0b';
       e.target.style.transform = 'translateY(0)';
       e.target.style.boxShadow = 'none';
     };
 
     const handleDeleteButtonHover = (e) => {
-      e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-      e.target.style.borderColor = 'rgba(239, 68, 68, 0.8)';
+      e.target.style.backgroundColor = '#fee2e2';
+      e.target.style.borderColor = '#ef4444';
       e.target.style.transform = 'translateY(-2px)';
       e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
     };
 
     const handleDeleteButtonLeave = (e) => {
-      e.target.style.backgroundColor = 'transparent';
-      e.target.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+      e.target.style.backgroundColor = 'white';
+      e.target.style.borderColor = '#ef4444';
       e.target.style.transform = 'translateY(0)';
       e.target.style.boxShadow = 'none';
     };
     const handleButtonHover = (e) => {
-      e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)';
-      e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
-      e.target.style.transform = 'translateY(-2px)';
+      e.target.style.backgroundColor = '#f8fafc';
+      e.target.style.borderColor = '#cbd5e1';
+      e.target.style.transform = 'translateY(-1px)';
     };
 
     const handleButtonLeave = (e) => {
-      e.target.style.backgroundColor = 'transparent';
-      e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
+      e.target.style.backgroundColor = 'white';
+      e.target.style.borderColor = '#e2e8f0';
       e.target.style.transform = 'translateY(0)';
     };
 
     const handleCreateButtonHover = (e) => {
-      e.target.style.backgroundColor = 'transparent';
-      e.target.style.color = '#64ffda';
-      e.target.style.transform = 'translateY(-2px)';
-      e.target.style.boxShadow = '0 8px 20px rgba(100, 255, 218, 0.3)';
+      e.target.style.backgroundColor = '#2563eb';
+      e.target.style.borderColor = '#2563eb';
+      e.target.style.transform = 'translateY(-1px)';
+      e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
     };
 
     const handleCreateButtonLeave = (e) => {
-      e.target.style.backgroundColor = '#64ffda';
-      e.target.style.color = '#0b1a2c';
+      e.target.style.backgroundColor = '#3b82f6';
+      e.target.style.borderColor = '#3b82f6';
       e.target.style.transform = 'translateY(0)';
       e.target.style.boxShadow = 'none';
     };
 
     const handleInputFocus = (e) => {
-      e.target.style.borderColor = 'rgba(100, 255, 218, 0.6)';
-      e.target.style.boxShadow = '0 0 0 3px rgba(100, 255, 218, 0.1)';
+      e.target.style.borderColor = '#3b82f6';
+      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
     };
 
     const handleInputBlur = (e) => {
-      e.target.style.borderColor = 'rgba(100, 255, 218, 0.2)';
+      e.target.style.borderColor = '#e2e8f0';
       e.target.style.boxShadow = 'none';
     };
 
     const handleStatCardHover = (e) => {
-      e.target.style.transform = 'translateY(-4px)';
-      e.target.style.boxShadow = '0 8px 20px rgba(100, 255, 218, 0.15)';
-      e.target.style.borderColor = 'rgba(100, 255, 218, 0.3)';
+      e.target.style.transform = 'translateY(-2px)';
+      e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
     };
 
     const handleStatCardLeave = (e) => {
       e.target.style.transform = 'translateY(0)';
-      e.target.style.boxShadow = 'none';
-      e.target.style.borderColor = 'rgba(100, 255, 218, 0.15)';
+      e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
     };
 
     return (
@@ -701,8 +742,8 @@
             onMouseEnter={handleStatCardHover}
             onMouseLeave={handleStatCardLeave}
           >
-            <FaUsers size={24} style={{ marginBottom: '10px', color: '#60a5fa' }} />
-            <div style={{...styles.statNumber, color: '#60a5fa'}}>{totalUsers}</div>
+            <FaUsers size={24} style={{ marginBottom: '10px', color: '#3b82f6' }} />
+            <div style={{...styles.statNumber, color: '#3b82f6'}}>{totalUsers}</div>
             <div style={styles.statLabel}>Total Users</div>
           </div>
           <div 
@@ -710,8 +751,8 @@
             onMouseEnter={handleStatCardHover}
             onMouseLeave={handleStatCardLeave}
           >
-            <FaUser size={24} style={{ marginBottom: '10px', color: '#64ffda' }} />
-            <div style={{...styles.statNumber, color: '#64ffda'}}>{totalUserRole}</div>
+            <FaUser size={24} style={{ marginBottom: '10px', color: '#10b981' }} />
+            <div style={{...styles.statNumber, color: '#10b981'}}>{totalUserRole}</div>
             <div style={styles.statLabel}>Regular Users</div>
           </div>
           <div 
@@ -719,8 +760,8 @@
             onMouseEnter={handleStatCardHover}
             onMouseLeave={handleStatCardLeave}
           >
-            <FaUserShield size={24} style={{ marginBottom: '10px', color: '#fbbf24' }} />
-            <div style={{...styles.statNumber, color: '#fbbf24'}}>{totalAdmins}</div>
+            <FaUserShield size={24} style={{ marginBottom: '10px', color: '#f59e0b' }} />
+            <div style={{...styles.statNumber, color: '#f59e0b'}}>{totalAdmins}</div>
             <div style={styles.statLabel}>Administrators</div>
           </div>
           <div 
@@ -736,7 +777,7 @@
 
         <div style={styles.controls}>
           <div style={styles.filterSection}>
-            <FaSearch size={16} style={{marginRight: 8, color: '#64ffda'}} />
+            <FaSearch size={16} style={{marginRight: 8, color: '#64748b'}} />
             <input
               type="text"
               placeholder="Search users..."
@@ -746,7 +787,7 @@
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
             />
-            <FaFilter size={16} style={{marginRight: 8, color: '#64ffda'}} />
+            <FaFilter size={16} style={{marginRight: 8, color: '#64748b'}} />
             <select
               style={styles.filterSelect}
               value={roleFilter}
@@ -771,16 +812,16 @@
         </div>
 
         {filteredUsers.length > 0 ? (
-          <div style={{ overflowX: 'auto', borderRadius: '12px' }}>
+          <div style={{ overflowX: 'auto', borderRadius: '16px' }}>
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={{...styles.tableHeader, ...styles.nameCell}}>Name</th>
-                  <th style={{...styles.tableHeader, ...styles.emailCell}}>Email</th>
-                  <th style={styles.tableHeader}>Role</th>
-                  <th style={styles.tableHeader}>Status</th>
-                  <th style={styles.tableHeader}>Created</th>
-                  <th style={{...styles.tableHeader, width: '260px'}}>Actions</th>
+                  <th style={{...styles.tableHeader, ...styles.nameCell, minWidth: '140px'}}>Name</th>
+                  <th style={{...styles.tableHeader, ...styles.emailCell, minWidth: '180px'}}>Email</th>
+                  <th style={{...styles.tableHeader, width: 'auto', minWidth: '80px'}}>Role</th>
+                  <th style={{...styles.tableHeader, width: 'auto', minWidth: '80px'}}>Status</th>
+                  <th style={{...styles.tableHeader, width: 'auto', minWidth: '100px'}}>Created</th>
+                  <th style={{...styles.tableHeader, width: 'auto', minWidth: '200px'}}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -791,8 +832,8 @@
                     <td style={styles.tableCell}>
                       <span style={{
                         ...styles.statusBadge,
-                        backgroundColor: user.role === 'admin' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(100, 255, 218, 0.2)',
-                        color: user.role === 'admin' ? '#60a5fa' : '#64ffda'
+                        backgroundColor: user.role === 'admin' ? '#dbeafe' : '#d1fae5',
+                        color: user.role === 'admin' ? '#1e40af' : '#065f46'
                       }}>
                         {user.role}
                       </span>
@@ -800,13 +841,13 @@
                     <td style={styles.tableCell}>
                       <span style={{
                         ...styles.statusBadge,
-                        backgroundColor: user.isBlocked ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)',
-                        color: user.isBlocked ? '#ef4444' : '#22c55e'
+                        backgroundColor: user.isBlocked ? '#fee2e2' : '#d1fae5',
+                        color: user.isBlocked ? '#991b1b' : '#065f46'
                       }}>
                         {user.isBlocked ? 'Blocked' : 'Active'}
                       </span>
                     </td>
-                    <td style={styles.tableCell}>{user.createdAt}</td>
+                    <td style={styles.tableCell}>{formatDate(user.createdAt)}</td>
                     <td style={styles.tableCell}>
                       <div style={styles.actionsCell}>
                         <button
@@ -815,7 +856,7 @@
                           onMouseEnter={handleEditButtonHover}
                           onMouseLeave={handleEditButtonLeave}
                         >
-                          <FaEdit style={{marginRight: 6}} /> Edit
+                          <FaEdit size={11} style={{marginRight: 4}} /> Edit
                         </button>
                         {user.role !== 'admin' && (
                           <>
@@ -826,9 +867,9 @@
                               onMouseLeave={handleBlockButtonLeave}
                             >
                               {user.isBlocked ? (
-                                <><FaCheckCircle style={{marginRight: 6}} /> Unblock</>
+                                <><FaCheckCircle size={11} style={{marginRight: 4}} /> Unblock</>
                               ) : (
-                                <><FaBan style={{marginRight: 6}} /> Block</> 
+                                <><FaBan size={11} style={{marginRight: 4}} /> Block</> 
                               )}
                             </button>
                             <button
@@ -837,7 +878,7 @@
                               onMouseEnter={handleDeleteButtonHover}
                               onMouseLeave={handleDeleteButtonLeave}
                             >
-                              <FaTrash style={{marginRight: 6}}/>Delete
+                              <FaTrash size={11} style={{marginRight: 4}}/>Delete
                             </button>
                           </>
                         )}

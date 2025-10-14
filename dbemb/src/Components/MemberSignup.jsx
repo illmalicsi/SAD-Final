@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import authService from '../services/authService';
 import {
   FaUpload,
@@ -35,6 +35,29 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
   const [success, setSuccess] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [instrumentTypes, setInstrumentTypes] = useState([]);
+  const [customInstrument, setCustomInstrument] = useState("");
+  const [showCustomInstrument, setShowCustomInstrument] = useState(false);
+
+  // Fetch instrument types on component mount
+  useEffect(() => {
+    const fetchInstrumentTypes = async () => {
+      try {
+        console.log('Fetching instrument types...');
+        const response = await fetch('http://localhost:5000/api/instruments/types');
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Instrument types data:', data);
+        if (data.success) {
+          setInstrumentTypes(data.types);
+          console.log('Instrument types set:', data.types);
+        }
+      } catch (error) {
+        console.error('Error fetching instrument types:', error);
+      }
+    };
+    fetchInstrumentTypes();
+  }, []);
 
   const styles = {
     page: {
@@ -302,6 +325,23 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
   const handleChange = (k, v) => {
     setForm((s) => ({ ...s, [k]: v }));
     setErrors((prev) => ({ ...prev, [k]: null }));
+    
+    // Handle instrument selection
+    if (k === 'instrument') {
+      if (v === 'Others') {
+        setShowCustomInstrument(true);
+        setForm((s) => ({ ...s, instrument: customInstrument }));
+      } else {
+        setShowCustomInstrument(false);
+        setCustomInstrument("");
+      }
+    }
+  };
+
+  const handleCustomInstrumentChange = (value) => {
+    setCustomInstrument(value);
+    setForm((s) => ({ ...s, instrument: value }));
+    setErrors((prev) => ({ ...prev, instrument: null }));
   };
 
   const handleFileChange = (e) => {
@@ -332,6 +372,12 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
       formData.append('address', form.address);
       if (form.identityProof) {
         formData.append('identityProof', form.identityProof);
+      }
+
+      // Debug: Log FormData contents
+      console.log('Form data being sent:');
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
       }
 
       await authService.register(formData);
@@ -442,15 +488,15 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
         </div>
 
         <div style={styles.field}>
-          <label style={styles.label}>Email</label>
+          <label style={styles.label}>Email address</label>
           <div style={styles.inputWrapper}>
             <FaEnvelope style={styles.icon} />
             <input
+              type="email"
               style={styles.input}
               value={form.email}
               onChange={(e) => handleChange("email", e.target.value)}
-              placeholder="Enter your email address"
-              type="email"
+              placeholder="your.email@example.com"
               onFocus={(e) => {
                 e.target.style.borderColor = '#0b4f8a';
                 e.target.style.background = '#ffffff';
@@ -464,74 +510,68 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
           {errors.email && <div style={styles.err}>{errors.email}</div>}
         </div>
 
-        <div style={styles.field}>
-          <label style={styles.label}>Password</label>
-          <div style={styles.inputWrapper}>
-            <FaLock style={styles.icon} />
-            <input
-              style={styles.input}
-              value={form.password}
-              onChange={(e) => handleChange("password", e.target.value)}
-              placeholder="Enter your password"
-              type={showPassword ? "text" : "password"}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#0b4f8a';
-                e.target.style.background = '#ffffff';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0';
-                e.target.style.background = '#f8fafc';
-              }}
-            />
-            <div 
-              style={styles.eyeIcon}
-              onClick={() => setShowPassword(!showPassword)}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#0b4f8a'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
+        <div style={styles.grid2}>
+          <div style={styles.field}>
+            <label style={styles.label}>Password</label>
+            <div style={styles.inputWrapper}>
+              <FaLock style={styles.icon} />
+              <input
+                type={showPassword ? "text" : "password"}
+                style={styles.input}
+                value={form.password}
+                onChange={(e) => handleChange("password", e.target.value)}
+                placeholder="Create a password"
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0b4f8a';
+                  e.target.style.background = '#ffffff';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0';
+                  e.target.style.background = '#f8fafc';
+                }}
+              />
+              <div
+                style={styles.eyeIcon}
+                onClick={() => setShowPassword(!showPassword)}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#0b4f8a'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </div>
             </div>
+            {errors.password && <div style={styles.err}>{errors.password}</div>}
           </div>
-          {errors.password && <div style={styles.err}>{errors.password}</div>}
-        </div>
 
-        <div style={styles.field}>
-          <label style={styles.label}>Confirm Password</label>
-          <div style={styles.inputWrapper}>
-            <FaLock style={styles.icon} />
-            <input
-              style={styles.input}
-              value={form.confirmPassword}
-              onChange={(e) => handleChange("confirmPassword", e.target.value)}
-              placeholder="Re-enter your password"
-              type={showConfirmPassword ? "text" : "password"}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#0b4f8a';
-                e.target.style.background = '#ffffff';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0';
-                e.target.style.background = '#f8fafc';
-              }}
-            />
-            <div 
-              style={styles.eyeIcon}
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#0b4f8a'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-            >
-              {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+          <div style={styles.field}>
+            <label style={styles.label}>Confirm password</label>
+            <div style={styles.inputWrapper}>
+              <FaLock style={styles.icon} />
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                style={styles.input}
+                value={form.confirmPassword}
+                onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                placeholder="Confirm your password"
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0b4f8a';
+                  e.target.style.background = '#ffffff';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0';
+                  e.target.style.background = '#f8fafc';
+                }}
+              />
+              <div
+                style={styles.eyeIcon}
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#0b4f8a'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </div>
             </div>
+            {errors.confirmPassword && <div style={styles.err}>{errors.confirmPassword}</div>}
           </div>
-          {errors.confirmPassword && <div style={styles.err}>{errors.confirmPassword}</div>}
-        </div>
-
-        <hr style={styles.sectionDivider} />
-
-        {/* Additional Information */}
-        <div style={styles.sectionTitle}>
-          <FaMusic />
-          Musical Background & Contact Details
         </div>
 
         <div style={styles.grid3}>
@@ -540,11 +580,10 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
             <div style={styles.inputWrapper}>
               <FaCalendar style={styles.icon} />
               <input
+                type="date"
                 style={styles.input}
                 value={form.birthday}
                 onChange={(e) => handleChange("birthday", e.target.value)}
-                placeholder="YYYY-MM-DD"
-                type="date"
                 onFocus={(e) => {
                   e.target.style.borderColor = '#0b4f8a';
                   e.target.style.background = '#ffffff';
@@ -563,11 +602,11 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
             <div style={styles.inputWrapper}>
               <FaPhone style={styles.icon} />
               <input
+                type="tel"
                 style={styles.input}
                 value={form.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
-                placeholder="Mobile number (e.g., 09123456789)"
-                type="tel"
+                placeholder="e.g., 09123456789"
                 onFocus={(e) => {
                   e.target.style.borderColor = '#0b4f8a';
                   e.target.style.background = '#ffffff';
@@ -585,10 +624,39 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
             <label style={styles.label}>Primary Instrument/Section</label>
             <div style={styles.inputWrapper}>
               <FaMusic style={styles.icon} />
+              <select
+                style={styles.input}
+                value={showCustomInstrument ? 'Others' : form.instrument}
+                onChange={(e) => handleChange("instrument", e.target.value)}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0b4f8a';
+                  e.target.style.background = '#ffffff';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0';
+                  e.target.style.background = '#f8fafc';
+                }}
+              >
+                <option value="">Select instrument type</option>
+                {instrumentTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+                <option value="Others">Others</option>
+              </select>
+            </div>
+            {errors.instrument && <div style={styles.err}>{errors.instrument}</div>}
+          </div>
+        </div>
+
+        {showCustomInstrument && (
+          <div style={styles.field}>
+            <label style={styles.label}>Specify Instrument Type</label>
+            <div style={styles.inputWrapper}>
+              <FaMusic style={styles.icon} />
               <input
                 style={styles.input}
-                value={form.instrument}
-                onChange={(e) => handleChange("instrument", e.target.value)}
+                value={customInstrument}
+                onChange={(e) => handleCustomInstrumentChange(e.target.value)}
                 placeholder="e.g., Trumpet, Flute, Drums, Color Guard"
                 onFocus={(e) => {
                   e.target.style.borderColor = '#0b4f8a';
@@ -600,9 +668,8 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
                 }}
               />
             </div>
-            {errors.instrument && <div style={styles.err}>{errors.instrument}</div>}
           </div>
-        </div>
+        )}
 
         <div style={styles.field}>
           <label style={styles.label}>Complete Address</label>
@@ -716,3 +783,4 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
 };
 
 export default Signup;
+

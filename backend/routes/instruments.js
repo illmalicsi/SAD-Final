@@ -207,4 +207,21 @@ router.get('/instruments', async (req, res) => {
   }
 });
 
+// Get available instrument types for signup form
+router.get('/types', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(`
+      SELECT DISTINCT subcategory 
+      FROM instruments 
+      WHERE is_archived = 0 AND subcategory IS NOT NULL AND subcategory != ''
+      ORDER BY subcategory
+    `);
+    const types = rows.map(r => r.subcategory);
+    res.json({ success: true, types });
+  } catch (error) {
+    console.error('Error fetching instrument types:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch instrument types' });
+  }
+});
+
 module.exports = router;

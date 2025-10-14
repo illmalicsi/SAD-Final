@@ -19,87 +19,79 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
 
   const services = ['Band Gigs', 'Music Arrangement', 'Parade Events', 'Music Workshops', 'Instrument Rentals'];
 
-  // Load bookings from localStorage or use default data
-  const getStoredBookings = () => {
+  // Load bookings from API ONLY (no localStorage)
+  const getStoredBookings = async () => {
     try {
-      const stored = localStorage.getItem('dbeBookings');
-      if (stored && stored !== 'undefined' && stored !== 'null') {
-        return JSON.parse(stored);
+      console.log('Booking.jsx: Fetching bookings from API...');
+      const response = await fetch('http://localhost:5000/api/bookings', {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Booking.jsx: API Response:', data);
+        if (data.success && Array.isArray(data.bookings)) {
+          // Convert database format to frontend format
+          const bookings = data.bookings.map(b => ({
+            id: b.booking_id,
+            customerName: b.customer_name,
+            name: b.customer_name,
+            email: b.email,
+            phone: b.phone,
+            service: b.service,
+            date: b.date ? b.date.split('T')[0] : b.date, // Fix date format
+            startTime: b.start_time,
+            endTime: b.end_time,
+            location: b.location,
+            estimatedValue: parseFloat(b.estimated_value || 5000),
+            status: b.status,
+            notes: b.notes,
+            createdAt: b.created_at
+          }));
+          console.log('Booking.jsx: Loaded', bookings.length, 'bookings from API');
+          return bookings;
+        }
+      } else {
+        console.error('Booking.jsx: API request failed:', response.status);
       }
     } catch (error) {
-      console.error('Error loading bookings from localStorage:', error);
+      console.error('Booking.jsx: Error loading bookings from API:', error);
     }
 
-    // Default data if no stored data
-    return [
-      {
-        id: 1,
-        service: 'Band Gigs',
-        name: 'Bongbong Marky',
-        email: 'magnanakaw@gmail.com',
-        phone: '+63 912 345 6789',
-        location: 'Ilocos Norte',
-        notes: 'Birthday ni BWS',
-        date: '2025-09-25',
-        startTime: '14:00',
-        endTime: '18:00',
-        createdAt: '2025-09-17T10:00:00.000Z',
-        status: 'approved'
-      },
-      {
-        id: 2,
-        service: 'Music Workshops',
-        name: 'Justin Nabunturan',
-        email: 'justin@gmail.com',
-        phone: '+63 917 654 3210',
-        location: 'Nabunturan City',
-        notes: 'Saxophone practice for idol Justin',
-        date: '2025-09-26',
-        startTime: '10:00',
-        endTime: '12:00',
-        createdAt: '2025-09-17T11:00:00.000Z',
-        status: 'pending'
-      },
-      {
-        id: 3,
-        service: 'Band Gigs',
-        name: 'Ivan Louie Malicsi',
-        email: 'ilim@gmail.com',
-        phone: '+63 920 111 2222',
-        location: 'Jollibee Toril',
-        notes: 'Farewell party (yoko na sa Davao)',
-        date: '2025-09-26',
-        startTime: '15:00',
-        endTime: '19:00',
-        createdAt: '2025-09-17T12:00:00.000Z',
-        status: 'pending'
-      }
-    ];
+    // Return empty array if API fails
+    return [];
   };
 
-  const [localBookings, setLocalBookings] = useState(() => {
-    const stored = getStoredBookings();
-    console.log('Booking.jsx: Initial load - stored bookings:', stored.length);
-    return stored;
-  });
+  const [localBookings, setLocalBookings] = useState([]);
 
-  // Function to save bookings to localStorage
-  const saveBookingsToStorage = (newBookings) => {
-    try {
-      localStorage.setItem('dbeBookings', JSON.stringify(newBookings));
-      console.log('Booking.jsx: Saved to localStorage:', newBookings.length, 'bookings');
-      console.log('Latest booking:', newBookings[newBookings.length - 1]);
+  // Load bookings on component mount
+  useEffect(() => {
+    const loadBookings = async () => {
+      console.log('Booking.jsx: Component mounted, loading bookings...');
+      const stored = await getStoredBookings();
+      console.log('Booking.jsx: Setting local bookings:', stored.length);
+      setLocalBookings(stored);
+    };
+    
+    loadBookings();
 
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('bookingsUpdated', {
-        detail: { bookings: newBookings }
-      }));
-    } catch (error) {
-      console.error('Error saving bookings to localStorage:', error);
-    }
-  };
+    // Listen for booking updates from other components
+    const handleBookingsUpdate = async () => {
+      console.log('Booking.jsx: Received bookingsUpdated event, reloading...');
+      const updated = await getStoredBookings();
+      setLocalBookings(updated);
+    };
+    
+    window.addEventListener('bookingsUpdated', handleBookingsUpdate);
+    
+    return () => {
+      window.removeEventListener('bookingsUpdated', handleBookingsUpdate);
+    };
+  }, []);
 
-  // Enhanced setBookings function that also saves to localStorage
+  // Enhanced setBookings function - now just updates state, no localStorage
   const updateBookings = (newBookingsOrFunction) => {
     let newBookings;
 
@@ -118,11 +110,15 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       console.log('Using prop setter');
       propSetBookings(newBookings);
     } else {
-      // If standalone, update local state and save to localStorage
+      // If standalone, update local state only (database is source of truth)
       console.log('Using local state setter');
       setLocalBookings(newBookings);
-      saveBookingsToStorage(newBookings);
     }
+
+    // Dispatch event to notify other components to reload from database
+    window.dispatchEvent(new CustomEvent('bookingsUpdated', {
+      detail: { reload: true }
+    }));
   };
 
   // Use prop data if available, otherwise use local state
@@ -200,45 +196,81 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
 
     setIsSubmitting(true);
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Create booking object
+      const newBooking = {
+        userId: null, // Can be set if user is logged in
+        customerName: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        service: service,
+        date: date,
+        startTime: startTime,
+        endTime: endTime,
+        location: location.trim(),
+        estimatedValue: 5000, // Default value
+        notes: notes.trim() || null
+      };
 
-    const newBooking = {
-      id: Date.now(),
-      service,
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone.trim(),
-      location: location.trim(),
-      notes: notes.trim(),
-      date,
-      startTime,
-      endTime,
-      createdAt: new Date().toISOString(),
-      status: 'pending'
-    };
+      // Save to database via API
+      const response = await fetch('http://localhost:5000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newBooking)
+      });
 
-    setBookings(prev => {
-      const updated = [...prev, newBooking];
-      console.log('Booking.jsx: Adding new booking, total bookings:', updated.length);
-      return updated;
-    });
+      const data = await response.json();
 
-    setIsSubmitting(false);
-    setShowSuccess(true);
+      if (response.ok && data.success) {
+        // Format the returned booking for frontend
+        const formattedBooking = {
+          id: data.booking.booking_id,
+          service: data.booking.service,
+          name: data.booking.customer_name,
+          email: data.booking.email,
+          phone: data.booking.phone,
+          location: data.booking.location,
+          notes: data.booking.notes,
+          date: data.booking.date,
+          startTime: data.booking.start_time,
+          endTime: data.booking.end_time,
+          createdAt: data.booking.created_at,
+          status: data.booking.status,
+          estimatedValue: parseFloat(data.booking.estimated_value || 5000)
+        };
 
-    // Reset form
-    setService('');
-    setName('');
-    setEmail('');
-    setPhone('');
-    setLocation('');
-    setNotes('');
-    setDate('');
-    setStartTime('');
-    setEndTime('');
+        // Update local state (for immediate UI feedback)
+        setBookings(prev => {
+          const updated = [...prev, formattedBooking];
+          console.log('Booking.jsx: Added new booking, total bookings:', updated.length);
+          return updated;
+        });
 
-    setTimeout(() => setShowSuccess(false), 5000);
+        setShowSuccess(true);
+
+        // Reset form
+        setService('');
+        setName('');
+        setEmail('');
+        setPhone('');
+        setLocation('');
+        setNotes('');
+        setDate('');
+        setStartTime('');
+        setEndTime('');
+
+        setTimeout(() => setShowSuccess(false), 5000);
+      } else {
+        alert(data.message || 'Failed to submit booking. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting booking:', error);
+      alert('An error occurred while submitting your booking. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isFormValid = service && name && email && location && date && startTime && endTime && !isDateBlocked(date) && endTime > startTime;

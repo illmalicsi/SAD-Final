@@ -7,9 +7,10 @@ import paradeEvents from "./Assets/paradeEvents.jpg";
 import musicWorkshop from "./Assets/musicWorkshop.jpg";
 import instrumentRentals from "./Assets/instrumentRentals.jpg";
 import Login from './login'
-import Signup from './signup'
+import MemberSignup from './MemberSignup'
 import UserSignup from './UserSignup'
 import Dashboard from './dashboard'
+import NotificationService from '../services/notificationService'
 
 
 const Home = () => {
@@ -1469,14 +1470,42 @@ const servicesHeaderRightStyle = {
     }
   }, []);
 
-  // Load bookings from localStorage
+  // Load bookings from API ONLY (no localStorage)
   useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('dbeBookings') || '[]');
-      setBookings(Array.isArray(saved) ? saved : []);
-    } catch (e) {
-      setBookings([]);
-    }
+    const loadBookingsFromAPI = async () => {
+      try {
+        console.log('Home: Fetching bookings from API...');
+        const response = await fetch('http://localhost:5000/api/bookings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && Array.isArray(data.bookings)) {
+            const formatted = data.bookings.map(b => ({
+              id: b.booking_id,
+              customerName: b.customer_name,
+              email: b.email,
+              phone: b.phone,
+              service: b.service,
+              date: b.date ? b.date.split('T')[0] : b.date,
+              startTime: b.start_time,
+              endTime: b.end_time,
+              location: b.location,
+              estimatedValue: parseFloat(b.estimated_value || 5000),
+              status: b.status,
+              notes: b.notes,
+              createdAt: b.created_at
+            }));
+            console.log('Home: Loaded', formatted.length, 'bookings from API');
+            setBookings(formatted);
+          }
+        }
+      } catch (error) {
+        console.error('Home: Error loading bookings:', error);
+        setBookings([]);
+      }
+    };
+    
+    loadBookingsFromAPI();
+    
     // If opened in a new tab with a requested service, auto-open booking
     const svc = localStorage.getItem('dbeOpenBookingForService');
     if (svc) {
@@ -1557,8 +1586,12 @@ const servicesHeaderRightStyle = {
   };
 
   const saveBookings = (next) => {
+    // Just update state - API is source of truth (no localStorage)
     setBookings(next);
-    localStorage.setItem('dbeBookings', JSON.stringify(next));
+    // Dispatch event to notify other components to reload from API
+    window.dispatchEvent(new CustomEvent('bookingsUpdated', {
+      detail: { reload: true }
+    }));
   };
 
   const openBooking = (serviceTitle) => {
@@ -1730,53 +1763,89 @@ const servicesHeaderRightStyle = {
     }
   }, [currentView]);
 
-  // Load notifications from localStorage
+  // Load notifications for current user from NotificationService
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('dbeNotifications') || '[]');
-      setNotifications(Array.isArray(stored) ? stored : []);
-    } catch (err) {
-      setNotifications([]);
-    }
-  }, []);
+    const loadNotifications = () => {
+      if (user && user.email) {
+        console.log('Home: Loading notifications for user:', user.email);
+        const userNotifications = NotificationService.getUserNotifications(user.email);
+        console.log('Home: Loaded', userNotifications.length, 'notifications');
+        setNotifications(userNotifications);
+      } else {
+        setNotifications([]);
+      }
+    };
+
+    loadNotifications();
+
+    // Listen for notification updates
+    const handleNotificationsUpdate = () => {
+      console.log('Home: Notifications updated, reloading...');
+      loadNotifications();
+    };
+
+    window.addEventListener('notificationsUpdated', handleNotificationsUpdate);
+    
+    return () => {
+      window.removeEventListener('notificationsUpdated', handleNotificationsUpdate);
+    };
+  }, [user]);
 
   const saveNotifications = (next) => {
     setNotifications(next);
-    localStorage.setItem('dbeNotifications', JSON.stringify(next));
+    // Notifications are now managed by NotificationService
+    // The service handles localStorage internally
   };
 
   const unreadCount = () => notifications.filter(n => !n.read).length;
 
   const markAllRead = () => {
-    const next = notifications.map(n => ({ ...n, read: true }));
-    saveNotifications(next);
+    if (user && user.email) {
+      NotificationService.markAllAsRead(user.email);
+      // Event listener will reload notifications
+    }
   };
 
   const clearAllNotifications = () => {
-    saveNotifications([]);
+    if (user && user.email) {
+      NotificationService.clearUserNotifications(user.email);
+      // Event listener will reload notifications
+    }
   };
 
   const handleOpenNotification = (index) => {
     // mark as read and open notifications view focused on the clicked item
-    const next = notifications.map((n, i) => i === index ? { ...n, read: true } : n);
-    saveNotifications(next);
-    setSelectedNotification(next[index]);
-    setShowNotifications(false);
-    setCurrentView('notifications');
+    const notification = notifications[index];
+    if (notification) {
+      NotificationService.markAsRead(notification.id);
+      setSelectedNotification(notification);
+      setShowNotifications(false);
+      setCurrentView('notifications');
+    }
   };
 
   const deleteNotification = (index) => {
-    const next = notifications.filter((_, i) => i !== index);
-    saveNotifications(next);
-    // if the deleted was selected, clear selection
-    if (selectedNotification && notifications[index] && selectedNotification.ts === notifications[index].ts) {
-      setSelectedNotification(null);
+    const notification = notifications[index];
+    if (notification) {
+      NotificationService.deleteNotification(notification.id);
+      // if the deleted was selected, clear selection
+      if (selectedNotification && selectedNotification.id === notification.id) {
+        setSelectedNotification(null);
+      }
     }
   };
 
   const toggleNotificationRead = (index) => {
-    const next = notifications.map((n, i) => i === index ? { ...n, read: !n.read } : n);
-    saveNotifications(next);
+    const notification = notifications[index];
+    if (notification) {
+      if (notification.read) {
+        // Mark as unread (need to implement this in service if needed)
+        const next = notifications.map((n, i) => i === index ? { ...n, read: false } : n);
+        saveNotifications(next);
+      } else {
+        NotificationService.markAsRead(notification.id);
+      }
+    }
   };
 
   // Helper to add a test notification (useful while developing)
@@ -2017,7 +2086,7 @@ const servicesHeaderRightStyle = {
 
       {/* Membership Application */}
       {currentView === 'signup' && (
-        <Signup
+        <MemberSignup
           onClose={handleBackToHome}
           onSignup={handleSignup}
           onSwitchToLogin={handleSwitchToLogin}

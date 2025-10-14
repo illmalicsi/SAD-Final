@@ -1,6 +1,33 @@
 const express = require('express');
 const authService = require('../services/authService');
+const multer = require('multer');
+const path = require('path');
 const router = express.Router();
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, 'identityProof-' + Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png|pdf/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, PNG, and PDF files are allowed'));
+    }
+  }
+});
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -30,9 +57,9 @@ router.post('/login', async (req, res) => {
 });
 
 // Register route
-router.post('/register', async (req, res) => {
+router.post('/register', upload.single('identityProof'), async (req, res) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, email, password, birthday, phone, instrument, address } = req.body;
 
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
@@ -55,12 +82,22 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    const user = await authService.register({
+    // Prepare user data
+    const userData = {
       firstName,
       lastName,
       email,
       password
-    });
+    };
+
+    // Add optional fields if provided
+    if (birthday) userData.birthday = birthday;
+    if (phone) userData.phone = phone;
+    if (instrument) userData.instrument = instrument;
+    if (address) userData.address = address;
+    if (req.file) userData.identityProof = req.file.path;
+
+    const user = await authService.register(userData);
 
     res.status(201).json({
       success: true,
