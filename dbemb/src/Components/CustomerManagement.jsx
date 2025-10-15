@@ -22,6 +22,7 @@ import {
   FaSort,
   FaSortUp,
   FaSortDown,
+  FaSortAmountDown,
   FaDownload,
   FaArchive,
   FaUndo,
@@ -223,8 +224,20 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         const overrideStatus = customerStatusOverrides.get(customerEmail);
         const defaultStatus = booking.status === 'approved' ? 'active' : booking.status;
         
+        // Generate a unique customer ID based on email hash
+        // This ensures the same customer always gets the same ID
+        const generateCustomerId = (email) => {
+          let hash = 0;
+          for (let i = 0; i < email.length; i++) {
+            const char = email.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+          }
+          return Math.abs(hash);
+        };
+        
         customerMap.set(customerKey, {
-          id: customerMap.size + 1,
+          id: generateCustomerId(customerEmail),
           name: booking.name.trim(),
           email: booking.email,
           phone: booking.phone || 'N/A',
@@ -383,22 +396,54 @@ const CustomerManagement = ({ bookingsData = [] }) => {
     }
   };
 
-  const handleApprove = (customer) => {
+  const handleApprove = async (customer) => {
     setIsProcessing(true);
-    setTimeout(() => {
+    try {
+      console.log('🔵 Approving customer and their pending bookings:', customer.name);
+      
+      // Find all pending bookings for this customer
+      const pendingBookings = customer.bookings.filter(b => b.status === 'pending');
+      console.log('📋 Found', pendingBookings.length, 'pending bookings to approve');
+      
+      // Approve each pending booking via API
+      for (const booking of pendingBookings) {
+        await handleApproveBooking(booking);
+      }
+      
+      // Update customer status
       updateCustomerStatus(customer.email, 'active');
+      showNotification(`${customer.name} and ${pendingBookings.length} booking(s) approved!`, "success");
+    } catch (error) {
+      console.error('❌ Error approving customer:', error);
+      showNotification("Failed to approve customer", "error");
+    } finally {
       setIsProcessing(false);
-      showNotification(`${customer.name} approved successfully!`, "success");
-    }, 500);
+    }
   };
 
-  const handleReject = (customer) => {
+  const handleReject = async (customer) => {
     setIsProcessing(true);
-    setTimeout(() => {
+    try {
+      console.log('🔵 Rejecting customer and their pending bookings:', customer.name);
+      
+      // Find all pending bookings for this customer
+      const pendingBookings = customer.bookings.filter(b => b.status === 'pending');
+      console.log('📋 Found', pendingBookings.length, 'pending bookings to reject');
+      
+      // Reject each pending booking via API
+      for (const booking of pendingBookings) {
+        await handleRejectBooking(booking);
+      }
+      
+      // Update customer status
       updateCustomerStatus(customer.email, 'rejected');
+      showNotification(`${customer.name} and ${pendingBookings.length} booking(s) rejected.`, "error");
+    } catch (error) {
+      console.error('❌ Error rejecting customer:', error);
+      showNotification("Failed to reject customer", "error");
+    } finally {
       setIsProcessing(false);
-      showNotification(`${customer.name} rejected.`, "error");
-    }, 500);
+    }
   };
 
   const handleArchive = (customer) => {
@@ -423,16 +468,21 @@ const CustomerManagement = ({ bookingsData = [] }) => {
   const handleApproveBooking = async (booking) => {
     setIsProcessing(true);
     try {
-      console.log('CustomerManagement: Approving booking', booking.id);
+      console.log('🔵 CustomerManagement: Approving booking', booking.id, 'Full booking:', booking);
       
       // Get auth token
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
+      console.log('🔑 Auth token exists:', !!token);
+      
       if (!token) {
         throw new Error('Not authenticated');
       }
 
+      const url = `http://localhost:5000/api/bookings/${booking.id}/status`;
+      console.log('📡 Making PUT request to:', url);
+
       // Update booking status via API
-      const response = await fetch(`http://localhost:5000/api/bookings/${booking.id}/status`, {
+      const response = await fetch(url, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -441,13 +491,19 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         body: JSON.stringify({ status: 'approved' })
       });
 
+      console.log('📥 Response status:', response.status, response.statusText);
       const data = await response.json();
+      console.log('📦 Response data:', data);
 
       if (response.ok && data.success) {
-        console.log('CustomerManagement: Booking approved successfully');
+        console.log('✅ CustomerManagement: Booking approved successfully');
         
-        // Send notification to customer
-        NotificationService.notifyBookingConfirmed(booking);
+        // Use the updated booking data from backend (includes invoice_id)
+        const updatedBooking = data.booking || booking;
+        console.log('💰 Updated booking with invoice:', updatedBooking);
+        
+        // Send notification to customer with invoice info
+        NotificationService.notifyBookingConfirmed(updatedBooking);
         
         // Dispatch event to update other components
         window.dispatchEvent(new CustomEvent('bookingsUpdated', {
@@ -455,12 +511,15 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         }));
         
         setRefreshTrigger(prev => prev + 1);
-        showNotification(`Booking #${booking.id} approved and customer notified!`, "success");
+        
+        const invoiceMsg = updatedBooking.invoice_id ? ` (Invoice #${updatedBooking.invoice_id})` : '';
+        showNotification(`Booking #${booking.id} approved and customer notified!${invoiceMsg}`, "success");
       } else {
+        console.error('❌ Failed to approve:', data);
         throw new Error(data.message || 'Failed to approve booking');
       }
     } catch (error) {
-      console.error('Error approving booking:', error);
+      console.error('❌ Error approving booking:', error);
       showNotification(error.message || "Failed to approve booking", "error");
     } finally {
       setIsProcessing(false);
@@ -470,16 +529,21 @@ const CustomerManagement = ({ bookingsData = [] }) => {
   const handleRejectBooking = async (booking) => {
     setIsProcessing(true);
     try {
-      console.log('CustomerManagement: Rejecting booking', booking.id);
+      console.log('🔵 CustomerManagement: Rejecting booking', booking.id, 'Full booking:', booking);
       
       // Get auth token
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
+      console.log('🔑 Auth token exists:', !!token);
+      
       if (!token) {
         throw new Error('Not authenticated');
       }
 
+      const url = `http://localhost:5000/api/bookings/${booking.id}/status`;
+      console.log('📡 Making PUT request to:', url);
+
       // Update booking status via API
-      const response = await fetch(`http://localhost:5000/api/bookings/${booking.id}/status`, {
+      const response = await fetch(url, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -488,10 +552,12 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         body: JSON.stringify({ status: 'rejected' })
       });
 
+      console.log('📥 Response status:', response.status, response.statusText);
       const data = await response.json();
+      console.log('📦 Response data:', data);
 
       if (response.ok && data.success) {
-        console.log('CustomerManagement: Booking rejected successfully');
+        console.log('✅ CustomerManagement: Booking rejected successfully');
         
         // Send notification to customer
         NotificationService.notifyBookingRejected(booking);
@@ -504,10 +570,11 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         setRefreshTrigger(prev => prev + 1);
         showNotification(`Booking #${booking.id} rejected and customer notified.`, "info");
       } else {
+        console.error('❌ Failed to reject:', data);
         throw new Error(data.message || 'Failed to reject booking');
       }
     } catch (error) {
-      console.error('Error rejecting booking:', error);
+      console.error('❌ Error rejecting booking:', error);
       showNotification(error.message || "Failed to reject booking", "error");
     } finally {
       setIsProcessing(false);
@@ -948,7 +1015,8 @@ const CustomerManagement = ({ bookingsData = [] }) => {
 
       {/* Enhanced Filter Bar */}
       <div style={styles.filterBar}>
-        <div style={{ display: "flex", alignItems: "center", flex: 1, gap: "12px" }}>
+        {/* Search Section */}
+        <div style={{ display: "flex", alignItems: "center", flex: "1 1 300px", minWidth: "250px", gap: "12px" }}>
           <FaSearch size={18} style={{ color: "#0369a1" }} />
           <input
             type="text"
@@ -959,6 +1027,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
           />
         </div>
         
+        {/* Filters Section */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
           <FaFilter size={18} style={{ color: "#0369a1" }} />
           
@@ -985,7 +1054,27 @@ const CustomerManagement = ({ bookingsData = [] }) => {
               <option key={service} value={service}>{service}</option>
             ))}
           </select>
+        </div>
+      </div>
 
+      {/* Sort and Actions Bar */}
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "center", 
+        padding: "16px 20px", 
+        background: "white", 
+        borderRadius: "12px", 
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+        marginBottom: "24px",
+        gap: "16px",
+        flexWrap: "wrap"
+      }}>
+        {/* Sort Section */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <FaSortAmountDown size={18} style={{ color: "#0369a1" }} />
+          <span style={{ color: "#64748b", fontWeight: "600", fontSize: "14px" }}>Sort by:</span>
+          
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -1006,6 +1095,32 @@ const CustomerManagement = ({ bookingsData = [] }) => {
             {sortOrder === 'asc' ? <FaSortUp /> : <FaSortDown />}
             {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
           </button>
+        </div>
+
+        {/* Actions Section */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {stats.pendingBookings > 0 && (
+            <button
+              style={{
+                ...styles.button,
+                background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                color: "white",
+                fontWeight: "700",
+                padding: "10px 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
+              }}
+              onClick={handleApprove}
+            >
+              <FaCheckCircle size={16} />
+              Approve All Pending ({stats.pendingBookings})
+            </button>
+          )}
+          
+          <span style={{ color: "#64748b", fontSize: "14px", fontWeight: "600" }}>
+            Showing {filteredCustomers.length} of {customers.length} customers
+          </span>
         </div>
       </div>
 
@@ -1264,7 +1379,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
               </h3>
               <div style={{ maxHeight: "350px", overflowY: "auto" }}>
                 {selectedCustomer.bookings
-                  .sort((a, b) => new Date(b.date) - new Date(a.date))
+                  .sort((a, b) => a.id - b.id)
                   .map((booking) => (
                   <div key={booking.id} style={{
                     ...styles.bookingItem,

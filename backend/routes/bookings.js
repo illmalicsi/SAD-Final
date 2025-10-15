@@ -2,10 +2,16 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const { pool } = require('../config/database');
+const billingService = require('../services/billingService');
 
 // Get all bookings (public endpoint for calendar display)
 router.get('/', async (req, res) => {
   try {
+    // Disable caching to always get fresh data
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     const [bookings] = await pool.query(
       `SELECT b.*, 
               u.first_name, u.last_name,
@@ -31,6 +37,11 @@ router.get('/', async (req, res) => {
 // Get bookings by user email (for customers)
 router.get('/user/:email', async (req, res) => {
   try {
+    // Disable caching to always get fresh data
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     const { email } = req.params;
     const [bookings] = await pool.query(
       `SELECT b.*, 
@@ -155,6 +166,37 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
     );
 
     console.log('✅ Updated booking:', updatedBooking[0]);
+
+    // If booking was approved, automatically create an invoice
+    if (status === 'approved' && updatedBooking[0]) {
+      try {
+        const booking = updatedBooking[0];
+        const amount = booking.estimated_value || 5000;
+        const description = `Booking for ${booking.service} on ${booking.date}`;
+        
+        // Find user by email (if they have an account)
+        const [userResult] = await pool.query(
+          'SELECT id FROM users WHERE email = ?',
+          [booking.email]
+        );
+        
+        if (userResult.length > 0) {
+          const userId = userResult[0].id;
+          console.log(`💰 Creating invoice for user ${userId}, amount: ₱${amount}`);
+          
+          const invoice = await billingService.generateInvoice(userId, amount, description);
+          console.log(`✅ Invoice #${invoice.invoice_id} created successfully`);
+          
+          // Add invoice info to response
+          updatedBooking[0].invoice_id = invoice.invoice_id;
+        } else {
+          console.log(`⚠️ No user account found for email: ${booking.email}, skipping invoice creation`);
+        }
+      } catch (invoiceError) {
+        console.error('❌ Error creating invoice:', invoiceError);
+        // Don't fail the booking approval if invoice creation fails
+      }
+    }
 
     res.json({
       success: true,

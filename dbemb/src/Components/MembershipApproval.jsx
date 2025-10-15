@@ -15,11 +15,22 @@ const MembershipApproval = ({ user, onBackToHome, onLogout, embedded = false }) 
   const fetchPendingMembers = async () => {
     try {
       setLoading(true);
+      console.log('MembershipApproval: Fetching pending members...');
       const response = await AuthService.get('/membership/pending');
-      setPendingMembers(response.data || []);
+      console.log('MembershipApproval: API Response:', response);
+      
+      if (response.success && Array.isArray(response.data)) {
+        console.log('MembershipApproval: Loaded', response.data.length, 'pending members');
+        setPendingMembers(response.data);
+      } else {
+        console.error('MembershipApproval: Invalid response format:', response);
+        setPendingMembers([]);
+        showNotification(response.message || 'Failed to load pending members', 'error');
+      }
     } catch (error) {
-      console.error('Error fetching pending members:', error);
-      showNotification('Failed to load pending members', 'error');
+      console.error('MembershipApproval: Error fetching pending members:', error);
+      setPendingMembers([]);
+      showNotification(error.message || 'Failed to load pending members', 'error');
     } finally {
       setLoading(false);
     }
@@ -28,12 +39,19 @@ const MembershipApproval = ({ user, onBackToHome, onLogout, embedded = false }) 
   const handleApprove = async (userId) => {
     try {
       setProcessingId(userId);
-      await AuthService.put(`/membership/approve/${userId}`);
-      showNotification('Member approved successfully!', 'success');
-      fetchPendingMembers();
+      console.log('MembershipApproval: Approving user', userId);
+      const response = await AuthService.put(`/membership/approve/${userId}`);
+      console.log('MembershipApproval: Approve response:', response);
+      
+      if (response.success) {
+        showNotification('Member approved successfully!', 'success');
+        fetchPendingMembers();
+      } else {
+        showNotification(response.message || 'Failed to approve member', 'error');
+      }
     } catch (error) {
-      console.error('Error approving member:', error);
-      showNotification('Failed to approve member', 'error');
+      console.error('MembershipApproval: Error approving member:', error);
+      showNotification(error.message || 'Failed to approve member', 'error');
     } finally {
       setProcessingId(null);
     }
@@ -42,12 +60,19 @@ const MembershipApproval = ({ user, onBackToHome, onLogout, embedded = false }) 
   const handleReject = async (userId) => {
     try {
       setProcessingId(userId);
-      await AuthService.put(`/membership/reject/${userId}`);
-      showNotification('Member rejected', 'info');
-      fetchPendingMembers();
+      console.log('MembershipApproval: Rejecting user', userId);
+      const response = await AuthService.put(`/membership/reject/${userId}`);
+      console.log('MembershipApproval: Reject response:', response);
+      
+      if (response.success) {
+        showNotification('Member rejected', 'info');
+        fetchPendingMembers();
+      } else {
+        showNotification(response.message || 'Failed to reject member', 'error');
+      }
     } catch (error) {
-      console.error('Error rejecting member:', error);
-      showNotification('Failed to reject member', 'error');
+      console.error('MembershipApproval: Error rejecting member:', error);
+      showNotification(error.message || 'Failed to reject member', 'error');
     } finally {
       setProcessingId(null);
     }

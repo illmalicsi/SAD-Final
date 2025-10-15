@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock, FaUser, FaMusic } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock, FaUser, FaMusic, FaCreditCard, FaMobileAlt, FaUniversity, FaStore, FaWallet } from 'react-icons/fa';
+import { BsThreeDotsVertical } from 'react-icons/bs';
 import bg2 from "./Assets/bg2.jpg";
 import bandGigs from "./Assets/bandGigs.jpg";
 import musicArrangement from "./Assets/music-arrangement.jpg";
@@ -1396,6 +1397,10 @@ const servicesHeaderRightStyle = {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
+  const [showOnlyUnread, setShowOnlyUnread] = useState(false); // Filter for read/unread
+  const [openNotificationMenu, setOpenNotificationMenu] = useState(null); // Track which notification menu is open
+  const [showPaymentModal, setShowPaymentModal] = useState(false); // Payment modal
+  const [selectedPaymentNotification, setSelectedPaymentNotification] = useState(null); // Notification with payment data
   const today = new Date();
   const [calendarYear, setCalendarYear] = useState(today.getFullYear());
   const [calendarMonth, setCalendarMonth] = useState(today.getMonth()); // 0-11
@@ -1839,13 +1844,58 @@ const servicesHeaderRightStyle = {
     const notification = notifications[index];
     if (notification) {
       if (notification.read) {
-        // Mark as unread (need to implement this in service if needed)
-        const next = notifications.map((n, i) => i === index ? { ...n, read: false } : n);
-        saveNotifications(next);
+        // Mark as unread
+        NotificationService.markAsUnread(notification.id);
       } else {
+        // Mark as read
         NotificationService.markAsRead(notification.id);
       }
     }
+  };
+
+  // Render notification message with clickable payment link
+  const renderNotificationMessage = (notification) => {
+    const message = notification.message || '';
+    const hasPaymentLink = message.includes('<payment-link>');
+    
+    console.log('Rendering notification:', { message, hasPaymentLink, notification });
+    
+    if (!hasPaymentLink) {
+      return <div style={{ color: '#4b5563' }}>{message}</div>;
+    }
+    
+    // Split message by payment link tags
+    const parts = message.split(/<payment-link>|<\/payment-link>/);
+    
+    return (
+      <div style={{ color: '#4b5563' }}>
+        {parts.map((part, index) => {
+          // Every odd index is the clickable "payment" text
+          if (index % 2 === 1) {
+            return (
+              <span
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log('Payment link clicked!', notification);
+                  setSelectedPaymentNotification(notification);
+                  setShowPaymentModal(true);
+                }}
+                style={{
+                  color: '#0ea5e9',
+                  fontWeight: 700,
+                  textDecoration: 'underline',
+                  cursor: 'pointer'
+                }}
+              >
+                {part}
+              </span>
+            );
+          }
+          return <span key={index}>{part}</span>;
+        })}
+      </div>
+    );
   };
 
   // Helper to add a test notification (useful while developing)
@@ -2199,16 +2249,120 @@ const servicesHeaderRightStyle = {
               <div style={{ padding: 18, borderRadius: 12, background: '#f8fafc', color: '#6b7280' }}>No notifications</div>
             ) : notifications.slice().reverse().map((n, idx) => {
               const origIndex = notifications.length - 1 - idx;
+              const menuOpen = openNotificationMenu === n.id;
+              
               return (
-                <div key={n.ts || idx} style={{ padding: 16, borderRadius: 12, border: '1px solid rgba(11,59,120,0.06)', background: n.read ? '#ffffff' : '#eef6ff', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                  <div>
-                    <div style={{ fontWeight: 800, color: '#06264a' }}>{n.title}</div>
-                    <div style={{ color: '#4b5563', marginTop: 6 }}>{n.body}</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 8 }}>{new Date(n.ts).toLocaleString()}</div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
-                    <button onClick={() => toggleNotificationRead(origIndex)} style={{ padding: '6px 10px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(11,98,214,0.08)', color: '#0b62d6', fontWeight: 700 }}>{n.read ? 'Unread' : 'Mark read'}</button>
-                    <button onClick={() => deleteNotification(origIndex)} style={{ padding: '6px 10px', borderRadius: 8, background: '#fff1f2', border: 'none', color: '#7f1d1d', fontWeight: 700 }}>Delete</button>
+                <div key={n.id || idx} style={{ padding: 16, borderRadius: 12, border: '1px solid rgba(11,59,120,0.06)', background: n.read ? '#ffffff' : '#eef6ff', position: 'relative' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 800, color: '#06264a' }}>{n.title}</div>
+                      <div style={{ marginTop: 6 }}>{renderNotificationMessage(n)}</div>
+                      <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 8 }}>{new Date(n.createdAt).toLocaleString()}</div>
+                    </div>
+                    <div style={{ position: 'relative' }}>
+                      <button 
+                        onClick={() => setOpenNotificationMenu(menuOpen ? null : n.id)}
+                        style={{ 
+                          padding: '8px', 
+                          borderRadius: 8, 
+                          background: 'transparent', 
+                          border: 'none', 
+                          color: '#64748b', 
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <BsThreeDotsVertical size={18} />
+                      </button>
+                      
+                      {/* Dropdown Menu */}
+                      {menuOpen && (
+                        <>
+                          {/* Backdrop to close menu when clicking outside */}
+                          <div 
+                            onClick={() => setOpenNotificationMenu(null)}
+                            style={{ 
+                              position: 'fixed', 
+                              top: 0, 
+                              left: 0, 
+                              right: 0, 
+                              bottom: 0, 
+                              zIndex: 999 
+                            }}
+                          />
+                          
+                          {/* Menu */}
+                          <div style={{ 
+                            position: 'absolute', 
+                            top: '100%', 
+                            right: 0, 
+                            marginTop: 4,
+                            background: 'white', 
+                            borderRadius: 8, 
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            zIndex: 1000,
+                            minWidth: 140,
+                            overflow: 'hidden'
+                          }}>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleNotificationRead(origIndex);
+                                setOpenNotificationMenu(null);
+                              }}
+                              style={{ 
+                                width: '100%',
+                                padding: '10px 16px', 
+                                background: 'transparent', 
+                                border: 'none', 
+                                color: '#0b62d6', 
+                                fontWeight: 600,
+                                fontSize: 14,
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                transition: 'background 0.2s'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
+                              {n.read ? 'Mark as Unread' : 'Mark as Read'}
+                            </button>
+                            <div style={{ height: 1, background: '#e2e8f0' }} />
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(origIndex);
+                                setOpenNotificationMenu(null);
+                              }}
+                              style={{ 
+                                width: '100%',
+                                padding: '10px 16px', 
+                                background: 'transparent', 
+                                border: 'none', 
+                                color: '#dc2626', 
+                                fontWeight: 600,
+                                fontSize: 14,
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                transition: 'background 0.2s'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#fef2f2'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -2297,24 +2451,143 @@ const servicesHeaderRightStyle = {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                         <div style={{ fontWeight: 800, color: '#06264a' }}>Notifications</div>
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button onClick={markAllRead} style={{ background: 'transparent', border: 'none', color: '#0b62d6', fontWeight: 700, cursor: 'pointer' }}>Mark all</button>
-                          <button onClick={clearAllNotifications} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontWeight: 700, cursor: 'pointer' }}>Clear</button>
+                          <button onClick={markAllRead} style={{ background: 'transparent', border: 'none', color: '#0b62d6', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}>Mark all</button>
+                          <button 
+                            onClick={() => setShowOnlyUnread(!showOnlyUnread)} 
+                            style={{ background: 'transparent', border: 'none', color: showOnlyUnread ? '#10b981' : '#6b7280', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}
+                          >
+                            {showOnlyUnread ? 'Show All' : 'Unread'}
+                          </button>
                         </div>
                       </div>
 
                       <div style={{ maxHeight: '260px', overflowY: 'auto', display: 'grid', gap: 8 }}>
-                        {notifications.length === 0 ? (
-                          <div style={{ color: '#6b7280' }}>No notifications</div>
-                        ) : notifications.slice().reverse().map((n, idx) => {
-                          const origIndex = notifications.length - 1 - idx;
-                          return (
-                            <div key={n.ts || idx} onClick={() => handleOpenNotification(origIndex)} style={{ padding: '8px', borderRadius: 8, background: n.read ? '#f8fafc' : '#eef6ff', border: '1px solid rgba(11,59,120,0.04)', cursor: 'pointer' }}>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: '#06264a' }}>{n.title}</div>
-                              <div style={{ fontSize: 13, color: '#4b5563' }}>{n.body}</div>
-                              <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>{new Date(n.ts).toLocaleString()}</div>
-                            </div>
-                          );
-                        })}
+                        {(() => {
+                          const filteredNotifications = showOnlyUnread 
+                            ? notifications.filter(n => !n.read) 
+                            : notifications;
+                          
+                          if (filteredNotifications.length === 0) {
+                            return <div style={{ color: '#6b7280' }}>
+                              {showOnlyUnread ? 'No unread notifications' : 'No notifications'}
+                            </div>;
+                          }
+                          
+                          return filteredNotifications.slice().reverse().map((n, idx) => {
+                            const origIndex = notifications.indexOf(n);
+                            const menuOpen = openNotificationMenu === n.id;
+                            
+                            return (
+                              <div key={n.id || idx} style={{ padding: '8px', borderRadius: 8, background: n.read ? '#f8fafc' : '#eef6ff', border: '1px solid rgba(11,59,120,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, position: 'relative' }}>
+                                <div onClick={() => handleOpenNotification(origIndex)} style={{ flex: 1, cursor: 'pointer' }}>
+                                  <div style={{ fontSize: 13, fontWeight: 700, color: '#06264a' }}>{n.title}</div>
+                                  <div style={{ fontSize: 13 }}>{renderNotificationMessage(n)}</div>
+                                  <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>{new Date(n.createdAt).toLocaleString()}</div>
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                  <button 
+                                    onClick={(e) => { 
+                                      e.stopPropagation(); 
+                                      setOpenNotificationMenu(menuOpen ? null : n.id);
+                                    }} 
+                                    style={{ 
+                                      padding: '4px', 
+                                      background: 'transparent', 
+                                      border: 'none', 
+                                      color: '#64748b', 
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}
+                                  >
+                                    <BsThreeDotsVertical size={16} />
+                                  </button>
+                                  
+                                  {/* Dropdown Menu */}
+                                  {menuOpen && (
+                                    <>
+                                      {/* Backdrop */}
+                                      <div 
+                                        onClick={() => setOpenNotificationMenu(null)}
+                                        style={{ 
+                                          position: 'fixed', 
+                                          top: 0, 
+                                          left: 0, 
+                                          right: 0, 
+                                          bottom: 0, 
+                                          zIndex: 1199 
+                                        }}
+                                      />
+                                      
+                                      {/* Menu */}
+                                      <div style={{ 
+                                        position: 'absolute', 
+                                        top: '100%', 
+                                        right: 0, 
+                                        marginTop: 4,
+                                        background: 'white', 
+                                        borderRadius: 8, 
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                        zIndex: 1201,
+                                        minWidth: 140,
+                                        overflow: 'hidden'
+                                      }}>
+                                        <button 
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleNotificationRead(origIndex);
+                                            setOpenNotificationMenu(null);
+                                          }}
+                                          style={{ 
+                                            width: '100%',
+                                            padding: '10px 16px', 
+                                            background: 'transparent', 
+                                            border: 'none', 
+                                            color: '#0b62d6', 
+                                            fontWeight: 600,
+                                            fontSize: 13,
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            transition: 'background 0.2s'
+                                          }}
+                                          onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                        >
+                                          {n.read ? 'Mark as Unread' : 'Mark as Read'}
+                                        </button>
+                                        <div style={{ height: 1, background: '#e2e8f0' }} />
+                                        <button 
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteNotification(origIndex);
+                                            setOpenNotificationMenu(null);
+                                          }}
+                                          style={{ 
+                                            width: '100%',
+                                            padding: '10px 16px', 
+                                            background: 'transparent', 
+                                            border: 'none', 
+                                            color: '#dc2626', 
+                                            fontWeight: 600,
+                                            fontSize: 13,
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            transition: 'background 0.2s'
+                                          }}
+                                          onMouseEnter={(e) => e.currentTarget.style.background = '#fef2f2'}
+                                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                        >
+                                          Delete
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
                     </div>
                   )}
@@ -3071,6 +3344,186 @@ const servicesHeaderRightStyle = {
               </div>
             </div>
           </footer>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedPaymentNotification && selectedPaymentNotification.data && selectedPaymentNotification.data.paymentDetails && (
+        <div 
+          onClick={() => setShowPaymentModal(false)}
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            background: 'rgba(0, 0, 0, 0.7)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 9999,
+            padding: '20px'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{ 
+              background: 'white', 
+              borderRadius: '16px', 
+              maxWidth: '600px', 
+              width: '100%', 
+              maxHeight: '90vh', 
+              overflow: 'auto',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+            }}
+          >
+            {/* Header */}
+            <div style={{ 
+              padding: '24px', 
+              borderBottom: '1px solid #e2e8f0',
+              background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+              borderRadius: '16px 16px 0 0'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h2 style={{ margin: 0, color: 'white', fontSize: 24, fontWeight: 800 }}>Payment Details</h2>
+                  <p style={{ margin: '4px 0 0 0', color: 'rgba(255, 255, 255, 0.9)', fontSize: 14 }}>
+                    {selectedPaymentNotification.data.service} - {selectedPaymentNotification.data.date}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowPaymentModal(false)}
+                  style={{ 
+                    background: 'rgba(255, 255, 255, 0.2)', 
+                    border: 'none', 
+                    color: 'white', 
+                    fontSize: 24, 
+                    width: 36, 
+                    height: 36, 
+                    borderRadius: '50%', 
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Payment Amount */}
+            <div style={{ padding: '24px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>Total Amount</div>
+                <div style={{ fontSize: 36, fontWeight: 800, color: '#0c4a6e' }}>
+                  ₱{selectedPaymentNotification.data.paymentDetails.totalAmount.toLocaleString()}
+                </div>
+                <div style={{ fontSize: 14, color: '#64748b', marginTop: 8 }}>
+                  Down Payment (50%): <span style={{ fontWeight: 700, color: '#0284c7' }}>₱{selectedPaymentNotification.data.paymentDetails.downPayment.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Methods */}
+            <div style={{ padding: '24px' }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>Choose Payment Method</h3>
+              
+              {/* Credit/Debit Card */}
+              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
+                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0ea5e9'}
+                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <FaCreditCard style={{ fontSize: 28, color: '#0ea5e9' }} />
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0f172a' }}>Credit / Debit Card</div>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>Visa, Mastercard, American Express</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* GCash */}
+              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  <FaMobileAlt style={{ fontSize: 28, color: '#0284c7' }} />
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0c4a6e' }}>GCash</div>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>Instant mobile payment</div>
+                  </div>
+                </div>
+                <div style={{ padding: 12, background: 'white', borderRadius: 8, fontSize: 13, color: '#475569' }}>
+                  <div><strong>Number:</strong> {selectedPaymentNotification.data.paymentDetails.gcashNumber}</div>
+                  <div><strong>Name:</strong> {selectedPaymentNotification.data.paymentDetails.gcashName}</div>
+                </div>
+              </div>
+
+              {/* PayMaya */}
+              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
+                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#10b981'}
+                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <FaWallet style={{ fontSize: 28, color: '#10b981' }} />
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0f172a' }}>PayMaya</div>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>Fast and secure mobile payment</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bank Transfer */}
+              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fef3c7 100%)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  <FaUniversity style={{ fontSize: 28, color: '#d97706' }} />
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#78350f' }}>Bank Transfer</div>
+                    <div style={{ fontSize: 12, color: '#92400e' }}>Direct bank deposit</div>
+                  </div>
+                </div>
+                <div style={{ padding: 12, background: 'white', borderRadius: 8, fontSize: 13, color: '#475569' }}>
+                  <div><strong>Bank:</strong> {selectedPaymentNotification.data.paymentDetails.bankName}</div>
+                  <div><strong>Account Name:</strong> {selectedPaymentNotification.data.paymentDetails.accountName}</div>
+                  <div><strong>Account Number:</strong> {selectedPaymentNotification.data.paymentDetails.accountNumber}</div>
+                </div>
+              </div>
+
+              {/* Over the Counter */}
+              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
+                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#f59e0b'}
+                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <FaStore style={{ fontSize: 28, color: '#f59e0b' }} />
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0f172a' }}>Over the Counter</div>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>7-Eleven, SM, Bayad Center</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Instructions */}
+            <div style={{ padding: '16px 24px 24px 24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FaEnvelope style={{ color: '#64748b' }} />
+                <span>{selectedPaymentNotification.data.paymentDetails.instructions}</span>
+              </div>
+              <button 
+                onClick={() => setShowPaymentModal(false)}
+                style={{ 
+                  width: '100%',
+                  padding: '12px', 
+                  borderRadius: 8, 
+                  background: '#0ea5e9', 
+                  border: 'none', 
+                  color: 'white', 
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>

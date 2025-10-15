@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { pool } = require('../config/database');
 
 class AuthService {
@@ -29,9 +30,19 @@ class AuthService {
         throw new Error('Account is blocked');
       }
 
-      // Verify password (plaintext comparison for school project)
+      // Verify password - support both bcrypt hash and plaintext
       const stored = user.password_hash || '';
-      if (password !== stored) {
+      let passwordValid = false;
+      
+      // Check if it's a bcrypt hash (starts with $2a$, $2b$, or $2y$)
+      if (stored.startsWith('$2a$') || stored.startsWith('$2b$') || stored.startsWith('$2y$')) {
+        passwordValid = await bcrypt.compare(password, stored);
+      } else {
+        // Plaintext comparison for school project
+        passwordValid = (password === stored);
+      }
+      
+      if (!passwordValid) {
         throw new Error('Invalid email or password');
       }
 

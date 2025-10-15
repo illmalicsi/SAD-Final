@@ -233,7 +233,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
           phone: data.booking.phone,
           location: data.booking.location,
           notes: data.booking.notes,
-          date: data.booking.date,
+          date: data.booking.date ? data.booking.date.split('T')[0] : data.booking.date,
           startTime: data.booking.start_time,
           endTime: data.booking.end_time,
           createdAt: data.booking.created_at,

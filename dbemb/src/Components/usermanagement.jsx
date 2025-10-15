@@ -11,7 +11,9 @@
     FaCheckCircle, 
     FaTimes, 
     FaSearch, 
-    FaFilter 
+    FaFilter,
+    FaEye,
+    FaEyeSlash
   } from "react-icons/fa";
 
   const UserManagement = ({ user }) => {
@@ -25,6 +27,7 @@
     const [editingUser, setEditingUser] = useState(null);
     const [userToDelete, setUserToDelete] = useState(null);
     const [roles, setRoles] = useState([]);
+    const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
     const [newUser, setNewUser] = useState({
       firstName: '',
       lastName: '',
@@ -36,47 +39,57 @@
 
     // No sample users: user list will come from the backend API
 
+    // Move fetchUsersFromApi outside useEffect so it can be reused
+    const fetchUsersFromApi = async () => {
+      const token = localStorage.getItem('authToken');
+      console.log('UserManagement: Checking auth token...');
+      
+      if (!token) {
+        // Not authenticated: set empty users list
+        console.error('UserManagement: No auth token found! Please login.');
+        setUsers([]);
+        return;
+      }
+
+      console.log('UserManagement: Token found, fetching users...');
+
+      try {
+        const res = await fetch('http://localhost:5000/api/users', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('UserManagement: API response status:', res.status);
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('UserManagement: API response not OK:', res.status, res.statusText, errorText);
+          throw new Error('Failed to fetch users from API');
+        }
+
+        const data = await res.json();
+        console.log('UserManagement: Fetched users data:', data);
+        
+        if (data && data.users && Array.isArray(data.users)) {
+          console.log('UserManagement: Loaded', data.users.length, 'users');
+          setUsers(data.users);
+          return;
+        }
+
+        // No data returned: set empty
+        console.warn('UserManagement: No users in response, setting empty array');
+        setUsers([]);
+      } catch (error) {
+        console.error('UserManagement: Error fetching users from API:', error);
+        // API error: set empty
+        setUsers([]);
+      }
+    };
+
     useEffect(() => {
         // Try to load users from backend API (requires auth token)
-        const fetchUsersFromApi = async () => {
-          const token = localStorage.getItem('authToken');
-          if (!token) {
-            // Not authenticated: set empty users list
-            console.log('No auth token found');
-            setUsers([]);
-            return;
-          }
-
-          try {
-            const res = await fetch('http://localhost:5000/api/users', {
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
-            });
-
-            if (!res.ok) {
-              console.error('API response not OK:', res.status, res.statusText);
-              throw new Error('Failed to fetch users from API');
-            }
-
-            const data = await res.json();
-            console.log('Fetched users data:', data);
-            if (data && data.users) {
-              setUsers(data.users);
-              return;
-            }
-
-            // No data returned: set empty
-            console.log('No users in response');
-            setUsers([]);
-          } catch (error) {
-            console.error('Error fetching users from API:', error);
-            // API error: set empty
-            setUsers([]);
-          }
-        };
-
         fetchUsersFromApi();
 
         // Fetch roles from backend (not protected)
@@ -148,28 +161,43 @@
       localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
     };
 
-    const handleCreateUser = () => {
-      // Generate incremental ID based on existing max ID
-      const maxId = users.reduce((max, u) => Math.max(max, u.id), 0);
-      const newUserWithId = {
-        ...newUser,
-        id: maxId + 1,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      
-      const updatedUsers = [...users, newUserWithId];
-      setUsers(updatedUsers);
-      localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
-      
-      setShowCreateModal(false);
-      setNewUser({
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        role: 'user',
-        isBlocked: false
-      });
+    const handleCreateUser = async () => {
+      try {
+        console.log('🔵 Creating user:', newUser.email);
+        const token = localStorage.getItem('authToken');
+        
+        const response = await fetch('http://localhost:5000/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(newUser)
+        });
+
+        const data = await response.json();
+        console.log('📥 Create user response:', data);
+
+        if (data.success) {
+          console.log('✅ User created successfully, refreshing list...');
+          await fetchUsersFromApi(); // Refresh the list
+          setShowCreateModal(false);
+          setNewUser({
+            firstName: '',
+            lastName: '',
+            email: '',
+            password: '',
+            role: 'user',
+            isBlocked: false
+          });
+        } else {
+          console.error('❌ Failed to create user:', data.message);
+          alert(`Failed to create user: ${data.message}`);
+        }
+      } catch (error) {
+        console.error('❌ Error creating user:', error);
+        alert('Failed to create user. Please try again.');
+      }
     };
 
     const handleEditUser = (userToEdit) => {
@@ -177,15 +205,36 @@
       setShowEditModal(true);
     };
 
-    const handleUpdateUser = () => {
-      const updatedUsers = users.map(user => 
-        user.id === editingUser.id ? editingUser : user
-      );
-      
-      setUsers(updatedUsers);
-      localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
-      setShowEditModal(false);
-      setEditingUser(null);
+    const handleUpdateUser = async () => {
+      try {
+        console.log('🔵 Updating user:', editingUser.id);
+        const token = localStorage.getItem('authToken');
+        
+        const response = await fetch(`http://localhost:5000/api/users/${editingUser.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(editingUser)
+        });
+
+        const data = await response.json();
+        console.log('📥 Update user response:', data);
+
+        if (data.success) {
+          console.log('✅ User updated successfully, refreshing list...');
+          await fetchUsersFromApi(); // Refresh the list
+          setShowEditModal(false);
+          setEditingUser(null);
+        } else {
+          console.error('❌ Failed to update user:', data.message);
+          alert(`Failed to update user: ${data.message}`);
+        }
+      } catch (error) {
+        console.error('❌ Error updating user:', error);
+        alert('Failed to update user. Please try again.');
+      }
     };
 
     const handleDeleteUser = (userId) => {
@@ -194,13 +243,35 @@
       setShowDeleteModal(true);
     };
 
-    const confirmDeleteUser = () => {
+    const confirmDeleteUser = async () => {
       if (userToDelete) {
-        const updatedUsers = users.filter(user => user.id !== userToDelete.id);
-        setUsers(updatedUsers);
-        localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
-        setShowDeleteModal(false);
-        setUserToDelete(null);
+        try {
+          console.log('🔵 Deleting user:', userToDelete.id);
+          const token = localStorage.getItem('authToken');
+          
+          const response = await fetch(`http://localhost:5000/api/users/${userToDelete.id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          const data = await response.json();
+          console.log('📥 Delete user response:', data);
+
+          if (data.success) {
+            console.log('✅ User deleted successfully, refreshing list...');
+            await fetchUsersFromApi(); // Refresh the list
+            setShowDeleteModal(false);
+            setUserToDelete(null);
+          } else {
+            console.error('❌ Failed to delete user:', data.message);
+            alert(`Failed to delete user: ${data.message}`);
+          }
+        } catch (error) {
+          console.error('❌ Error deleting user:', error);
+          alert('Failed to delete user. Please try again.');
+        }
       }
     };
 
@@ -1043,16 +1114,47 @@
                 
                 <div style={styles.formField}>
                   <label style={styles.formLabel}>Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    style={styles.formInput}
-                    value={newUser.password}
-                    onChange={handleInputChange}
-                    onFocus={handleInputFocus}
-                    onBlur={handleInputBlur}
-                    required
-                  />
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      style={{
+                        ...styles.formInput,
+                        paddingRight: '45px',
+                        width: '100%',
+                        boxSizing: 'border-box'
+                      }}
+                      value={newUser.password}
+                      onChange={handleInputChange}
+                      onFocus={handleInputFocus}
+                      onBlur={handleInputBlur}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#64748b',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '4px',
+                        height: '24px',
+                        width: '24px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#0ea5e9'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+                    >
+                      {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                    </button>
+                  </div>
                 </div>
                 
                 <div style={styles.formField}>

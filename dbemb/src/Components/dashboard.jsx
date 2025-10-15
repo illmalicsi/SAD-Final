@@ -10,7 +10,6 @@ const Invoice = React.lazy(() => import('./Invoice'));
 const TransactionHistory = React.lazy(() => import('./TransactionHistory'));
 const Approval = React.lazy(() => import('./Approval'));
 const MembershipApproval = React.lazy(() => import('./MembershipApproval'));
-const BookingManagement = React.lazy(() => import('./BookingManagement'));
 import Payment from './Payment';
 import NotificationService from '../services/notificationService';
 
