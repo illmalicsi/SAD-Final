@@ -12,6 +12,7 @@ import MemberSignup from './MemberSignup'
 import UserSignup from './UserSignup'
 import Dashboard from './dashboard'
 import NotificationService from '../services/notificationService'
+import TestPaymentGateway from './TestPaymentGateway'
 
 
 const Home = () => {

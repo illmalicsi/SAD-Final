@@ -1,156 +1,174 @@
-import React, { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaClock, FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaMusic, FaCheckCircle, FaSpinner, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import React, { useState, useEffect, useMemo } from 'react';
+import { FaCalendarAlt, FaClock, FaUser, FaUsers, FaEnvelope, FaPhone, FaMapMarkerAlt, FaMusic, FaCheckCircle, FaSpinner, FaChevronLeft, FaChevronRight, FaInfoCircle, FaGuitar, FaDrum, FaKeyboard, FaPlus } from 'react-icons/fa';
+
+// --- Data for Dynamic Form ---
+
+const services = ['Band Gigs', 'Parade Events', 'Instrument Rentals', 'Music Arrangement', 'Music Workshops'];
+
+const bandPackages = {
+  '20-players-with': { label: '20 Players (with Food & Transport)', price: 15000 },
+  '20-players-without': { label: '20 Players (without Food & Transport)', price: 20000 },
+  '30-players-with': { label: '30 Players (with Food & Transport)', price: 25000 },
+  '30-players-without': { label: '30 Players (without Food & Transport)', price: 30000 },
+  'full-band': { label: 'Full Band', price: 35000 },
+};
+
+const instruments = {
+  'trumpet': { label: 'Trumpet', pricePerDay: 500 },
+  'trombone': { label: 'Trombone', pricePerDay: 500 },
+  'french-horn': { label: 'French Horn', pricePerDay: 500 },
+  'tuba': { label: 'Tuba', pricePerDay: 500 },
+  'flute': { label: 'Flute', pricePerDay: 500 },
+  'clarinet': { label: 'Clarinet', pricePerDay: 500 },
+  'saxophone': { label: 'Saxophone', pricePerDay: 500 },
+  'yamaha-snare': { label: 'Yamaha Snare Drum', pricePerDay: 1000 },
+  'pearl-snare': { label: 'Pearl Snare Drum', pricePerDay: 1000 },
+  'bass-drum': { label: 'Bass Drum', pricePerDay: 500 },
+  'cymbals': { label: 'Cymbals', pricePerDay: 500 },
+};
+
+const musicArrangementBasePrice = 3000;
 
 const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) => {
   const today = new Date();
+  
+  // --- Core State ---
   const [service, setService] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
-  const [date, setDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  
+  // --- Dynamic State based on Service ---
+  const [estimatedValue, setEstimatedValue] = useState(0);
+  
+  // For Band Gigs / Parade Events
+  const [bandPackage, setBandPackage] = useState('');
+  
+  // For Instrument Rentals
+  const [selectedInstrument, setSelectedInstrument] = useState('');
+  const [rentalStartDate, setRentalStartDate] = useState('');
+  const [rentalEndDate, setRentalEndDate] = useState('');
+
+  // For Music Arrangement
+  const [numPieces, setNumPieces] = useState(1);
+
+  // --- Calendar State ---
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
 
-  const services = ['Band Gigs', 'Music Arrangement', 'Parade Events', 'Music Workshops', 'Instrument Rentals'];
+  // --- Derived State ---
+  const rentalDays = useMemo(() => {
+    if (service === 'Instrument Rentals' && rentalStartDate && rentalEndDate) {
+      const start = new Date(rentalStartDate);
+      const end = new Date(rentalEndDate);
+      if (end < start) return 0;
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive of start and end date
+      return diffDays;
+    }
+    return 0;
+  }, [service, rentalStartDate, rentalEndDate]);
 
-  // Load bookings from API ONLY (no localStorage)
+  // --- Effect for Price Calculation ---
+  useEffect(() => {
+    let value = 0;
+    if (service === 'Band Gigs' || service === 'Parade Events') {
+      value = bandPackages[bandPackage]?.price || 0;
+    } else if (service === 'Instrument Rentals') {
+      const instrumentPrice = instruments[selectedInstrument]?.pricePerDay || 0;
+      value = instrumentPrice * rentalDays;
+    } else if (service === 'Music Arrangement') {
+      value = musicArrangementBasePrice * numPieces;
+    } else if (service === 'Music Workshops') {
+        value = 5000; // Default value for workshops
+    }
+    setEstimatedValue(value);
+  }, [service, bandPackage, selectedInstrument, rentalDays, numPieces]);
+
+  // --- Data Fetching and State Management (largely unchanged) ---
+  const [localBookings, setLocalBookings] = useState([]);
+
   const getStoredBookings = async () => {
     try {
-      console.log('Booking.jsx: Fetching bookings from API...');
-      const response = await fetch('http://localhost:5000/api/bookings', {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
+      const response = await fetch('http://localhost:5000/api/bookings');
       if (response.ok) {
         const data = await response.json();
-        console.log('Booking.jsx: API Response:', data);
         if (data.success && Array.isArray(data.bookings)) {
-          // Convert database format to frontend format
-          const bookings = data.bookings.map(b => ({
+          return data.bookings.map(b => ({
             id: b.booking_id,
             customerName: b.customer_name,
-            name: b.customer_name,
             email: b.email,
             phone: b.phone,
             service: b.service,
-            date: b.date ? b.date.split('T')[0] : b.date, // Fix date format
+            date: b.date ? b.date.split('T')[0] : b.date,
             startTime: b.start_time,
             endTime: b.end_time,
             location: b.location,
-            estimatedValue: parseFloat(b.estimated_value || 5000),
+            estimatedValue: parseFloat(b.estimated_value || 0),
             status: b.status,
             notes: b.notes,
             createdAt: b.created_at
           }));
-          console.log('Booking.jsx: Loaded', bookings.length, 'bookings from API');
-          return bookings;
         }
-      } else {
-        console.error('Booking.jsx: API request failed:', response.status);
       }
     } catch (error) {
-      console.error('Booking.jsx: Error loading bookings from API:', error);
+      console.error('Error loading bookings:', error);
     }
-
-    // Return empty array if API fails
     return [];
   };
 
-  const [localBookings, setLocalBookings] = useState([]);
-
-  // Load bookings on component mount
   useEffect(() => {
     const loadBookings = async () => {
-      console.log('Booking.jsx: Component mounted, loading bookings...');
       const stored = await getStoredBookings();
-      console.log('Booking.jsx: Setting local bookings:', stored.length);
       setLocalBookings(stored);
     };
-    
     loadBookings();
-
-    // Listen for booking updates from other components
     const handleBookingsUpdate = async () => {
-      console.log('Booking.jsx: Received bookingsUpdated event, reloading...');
       const updated = await getStoredBookings();
       setLocalBookings(updated);
     };
-    
     window.addEventListener('bookingsUpdated', handleBookingsUpdate);
-    
-    return () => {
-      window.removeEventListener('bookingsUpdated', handleBookingsUpdate);
-    };
+    return () => window.removeEventListener('bookingsUpdated', handleBookingsUpdate);
   }, []);
 
-  // Enhanced setBookings function - now just updates state, no localStorage
   const updateBookings = (newBookingsOrFunction) => {
-    let newBookings;
-
-    if (typeof newBookingsOrFunction === 'function') {
-      // Handle function case (like prev => [...prev, newItem])
-      newBookings = newBookingsOrFunction(bookings);
-    } else {
-      // Handle direct array case
-      newBookings = newBookingsOrFunction;
-    }
-
-    console.log('updateBookings called with:', newBookings.length, 'bookings');
+    const newBookings = typeof newBookingsOrFunction === 'function' 
+      ? newBookingsOrFunction(bookings) 
+      : newBookingsOrFunction;
 
     if (propSetBookings) {
-      // If we have a prop setter, use it (for dashboard integration)
-      console.log('Using prop setter');
       propSetBookings(newBookings);
     } else {
-      // If standalone, update local state only (database is source of truth)
-      console.log('Using local state setter');
       setLocalBookings(newBookings);
     }
-
-    // Dispatch event to notify other components to reload from database
-    window.dispatchEvent(new CustomEvent('bookingsUpdated', {
-      detail: { reload: true }
-    }));
+    window.dispatchEvent(new CustomEvent('bookingsUpdated'));
   };
 
-  // Use prop data if available, otherwise use local state
   const bookings = propBookings.length > 0 ? propBookings : localBookings;
   const setBookings = updateBookings;
 
-  // Check if a date is blocked (has approved booking)
   const isDateBlocked = (dateStr) => {
     return bookings.some(b => b.date === dateStr && b.status === 'approved');
   };
 
-  // Calendar helper functions
+  // --- Calendar Utils ---
   const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
   const firstWeekday = (y, m) => new Date(y, m, 1).getDay();
   const pad2 = n => (n < 10 ? `0${n}` : `${n}`);
   const ymd = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
   const todayStr = ymd(today.getFullYear(), today.getMonth(), today.getDate());
 
-  // Get date status for calendar display
   const getDateStatus = (dateStr) => {
     const dayBookings = bookings.filter(b => b.date === dateStr);
-    const approvedBookings = dayBookings.filter(b => b.status === 'approved');
-    const pendingBookings = dayBookings.filter(b => b.status === 'pending');
-    const rejectedBookings = dayBookings.filter(b => b.status === 'rejected');
-
-    if (approvedBookings.length > 0) return 'approved';
-    if (pendingBookings.length > 0) return 'pending';
-    if (rejectedBookings.length > 0) return 'rejected';
+    if (dayBookings.some(b => b.status === 'approved')) return 'approved';
+    if (dayBookings.some(b => b.status === 'pending')) return 'pending';
     return 'available';
   };
 
-  // Navigate calendar
   const prevMonth = () => {
     if (month === 0) {
       setMonth(11);
@@ -159,7 +177,6 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       setMonth(month - 1);
     }
   };
-
   const nextMonth = () => {
     if (month === 11) {
       setMonth(0);
@@ -169,87 +186,72 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
     }
   };
 
-  // Handle date selection
   const handleDateClick = (dateStr) => {
-    if (dateStr >= todayStr && getDateStatus(dateStr) === 'available') {
-      setDate(dateStr);
+    if (dateStr >= todayStr && getDateStatus(dateStr) !== 'approved') {
+      if (service === 'Instrument Rentals') {
+        if (!rentalStartDate || rentalEndDate) {
+          setRentalStartDate(dateStr);
+          setRentalEndDate('');
+        } else if (dateStr >= rentalStartDate) {
+          setRentalEndDate(dateStr);
+        } else {
+          setRentalStartDate(dateStr);
+        }
+      }
     }
   };
 
+  // --- Form Submission ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!service || !name || !email || !date || !startTime || !endTime || !location) {
-      alert('Please fill in all required fields.');
-      return;
-    }
-
-    if (endTime <= startTime) {
-      alert('End time must be after start time.');
-      return;
-    }
-
-    if (isDateBlocked(date)) {
-      alert('This date is already booked. Please choose a different date.');
-      return;
-    }
-
     setIsSubmitting(true);
 
+    let bookingNotes = notes;
+    let bookingDate = todayStr; // Default date
+    let startTime = '09:00';
+    let endTime = '17:00';
+
+    if (service === 'Band Gigs' || service === 'Parade Events') {
+        bookingNotes = `Package: ${bandPackages[bandPackage]?.label}\n\n${notes}`;
+    } else if (service === 'Instrument Rentals') {
+        bookingNotes = `Instrument: ${instruments[selectedInstrument]?.label}\nRental Period: ${rentalStartDate} to ${rentalEndDate} (${rentalDays} days)\n\n${notes}`;
+        bookingDate = rentalStartDate;
+    } else if (service === 'Music Arrangement') {
+        bookingNotes = `Number of Pieces: ${numPieces}\n\n${notes}`;
+    }
+
     try {
-      // Create booking object
       const newBooking = {
-        userId: null, // Can be set if user is logged in
+        userId: null,
         customerName: name.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         service: service,
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
+        date: bookingDate,
+        startTime,
+        endTime,
         location: location.trim(),
-        estimatedValue: 5000, // Default value
-        notes: notes.trim() || null
+        estimatedValue: estimatedValue,
+        notes: bookingNotes.trim() || null
       };
 
-      // Save to database via API
       const response = await fetch('http://localhost:5000/api/bookings', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newBooking)
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Format the returned booking for frontend
         const formattedBooking = {
+          ...data.booking,
           id: data.booking.booking_id,
-          service: data.booking.service,
-          name: data.booking.customer_name,
-          email: data.booking.email,
-          phone: data.booking.phone,
-          location: data.booking.location,
-          notes: data.booking.notes,
           date: data.booking.date ? data.booking.date.split('T')[0] : data.booking.date,
-          startTime: data.booking.start_time,
-          endTime: data.booking.end_time,
-          createdAt: data.booking.created_at,
-          status: data.booking.status,
-          estimatedValue: parseFloat(data.booking.estimated_value || 5000)
         };
-
-        // Update local state (for immediate UI feedback)
-        setBookings(prev => {
-          const updated = [...prev, formattedBooking];
-          console.log('Booking.jsx: Added new booking, total bookings:', updated.length);
-          return updated;
-        });
-
+        setBookings(prev => [...prev, formattedBooking]);
         setShowSuccess(true);
-
+        
         // Reset form
         setService('');
         setName('');
@@ -257,26 +259,108 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         setPhone('');
         setLocation('');
         setNotes('');
-        setDate('');
-        setStartTime('');
-        setEndTime('');
+        setBandPackage('');
+        setSelectedInstrument('');
+        setRentalStartDate('');
+        setRentalEndDate('');
+        setNumPieces(1);
+        setEstimatedValue(0);
 
         setTimeout(() => setShowSuccess(false), 5000);
       } else {
-        alert(data.message || 'Failed to submit booking. Please try again.');
+        alert(data.message || 'Failed to submit booking.');
       }
     } catch (error) {
       console.error('Error submitting booking:', error);
-      alert('An error occurred while submitting your booking. Please try again.');
+      alert('An error occurred.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const isFormValid = service && name && email && location && date && startTime && endTime && !isDateBlocked(date) && endTime > startTime;
+  const isFormValid = useMemo(() => {
+    if (!service || !name || !email || !location) return false;
+    if (service === 'Band Gigs' || service === 'Parade Events') {
+      return !!bandPackage;
+    }
+    if (service === 'Instrument Rentals') {
+      return !!selectedInstrument && !!rentalStartDate && !!rentalEndDate;
+    }
+    if (service === 'Music Arrangement') {
+      return numPieces > 0;
+    }
+    if (service === 'Music Workshops') {
+        return true; // Or add specific validation
+    }
+    return false;
+  }, [service, name, email, location, bandPackage, selectedInstrument, rentalStartDate, rentalEndDate, numPieces]);
 
-  // Get minimum date (today)
   const minDate = today.toISOString().split('T')[0];
+
+  // --- Render Methods for Dynamic Fields ---
+
+  const renderServiceSpecificFields = () => {
+    switch (service) {
+      case 'Band Gigs':
+      case 'Parade Events':
+        return (
+          <div style={styles.inputGroup}>
+            <label style={styles.label}><FaUsers /> Package Options <span style={styles.required}>*</span></label>
+            <select value={bandPackage} onChange={e => setBandPackage(e.target.value)} style={styles.input} required>
+              <option value="">Select a package...</option>
+              {Object.entries(bandPackages).map(([key, { label, price }]) => (
+                <option key={key} value={key}>{label} - ₱{price.toLocaleString()}</option>
+              ))}
+            </select>
+          </div>
+        );
+      case 'Instrument Rentals':
+        return (
+          <>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}><FaGuitar /> Instrument <span style={styles.required}>*</span></label>
+              <select value={selectedInstrument} onChange={e => setSelectedInstrument(e.target.value)} style={styles.input} required>
+                <option value="">Select an instrument...</option>
+                {Object.entries(instruments).map(([key, { label, pricePerDay }]) => (
+                  <option key={key} value={key}>{label} - ₱{pricePerDay.toLocaleString()}/day</option>
+                ))}
+              </select>
+            </div>
+            <div style={styles.gridTwo}>
+                <div style={styles.inputGroup}>
+                    <label style={styles.label}><FaCalendarAlt /> Rental Start Date <span style={styles.required}>*</span></label>
+                    <input type="date" value={rentalStartDate} onChange={e => setRentalStartDate(e.target.value)} style={styles.input} min={minDate} required />
+                </div>
+                <div style={styles.inputGroup}>
+                    <label style={styles.label}><FaCalendarAlt /> Rental End Date <span style={styles.required}>*</span></label>
+                    <input type="date" value={rentalEndDate} onChange={e => setRentalEndDate(e.target.value)} style={styles.input} min={rentalStartDate || minDate} required />
+                </div>
+            </div>
+            {rentalDays > 0 && (
+                <div style={styles.priceInfo}>
+                    <FaInfoCircle />
+                    <span>Duration: <strong>{rentalDays} day{rentalDays > 1 && 's'}</strong></span>
+                </div>
+            )}
+          </>
+        );
+      case 'Music Arrangement':
+        return (
+            <>
+                <div style={styles.inputGroup}>
+                    <label style={styles.label}><FaPlus /> Number of Pieces <span style={styles.required}>*</span></label>
+                    <input type="number" value={numPieces} onChange={e => setNumPieces(Math.max(1, parseInt(e.target.value)))} style={styles.input} min="1" required />
+                </div>
+                <div style={styles.priceInfo}>
+                    <FaInfoCircle />
+                    <span>Base price is ₱{musicArrangementBasePrice.toLocaleString()} per piece. Final price depends on complexity and instrumentation.</span>
+                </div>
+            </>
+        );
+      default:
+        return null;
+    }
+  };
 
   const styles = {
     container: {
@@ -538,7 +622,37 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       width: '10px',
       height: '10px',
       borderRadius: '50%'
-    }
+    },
+    priceDisplay: {
+        background: 'rgba(3, 105, 161, 0.05)',
+        border: '1px solid rgba(3, 105, 161, 0.1)',
+        borderRadius: '16px',
+        padding: '1.5rem',
+        textAlign: 'center',
+        transition: 'all 0.3s ease',
+        marginTop: '1rem',
+    },
+    priceLabel: {
+        color: '#475569',
+        fontSize: '1rem',
+        fontWeight: '600',
+        marginBottom: '0.5rem',
+    },
+    priceValue: {
+        color: '#0369a1',
+        fontSize: '2.5rem',
+        fontWeight: '800',
+    },
+    priceInfo: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        background: 'rgba(248, 250, 252, 0.8)',
+        padding: '0.75rem 1rem',
+        borderRadius: '12px',
+        fontSize: '0.875rem',
+        color: '#475569',
+    },
   };
 
   return (
@@ -629,200 +743,59 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
               </select>
             </div>
 
-            {/* Contact Information */}
-            <div style={styles.gridTwo}>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>
-                  <FaUser />
-                  Full Name
-                  <span style={styles.required}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  style={styles.input}
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
+            {/* Dynamically Rendered Fields */}
+            {service && renderServiceSpecificFields()}
 
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>
-                  <FaEnvelope />
-                  Email Address
-                  <span style={styles.required}>*</span>
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  style={styles.input}
-                  placeholder="Enter your email address"
-                  required
-                />
-              </div>
-            </div>
-
-            <div style={styles.gridTwo}>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>
-                  <FaPhone />
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => {
-                    let value = e.target.value;
-
-                    // Remove all non-digit characters for processing
-                    const digitsOnly = value.replace(/\D/g, '');
-
-                    // Handle +63 format
-                    if (value.startsWith('+63')) {
-                      const remaining = digitsOnly.slice(2);
-                      if (remaining.length <= 10) {
-                        setPhone(`+63${remaining}`);
-                      }
-                    }
-                    // Handle 09 format (convert to +63)
-                    else if (digitsOnly.startsWith('09')) {
-                      if (digitsOnly.length <= 11) {
-                        setPhone(`+63${digitsOnly.slice(1)}`);
-                      }
-                    }
-                    // Handle direct 11 digits starting with 9
-                    else if (digitsOnly.startsWith('9')) {
-                      if (digitsOnly.length <= 10) {
-                        setPhone(`+63${digitsOnly}`);
-                      }
-                    }
-                    // Handle any other digit input
-                    else if (digitsOnly.length > 0) {
-                      if (digitsOnly.length <= 10) {
-                        setPhone(`+63${digitsOnly}`);
-                      }
-                    }
-                    // Empty input
-                    else {
-                      setPhone('');
-                    }
-                  }}
-                  style={styles.input}
-                  placeholder="+63 912 345 6789"
-                  pattern="\+639[0-9]{9}"
-                  title="Please enter a valid Philippine mobile number"
-                />
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>
-                  <FaMapMarkerAlt />
-                  Event Location
-                  <span style={styles.required}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={e => setLocation(e.target.value)}
-                  style={styles.input}
-                  placeholder="Enter event location"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Date and Time */}
-            <div style={styles.gridThree}>
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>
-                  <FaCalendarAlt />
-                  Event Date
-                  <span style={styles.required}>*</span>
-                </label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  style={styles.input}
-                  min={minDate}
-                  required
-                />
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>
-                  <FaClock />
-                  Start Time
-                  <span style={styles.required}>*</span>
-                </label>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={e => setStartTime(e.target.value)}
-                  style={styles.input}
-                  required
-                />
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>
-                  <FaClock />
-                  End Time
-                  <span style={styles.required}>*</span>
-                </label>
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={e => setEndTime(e.target.value)}
-                  style={styles.input}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Additional Notes */}
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>
-                Additional Notes
-              </label>
-              <textarea
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                style={{ ...styles.input, ...styles.textarea }}
-                placeholder="Any special requirements, equipment needs, or additional information..."
-                rows={4}
-              />
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={!isFormValid || isSubmitting}
-              style={styles.button}
-            >
-              {isSubmitting ? (
+            {/* Common Fields */}
+            {service && (
                 <>
-                  <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
-                  Submitting...
+                    <div style={styles.gridTwo}>
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaUser /> Full Name <span style={styles.required}>*</span></label>
+                            <input type="text" value={name} onChange={e => setName(e.target.value)} style={styles.input} placeholder="Enter your full name" required />
+                        </div>
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaEnvelope /> Email Address <span style={styles.required}>*</span></label>
+                            <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={styles.input} placeholder="Enter your email address" required />
+                        </div>
+                    </div>
+                    <div style={styles.gridTwo}>
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaPhone /> Phone Number</label>
+                            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} style={styles.input} placeholder="+63 912 345 6789" />
+                        </div>
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaMapMarkerAlt /> Event Location <span style={styles.required}>*</span></label>
+                            <input type="text" value={location} onChange={e => setLocation(e.target.value)} style={styles.input} placeholder="Enter event location" required />
+                        </div>
+                    </div>
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>Additional Notes</label>
+                        <textarea value={notes} onChange={e => setNotes(e.target.value)} style={{ ...styles.input, ...styles.textarea }} placeholder="Any special requirements or additional information..." rows={4} />
+                    </div>
+
+                    {/* Price Display */}
+                    {estimatedValue > 0 && (
+                        <div style={styles.priceDisplay}>
+                            <div style={styles.priceLabel}>Estimated Price</div>
+                            <div style={styles.priceValue}>₱{estimatedValue.toLocaleString()}</div>
+                        </div>
+                    )}
+
+                    <button type="submit" disabled={!isFormValid || isSubmitting} style={styles.button}>
+                        {isSubmitting ? <><FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> Submitting...</> : <><FaCheckCircle /> Submit Booking Request</>}
+                    </button>
                 </>
-              ) : (
-                <>
-                  <FaCheckCircle />
-                  Submit Booking Request
-                </>
-              )}
-            </button>
+            )}
           </form>
         </div>
 
-        {/* Calendar Section - Now on the side */}
+        {/* Calendar Section - Now primarily for rentals */}
         <div className="calendar-container" style={styles.calendarContainer}>
           <div style={styles.calendarHeader}>
             <div style={styles.calendarTitle}>
               <FaCalendarAlt size={16} />
-              Availability
+              {service === 'Instrument Rentals' ? 'Select Rental Dates' : 'Availability Calendar'}
             </div>
           </div>
           <div style={styles.calendarNav}>
@@ -856,7 +829,9 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
               const dateStr = ymd(year, month, day);
               const status = getDateStatus(dateStr);
               const isPast = dateStr < todayStr;
-              const isSelected = dateStr === date;
+              const isSelected = service === 'Instrument Rentals' && dateStr >= rentalStartDate && dateStr <= rentalEndDate;
+              const isSelectionStart = service === 'Instrument Rentals' && dateStr === rentalStartDate;
+              const isSelectionEnd = service === 'Instrument Rentals' && dateStr === rentalEndDate;
 
               let dayStyle = { ...styles.dayCell };
 

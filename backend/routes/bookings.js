@@ -3,6 +3,7 @@ const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const { pool } = require('../config/database');
 const billingService = require('../services/billingService');
+const { formatInTimeZone } = require('date-fns-tz');
 
 // Get all bookings (public endpoint for calendar display)
 router.get('/', async (req, res) => {
@@ -94,17 +95,30 @@ router.post('/', async (req, res) => {
     // Allow status to be set (for migration), default to 'pending'
     const bookingStatus = status || 'pending';
 
+    // The date from the frontend is a 'YYYY-MM-DD' string.
+    // We need to ensure it's treated as a date in a specific timezone (e.g., Asia/Manila)
+    // and not converted to UTC by the database driver, which can cause it to shift by a day.
+    const timeZone = 'Asia/Manila'; // Or your target timezone
+    const formattedDate = formatInTimeZone(new Date(date), timeZone, 'yyyy-MM-dd');
+
+    console.log('📅 Backend received booking date:', date);
+    console.log('   Formatted booking date for DB:', formattedDate);
+    console.log('   Full booking data:', { customerName, service, date: formattedDate, startTime, endTime });
+
     const [result] = await pool.query(
       `INSERT INTO bookings 
        (user_id, customer_name, email, phone, service, date, start_time, end_time, location, estimated_value, notes, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userId || null, customerName, email, phone, service, date, startTime, endTime, location, estimatedValue || 5000, notes || null, bookingStatus]
+      [userId || null, customerName, email, phone, service, formattedDate, startTime, endTime, location, estimatedValue || 5000, notes || null, bookingStatus]
     );
 
     const [newBooking] = await pool.query(
       'SELECT * FROM bookings WHERE booking_id = ?',
       [result.insertId]
     );
+
+    console.log('✅ Booking created with date:', newBooking[0].date);
+    console.log('   Stored date type:', typeof newBooking[0].date);
 
     res.status(201).json({
       success: true,
