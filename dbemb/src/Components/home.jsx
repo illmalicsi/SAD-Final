@@ -2119,6 +2119,16 @@ const servicesHeaderRightStyle = {
     setShowInstrumentRequest(false);
   };
 
+  const handleServiceClick = (service) => {
+    // Redirect to booking page with service pre-selected
+    const serviceParam = encodeURIComponent(service.title);
+    window.location.href = `/booking?service=${serviceParam}`;
+  };
+
+  const closeModal = () => {
+    setModalService(null);
+  };
+
   return (
     <>
       {/* Login view */}
@@ -2301,7 +2311,7 @@ const servicesHeaderRightStyle = {
                             right: 0, 
                             marginTop: 4,
                             background: 'white', 
-                            borderRadius: 8, 
+                            borderRadius: '8px', 
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                             zIndex: 1000,
                             minWidth: 140,
@@ -2528,7 +2538,7 @@ const servicesHeaderRightStyle = {
                                         right: 0, 
                                         marginTop: 4,
                                         background: 'white', 
-                                        borderRadius: 8, 
+                                        borderRadius: '8px', 
                                         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                                         zIndex: 1201,
                                         minWidth: 140,
@@ -2624,7 +2634,7 @@ const servicesHeaderRightStyle = {
                         </div>
                       <div style={{ textAlign: 'left', lineHeight: 1 }}>
                         <div style={{ fontSize: '13px', fontWeight: 800 }}>{user.firstName || (user.email || '').split('@')[0]}</div>
-                        <div style={{ fontSize: '11px', color: 'rgba(229,231,235,0.9)', marginTop: '2px' }}>{user.role || 'Member'}</div>
+                        <div style={{ fontSize: '11px', color: 'rgba(229, 231, 235, 0.9)', marginTop: '2px' }}>{user.role || 'Member'}</div>
                       </div>
                       <div style={{ marginLeft: '6px', opacity: 0.9, transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 180ms ease' }}>▾</div>
                     </button>
@@ -2654,7 +2664,7 @@ const servicesHeaderRightStyle = {
                           </a>
 
                           <a href="#bookings" onClick={(e) => { e.preventDefault(); setShowMyBookings(true); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 7h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M8 3v4" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M16 3v4" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 10v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             <span>Bookings</span>
                           </a>
 
@@ -2748,17 +2758,17 @@ const servicesHeaderRightStyle = {
             <div style={heroContentStyle}>
               {/* Main Tagline */}
               <h1 style={taglineStyle}>
-                Cirva a la Gente por la Musica
+                Cirva a la gente por la música
               </h1>
-              
-              {/* English Translation */}
+
+              {/* Translation */}
               <p style={translationStyle}>
-                "Serve the People Through Music"
+                "Serve the people through music"
               </p>
-              
-              {/* Call to Action Button */}
+
+              {/* Call to Action */}
               <button
-                onClick={handleShowSignup}
+                onClick={handleShowUserSignup}
                 style={{
                   background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                   border: 'none',

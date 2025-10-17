@@ -3,7 +3,6 @@ const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const { pool } = require('../config/database');
 const billingService = require('../services/billingService');
-const { formatInTimeZone } = require('date-fns-tz');
 
 // Get all bookings (public endpoint for calendar display)
 router.get('/', async (req, res) => {
@@ -95,14 +94,10 @@ router.post('/', async (req, res) => {
     // Allow status to be set (for migration), default to 'pending'
     const bookingStatus = status || 'pending';
 
-    // The date from the frontend is a 'YYYY-MM-DD' string.
-    // We need to ensure it's treated as a date in a specific timezone (e.g., Asia/Manila)
-    // and not converted to UTC by the database driver, which can cause it to shift by a day.
-    const timeZone = 'Asia/Manila'; // Or your target timezone
-    const formattedDate = formatInTimeZone(new Date(date), timeZone, 'yyyy-MM-dd');
+    // Use the date string directly from the request to avoid any timezone conversions.
+    const formattedDate = date;
 
-    console.log('📅 Backend received booking date:', date);
-    console.log('   Formatted booking date for DB:', formattedDate);
+    console.log('📅 Backend received booking date:', formattedDate);
     console.log('   Full booking data:', { customerName, service, date: formattedDate, startTime, endTime });
 
     const [result] = await pool.query(

@@ -41,12 +41,14 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   
   // --- Dynamic State based on Service ---
   const [estimatedValue, setEstimatedValue] = useState(0);
   
   // For Band Gigs / Parade Events
   const [bandPackage, setBandPackage] = useState('');
+  const [eventDate, setEventDate] = useState('');
   
   // For Instrument Rentals
   const [selectedInstrument, setSelectedInstrument] = useState('');
@@ -88,6 +90,15 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
     }
     setEstimatedValue(value);
   }, [service, bandPackage, selectedInstrument, rentalDays, numPieces]);
+
+  // Effect to set service from URL parameter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const serviceFromUrl = params.get('service');
+    if (serviceFromUrl && services.includes(serviceFromUrl)) {
+      setService(serviceFromUrl);
+    }
+  }, []);
 
   // --- Data Fetching and State Management (largely unchanged) ---
   const [localBookings, setLocalBookings] = useState([]);
@@ -197,6 +208,8 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         } else {
           setRentalStartDate(dateStr);
         }
+      } else if (service === 'Band Gigs' || service === 'Parade Events') {
+        setEventDate(dateStr);
       }
     }
   };
@@ -213,6 +226,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
 
     if (service === 'Band Gigs' || service === 'Parade Events') {
         bookingNotes = `Package: ${bandPackages[bandPackage]?.label}\n\n${notes}`;
+        bookingDate = eventDate; // Use the selected event date
     } else if (service === 'Instrument Rentals') {
         bookingNotes = `Instrument: ${instruments[selectedInstrument]?.label}\nRental Period: ${rentalStartDate} to ${rentalEndDate} (${rentalDays} days)\n\n${notes}`;
         bookingDate = rentalStartDate;
@@ -263,6 +277,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         setSelectedInstrument('');
         setRentalStartDate('');
         setRentalEndDate('');
+        setEventDate(''); // Reset event date
         setNumPieces(1);
         setEstimatedValue(0);
 
@@ -281,7 +296,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
   const isFormValid = useMemo(() => {
     if (!service || !name || !email || !location) return false;
     if (service === 'Band Gigs' || service === 'Parade Events') {
-      return !!bandPackage;
+      return !!bandPackage && !!eventDate;
     }
     if (service === 'Instrument Rentals') {
       return !!selectedInstrument && !!rentalStartDate && !!rentalEndDate;
@@ -293,7 +308,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         return true; // Or add specific validation
     }
     return false;
-  }, [service, name, email, location, bandPackage, selectedInstrument, rentalStartDate, rentalEndDate, numPieces]);
+  }, [service, name, email, location, bandPackage, eventDate, selectedInstrument, rentalStartDate, rentalEndDate, numPieces]);
 
   const minDate = today.toISOString().split('T')[0];
 
@@ -304,15 +319,21 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       case 'Band Gigs':
       case 'Parade Events':
         return (
-          <div style={styles.inputGroup}>
-            <label style={styles.label}><FaUsers /> Package Options <span style={styles.required}>*</span></label>
-            <select value={bandPackage} onChange={e => setBandPackage(e.target.value)} style={styles.input} required>
-              <option value="">Select a package...</option>
-              {Object.entries(bandPackages).map(([key, { label, price }]) => (
-                <option key={key} value={key}>{label} - ₱{price.toLocaleString()}</option>
-              ))}
-            </select>
-          </div>
+          <>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}><FaUsers /> Package Options <span style={styles.required}>*</span></label>
+              <select value={bandPackage} onChange={e => setBandPackage(e.target.value)} style={styles.input} required>
+                <option value="">Select a package...</option>
+                {Object.entries(bandPackages).map(([key, { label, price }]) => (
+                  <option key={key} value={key}>{label} - ₱{price.toLocaleString()}</option>
+                ))}
+              </select>
+            </div>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}><FaCalendarAlt /> Event Date <span style={styles.required}>*</span></label>
+              <input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} style={styles.input} min={minDate} required />
+            </div>
+          </>
         );
       case 'Instrument Rentals':
         return (
@@ -752,26 +773,29 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
                     <div style={styles.gridTwo}>
                         <div style={styles.inputGroup}>
                             <label style={styles.label}><FaUser /> Full Name <span style={styles.required}>*</span></label>
-                            <input type="text" value={name} onChange={e => setName(e.target.value)} style={styles.input} placeholder="Enter your full name" required />
+                            <input type="text" value={name} onChange={e => setName(e.target.value)} style={styles.input} placeholder="e.g., Juan Dela Cruz" required readOnly={isUserLoggedIn} />
                         </div>
+                        
                         <div style={styles.inputGroup}>
-                            <label style={styles.label}><FaEnvelope /> Email Address <span style={styles.required}>*</span></label>
-                            <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={styles.input} placeholder="Enter your email address" required />
+                          <label style={styles.label}><FaEnvelope /> Email Address <span style={styles.required}>*</span></label>
+                          <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={styles.input} placeholder="e.g., juan.delacruz@email.com" required readOnly={isUserLoggedIn} />
                         </div>
                     </div>
+
                     <div style={styles.gridTwo}>
-                        <div style={styles.inputGroup}>
-                            <label style={styles.label}><FaPhone /> Phone Number</label>
-                            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} style={styles.input} placeholder="+63 912 345 6789" />
-                        </div>
-                        <div style={styles.inputGroup}>
-                            <label style={styles.label}><FaMapMarkerAlt /> Event Location <span style={styles.required}>*</span></label>
-                            <input type="text" value={location} onChange={e => setLocation(e.target.value)} style={styles.input} placeholder="Enter event location" required />
-                        </div>
+                      <div style={styles.inputGroup}>
+                        <label style={styles.label}><FaPhone /> Phone Number <span style={styles.required}>*</span></label>
+                        <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} style={styles.input} placeholder="e.g., 09171234567" required readOnly={isUserLoggedIn} />
+                      </div>
+                      <div style={styles.inputGroup}>
+                        <label style={styles.label}><FaMapMarkerAlt /> Event Location / Address <span style={styles.required}>*</span></label>
+                        <input type="text" value={location} onChange={e => setLocation(e.target.value)} style={styles.input} placeholder="e.g., 123 Rizal St, Metro Manila" required />
+                      </div>
                     </div>
+
                     <div style={styles.inputGroup}>
-                        <label style={styles.label}>Additional Notes</label>
-                        <textarea value={notes} onChange={e => setNotes(e.target.value)} style={{ ...styles.input, ...styles.textarea }} placeholder="Any special requirements or additional information..." rows={4} />
+                        <label style={styles.label}><FaInfoCircle /> Notes / Special Requests</label>
+                        <textarea value={notes} onChange={e => setNotes(e.target.value)} style={styles.textarea} placeholder="e.g., specific song requests, setup details, etc." rows={4}></textarea>
                     </div>
 
                     {/* Price Display */}
@@ -829,9 +853,13 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
               const dateStr = ymd(year, month, day);
               const status = getDateStatus(dateStr);
               const isPast = dateStr < todayStr;
-              const isSelected = service === 'Instrument Rentals' && dateStr >= rentalStartDate && dateStr <= rentalEndDate;
-              const isSelectionStart = service === 'Instrument Rentals' && dateStr === rentalStartDate;
-              const isSelectionEnd = service === 'Instrument Rentals' && dateStr === rentalEndDate;
+              
+              let isSelected = false;
+              if (service === 'Instrument Rentals') {
+                isSelected = dateStr >= rentalStartDate && dateStr <= rentalEndDate && rentalStartDate && rentalEndDate;
+              } else if (service === 'Band Gigs' || service === 'Parade Events') {
+                isSelected = dateStr === eventDate;
+              }
 
               let dayStyle = { ...styles.dayCell };
 
