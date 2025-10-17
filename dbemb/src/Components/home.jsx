@@ -1409,7 +1409,9 @@ const servicesHeaderRightStyle = {
     expiryDate: '',
     cvv: '',
     gcashNumber: '',
-    referenceNumber: ''
+    referenceNumber: '',
+    paymentOption: 'fullpayment', // 'downpayment' or 'fullpayment'
+    selectedAmount: 0
   });
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -1419,6 +1421,30 @@ const servicesHeaderRightStyle = {
   const [serviceCols, setServiceCols] = useState(5);
   const [serviceCardH, setServiceCardH] = useState(240);
   const aboutImages = [bandGigs, paradeEvents, musicWorkshop, musicArrangement, instrumentRentals];
+  
+  // Date formatting utility
+  const formatDate = (dateValue) => {
+    if (!dateValue) return '';
+    try {
+      // Handle ISO format (2025-10-25T00:00:00.000Z)
+      let dateStr = dateValue;
+      if (typeof dateValue === 'string') {
+        dateStr = dateValue.split('T')[0]; // Get YYYY-MM-DD part
+      }
+      const dateObj = new Date(dateStr + 'T00:00:00'); // Add time to avoid timezone issues
+      if (!isNaN(dateObj.getTime())) {
+        return dateObj.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+      }
+      return dateValue;
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return dateValue;
+    }
+  };
   
   // Instrument Request States
   const [showInstrumentRequest, setShowInstrumentRequest] = useState(false);
@@ -1715,6 +1741,7 @@ const servicesHeaderRightStyle = {
         'Custom musical arrangements for parades, field shows, and ceremonial pieces. We adapt to your theme and instrumentation to deliver a polished performance.'
     },
     {
+     
       title: 'Parade Events',
       img: paradeEvents,
       description:
@@ -1771,6 +1798,31 @@ const servicesHeaderRightStyle = {
       window.history.replaceState(null, null, '#home');
     }
   }, [currentView]);
+
+  // Initialize payment form when modal opens
+  useEffect(() => {
+    if (showPaymentModal && selectedPaymentNotification?.data) {
+      console.log('🟡 PAYMENT MODAL OPENED - Initializing payment form');
+      console.log('Selected notification data:', selectedPaymentNotification.data);
+      
+      // Reset success state to show form, not success screen
+      setPaymentSuccess(false);
+      setPaymentProcessing(false);
+      
+      const totalAmount = selectedPaymentNotification.data.amount || 0;
+      setPaymentForm({
+        cardholderName: '',
+        cardNumber: '',
+        expiryDate: '',
+        cvv: '',
+        gcashNumber: '',
+        referenceNumber: '',
+        paymentOption: 'fullpayment',
+        selectedAmount: totalAmount
+      });
+      console.log('✅ Payment form initialized - Waiting for user to fill and submit');
+    }
+  }, [showPaymentModal, selectedPaymentNotification]);
 
   // Load notifications for current user from NotificationService
   useEffect(() => {
@@ -1859,6 +1911,9 @@ const servicesHeaderRightStyle = {
 
   // Handle payment submission
   const handlePaymentSubmit = async (e) => {
+    console.log('🔵 PAYMENT FORM SUBMITTED - handlePaymentSubmit called');
+    console.log('Event type:', e.type);
+    console.log('Event target:', e.target);
     e.preventDefault();
     setPaymentProcessing(true);
 
@@ -1890,76 +1945,120 @@ const servicesHeaderRightStyle = {
         return;
       }
 
-      // Simulate payment API call
-      const token = localStorage.getItem('authToken');
-      console.log('Using auth token:', token ? 'Token exists' : 'No token found');
+      // Use selected amount (down payment or full payment)
+      const paymentAmount = paymentForm.selectedAmount || amount;
+      const paymentType = paymentForm.paymentOption || 'fullpayment';
       
-      const response = await fetch('http://localhost:5000/api/payments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+      console.log('Payment details:', { paymentAmount, paymentType, originalAmount: amount });
+
+      // Simulate payment processing (store in localStorage instead of API call)
+      console.log('💳 Processing simulated payment...');
+      
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Store payment record in localStorage
+      const payments = JSON.parse(localStorage.getItem('payments') || '[]');
+      const newPayment = {
+        id: Date.now(),
+        bookingId,
+        amount: paymentAmount,
+        totalAmount: amount,
+        paymentType,
+        paymentMethod,
+        timestamp: new Date().toISOString(),
+        service: selectedPaymentNotification.data?.service,
+        date: selectedPaymentNotification.data?.date,
+        status: 'completed',
+        ...paymentForm
+      };
+      payments.push(newPayment);
+      localStorage.setItem('payments', JSON.stringify(payments));
+      
+      console.log('✅ Payment stored in localStorage:', newPayment);
+      
+      // Mark as successful
+      const data = {
+        success: true,
+        booking: {
+          id: bookingId,
+          service: selectedPaymentNotification.data?.service,
+          date: selectedPaymentNotification.data?.date,
+          email: user?.email,
+          amount: paymentAmount,
+          paymentMethod: paymentMethod
         },
-        body: JSON.stringify({
-          bookingId,
-          amount,
-          paymentMethod,
-          ...paymentForm
-        })
-      });
+        bookingId,
+        invoiceId: newPayment.id
+      };
       
-      console.log('Payment API response status:', response.status);
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setPaymentSuccess(true);
-        
-        // Create success notification
-        if (data.booking) {
+      console.log('✅ Payment successful - Creating success notification');
+      
+      // Create success notification (only if user is logged in)
+      if (data.booking && user && user.email) {
+        try {
+          const paymentStatusText = paymentType === 'downpayment' 
+            ? `Down payment (50%) of ₱${paymentAmount.toLocaleString()} has been received. Remaining balance: ₱${(amount - paymentAmount).toLocaleString()}`
+            : 'Your booking is now fully paid!';
+          
+          // Format date safely
+          const formattedDate = data.booking.date || 'your booking date';
+            
           NotificationService.createNotification(user.email, {
             type: 'success',
             title: 'Payment Successful! 💳',
-            message: `Your payment of ₱${amount.toLocaleString()} for "${data.booking.service}" on ${data.booking.date} has been confirmed. Your booking is now fully paid!`,
+            message: `Your payment of ₱${paymentAmount.toLocaleString()} for "${data.booking.service}" on ${formattedDate} has been confirmed. ${paymentStatusText}`,
             data: {
               bookingId: data.bookingId,
               invoiceId: data.invoiceId,
-              amount: amount,
+              amount: paymentAmount,
+              totalAmount: amount,
+              paymentType: paymentType,
               paymentMethod: paymentMethod,
               service: data.booking.service,
               date: data.booking.date
             }
           });
           
+          console.log('✅ Notification created successfully');
+          
           // Trigger notification refresh
           loadNotifications();
+        } catch (notifError) {
+          console.error('⚠️ Failed to create notification, but payment was successful:', notifError);
+          // Don't throw - payment was successful, just notification failed
         }
-        
-        // Wait 2 seconds then close modal
-        setTimeout(() => {
-          setShowPaymentModal(false);
-          setPaymentSuccess(false);
-          setPaymentForm({
-            cardholderName: '',
-            cardNumber: '',
-            expiryDate: '',
-            cvv: '',
-            gcashNumber: '',
-            referenceNumber: ''
-          });
-          
-          // Reload bookings to show updated status
-          window.dispatchEvent(new CustomEvent('bookingsUpdated', {
-            detail: { reload: true }
-          }));
-        }, 2000);
-      } else {
-        alert(data.message || 'Payment failed. Please try again.');
       }
+      
+      // Set success state AFTER notification is created (or skipped)
+      setPaymentSuccess(true);
+      
+      // Wait 2 seconds then close modal
+      setTimeout(() => {
+        setShowPaymentModal(false);
+        setPaymentSuccess(false);
+        setPaymentForm({
+          cardholderName: '',
+          cardNumber: '',
+          expiryDate: '',
+          cvv: '',
+          gcashNumber: '',
+          referenceNumber: ''
+        });
+        
+        // Reload bookings to show updated status
+        window.dispatchEvent(new CustomEvent('bookingsUpdated', {
+          detail: { reload: true }
+        }));
+      }, 2000);
     } catch (error) {
-      console.error('Payment error:', error);
-      alert('Payment processing failed. Please try again later.');
+      console.error('❌ Payment error caught:', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      alert(`Payment processing failed: ${error.message}. Please try again later.`);
     } finally {
+      console.log('🔵 Payment processing completed, setting paymentProcessing to false');
       setPaymentProcessing(false);
     }
   };
@@ -1995,6 +2094,7 @@ const servicesHeaderRightStyle = {
                   console.log('Notification.data.amount:', notification.data?.amount);
                   setSelectedPaymentNotification(notification);
                   setShowPaymentModal(true);
+                  console.log('Payment modal opened. Waiting for user to submit form...');
                 }}
                 style={{
                   color: '#0ea5e9',
@@ -2375,7 +2475,7 @@ const servicesHeaderRightStyle = {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ display: 'grid', gap: '12px' }}>
             {notifications.length === 0 ? (
               <div style={{ padding: 18, borderRadius: 12, background: '#f8fafc', color: '#6b7280' }}>No notifications</div>
             ) : notifications.slice().reverse().map((n, idx) => {
@@ -3186,7 +3286,7 @@ const servicesHeaderRightStyle = {
                     <button onClick={() => {
                       closeModal();
                       handleOpenInstrumentRequest();
-                    }} style={bookButtonStyle}>Rent/Borrow Now</button>
+                    }} style={bookButtonStyle}>Request Instruments</button>
                   ) : (
                     <button onClick={() => openBooking()} style={bookButtonStyle}>Book Now</button>
                   )}
@@ -3550,7 +3650,7 @@ const servicesHeaderRightStyle = {
                             <div>
                               <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Date</div>
                               <div style={{ fontSize: 14, fontWeight: 600, color: '#475569' }}>
-                                {new Date(booking.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                {formatDate(booking.date)}
                               </div>
                             </div>
                             <div>
@@ -3715,10 +3815,57 @@ const servicesHeaderRightStyle = {
 
                 {/* Payment Amount */}
                 <div style={{ padding: '24px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>Total Amount</div>
+                  <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                    <div style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>Total Booking Amount</div>
                     <div style={{ fontSize: 36, fontWeight: 800, color: '#0c4a6e' }}>
                       ₱{(selectedPaymentNotification.data?.amount || selectedPaymentNotification.data?.paymentDetails?.totalAmount || 0).toLocaleString()}
+                    </div>
+                  </div>
+                  
+                  {/* Payment Option Selection */}
+                  <div style={{ display: 'flex', gap: 12, maxWidth: 500, margin: '0 auto' }}>
+                    <div 
+                      onClick={() => {
+                        const totalAmount = selectedPaymentNotification.data?.amount || 0;
+                        setPaymentForm({...paymentForm, paymentOption: 'downpayment', selectedAmount: totalAmount * 0.5});
+                      }}
+                      style={{ 
+                        flex: 1,
+                        padding: '16px', 
+                        border: `3px solid ${paymentForm.paymentOption === 'downpayment' ? '#10b981' : '#e2e8f0'}`, 
+                        borderRadius: 12, 
+                        cursor: 'pointer',
+                        background: paymentForm.paymentOption === 'downpayment' ? '#ecfdf5' : 'white',
+                        transition: 'all 0.2s',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <div style={{ fontSize: 14, color: '#64748b', marginBottom: 4 }}>Down Payment (50%)</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>
+                        ₱{((selectedPaymentNotification.data?.amount || 0) * 0.5).toLocaleString()}
+                      </div>
+                    </div>
+                    
+                    <div 
+                      onClick={() => {
+                        const totalAmount = selectedPaymentNotification.data?.amount || 0;
+                        setPaymentForm({...paymentForm, paymentOption: 'fullpayment', selectedAmount: totalAmount});
+                      }}
+                      style={{ 
+                        flex: 1,
+                        padding: '16px', 
+                        border: `3px solid ${paymentForm.paymentOption === 'fullpayment' ? '#0ea5e9' : '#e2e8f0'}`, 
+                        borderRadius: 12, 
+                        cursor: 'pointer',
+                        background: paymentForm.paymentOption === 'fullpayment' ? '#f0f9ff' : 'white',
+                        transition: 'all 0.2s',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <div style={{ fontSize: 14, color: '#64748b', marginBottom: 4 }}>Full Payment (100%)</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: '#0ea5e9' }}>
+                        ₱{(selectedPaymentNotification.data?.amount || 0).toLocaleString()}
+                      </div>
                     </div>
                   </div>
                 </div>

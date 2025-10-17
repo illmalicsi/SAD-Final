@@ -6,9 +6,10 @@ const { authenticateToken } = require('../middleware/auth');
 // POST /api/payments - Simulated payment processing
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { bookingId, amount, paymentMethod, cardholderName, cardNumber, gcashNumber, referenceNumber } = req.body;
-    
-    console.log('💳 Payment request received:', { bookingId, amount, paymentMethod, user: req.user.id });
+    console.log('--- PAYMENT ATTEMPT ---');
+    console.log('Request body:', req.body);
+    const { bookingId, amount, totalAmount, paymentType, paymentMethod, cardholderName, cardNumber, gcashNumber, referenceNumber } = req.body;
+    console.log('💳 Payment request received:', { bookingId, amount, totalAmount, paymentType, paymentMethod, user: req.user.id });
     
     // Check booking status
     const [bookingRows] = await pool.query(
@@ -46,9 +47,13 @@ router.post('/', authenticateToken, async (req, res) => {
       // Create payment record
       // Use user ID or default to 1 (admin) if not available
       const processedBy = req.user?.id || 1;
+      const paymentNote = paymentType === 'downpayment' 
+        ? `Down payment (50%) for booking #${bookingId} - ₱${amount.toLocaleString()}. Remaining: ₱${((totalAmount || amount * 2) - amount).toLocaleString()}`
+        : `Full payment for booking #${bookingId} - Customer self-payment`;
+        
       const [paymentResult] = await pool.query(
         'INSERT INTO payments (invoice_id, amount_paid, payment_method, processed_by, notes) VALUES (?, ?, ?, ?, ?)',
-        [invoiceId, amount, paymentMethod || 'card', processedBy, `Payment for booking #${bookingId} - Customer self-payment`]
+        [invoiceId, amount, paymentMethod || 'card', processedBy, paymentNote]
       );
       
       console.log('✅ Payment record created:', paymentResult.insertId);
@@ -104,10 +109,12 @@ router.post('/', authenticateToken, async (req, res) => {
     });
   } catch (err) {
     console.error('❌ Payment error:', err);
+    console.error('Error stack:', err.stack);
     res.status(500).json({ 
       success: false,
       message: 'Payment failed', 
-      error: err.message 
+      error: err.message,
+      stack: err.stack
     });
   }
 });
