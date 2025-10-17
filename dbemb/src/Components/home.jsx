@@ -3051,43 +3051,25 @@ const servicesHeaderRightStyle = {
 
           {/* Modal - redesigned service info */}
           {modalService && (
-            <div style={modalOverlayStyle} onClick={() => setModalService(null)}>
+            <div style={modalOverlayStyle} onClick={closeModal}>
               <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
                 <div style={modalHeaderStyle}>
-                  <h4 style={modalTitleStyle}>{modalService.title}</h4>
-                  <button style={closeButtonStyle} onClick={() => setModalService(null)}>×</button>
+                  <h3 style={modalTitleStyle}>{modalService.title}</h3>
+                  <button onClick={closeModal} style={{ background: 'transparent', border: 'none', color: '#6b7280', fontSize: '24px', cursor: 'pointer' }}>&times;</button>
                 </div>
-                <div style={{ ...modalBodyStyle, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div>
-                    <div style={{ height: '220px', borderRadius: '10px', backgroundSize: 'cover', backgroundPosition: 'center', backgroundImage: `url(${modalService.img})`, border: '1px solid rgba(100,255,218,0.2)' }} />
-                  </div>
-                  <div>
-                    <p style={readMoreTextStyle}>{modalService.description}</p>
-                  
-                  </div>
+                <div style={modalBodyStyle}>
+                  <p style={{ color: '#374151', lineHeight: 1.6 }}>{modalService.description}</p>
                 </div>
-                <div style={{ ...modalActionsStyle, justifyContent: 'space-between' }}>
-                  <div style={{ color: '#94a3b8', fontSize: '14px' }}>
-                    {modalService.title === 'Instrument Rentals' 
-                      ? 'Need an instrument? Request to borrow or rent now.'
-                      : 'Ready to proceed? Reserve a date to get started.'}
-                  </div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    {modalService.title === 'Instrument Rentals' ? (
-                      <button 
-                        style={bookButtonStyle} 
-                        onClick={(e) => { 
-                          e.preventDefault(); 
-                          setModalService(null);
-                          handleOpenInstrumentRequest();
-                        }}
-                      >
-                        {user ? (user.role === 'user' ? 'Rent Instrument' : 'Borrow Instrument') : 'Request Instrument'}
-                      </button>
-                    ) : (
-                      <a href="#book" style={bookButtonStyle} onClick={(e) => { e.preventDefault(); localStorage.setItem('dbeOpenBookingForService', modalService?.title || ''); const url = window.location.origin + window.location.pathname + '#/booking'; window.open(url, '_blank'); }}>Book Now</a>
-                    )}
-                  </div>
+                <div style={modalActionsStyle}>
+                  <button onClick={closeModal} style={closeButtonStyle}>Close</button>
+                  {modalService.title === 'Instrument Rentals' ? (
+                    <button onClick={() => {
+                      closeModal();
+                      handleOpenInstrumentRequest();
+                    }} style={bookButtonStyle}>Rent/Borrow Now</button>
+                  ) : (
+                    <button onClick={() => openBooking()} style={bookButtonStyle}>Book Now</button>
+                  )}
                 </div>
               </div>
             </div>
@@ -3428,6 +3410,24 @@ const servicesHeaderRightStyle = {
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>Total Amount</div>
                 <div style={{ fontSize: 36, fontWeight: 800, color: '#0c4a6e' }}>
+                  ₱{selectedPaymentNotification.data.paymentDetails.totalAmount.toLocaleString()}
+                </div>
+                <div style={{ fontSize: 14, color: '#64748b', marginTop: 8 }}>
+                  Down Payment (50%): <span style={{ fontWeight: 700, color: '#0284c7' }}>₱{selectedPaymentNotification.data.paymentDetails.downPayment.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Methods */}
+            <div style={{ padding: '24px' }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>Choose Payment Method</h3>
+              
+              {/* Credit/Debit Card */}
+              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
+                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0ea5e9'}
+                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <FaCreditCard style={{ fontSize: 28, color: '#0ea5e9' }} />
                   ₱{selectedPaymentNotification.data.paymentDetails.totalAmount.toLocaleString()}
                 </div>
                 <div style={{ fontSize: 14, color: '#64748b', marginTop: 8 }}>
