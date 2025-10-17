@@ -10,6 +10,11 @@ const Payment = ({ onBackToHome }) => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [processingId, setProcessingId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [receipt, setReceipt] = useState(null);
+  const [userDetails, setUserDetails] = useState({});
 
   const fetchInvoices = async () => {
     try {
@@ -19,6 +24,19 @@ const Payment = ({ onBackToHome }) => {
       const data = await res.json();
       if (res.ok) {
         setInvoices(data.invoices);
+        // Fetch user details for each invoice
+        const userIds = [...new Set(data.invoices.map(inv => inv.user_id))];
+        const details = {};
+        for (const uid of userIds) {
+          try {
+            const resUser = await AuthService.makeAuthenticatedRequest(`${API_BASE_URL}/users/${uid}`);
+            const userData = await resUser.json();
+            if (userData.success && userData.user) {
+              details[uid] = userData.user;
+            }
+          } catch {}
+        }
+        setUserDetails(details);
       } else {
         setErrorMsg(data.message || 'Failed to load invoices');
       }
@@ -33,23 +51,30 @@ const Payment = ({ onBackToHome }) => {
     fetchInvoices();
   }, []);
 
-  const handlePayment = async (invoiceId, amount) => {
+  const handlePayment = async () => {
+    if (!selectedInvoice) return;
     setErrorMsg('');
     setSuccessMsg('');
-    setProcessingId(invoiceId);
-    
+    setProcessingId(selectedInvoice.invoice_id);
     try {
       const res = await AuthService.makeAuthenticatedRequest(
         `${API_BASE_URL}/billing/payments`,
         {
           method: 'POST',
-          body: JSON.stringify({ invoiceId, amountPaid: amount }),
+          body: JSON.stringify({ invoiceId: selectedInvoice.invoice_id, amountPaid: selectedInvoice.amount, paymentMethod }),
         }
       );
       const data = await res.json();
       if (res.ok) {
-        setSuccessMsg(`Payment recorded successfully for Invoice #${invoiceId}`);
-        setInvoices(prev => prev.filter(inv => inv.invoice_id !== invoiceId));
+        setSuccessMsg(`Payment recorded successfully for Invoice #${selectedInvoice.invoice_id}`);
+        setReceipt({
+          invoice: selectedInvoice,
+          user: userDetails[selectedInvoice.user_id],
+          paymentMethod,
+          payment: data.payment
+        });
+        setInvoices(prev => prev.filter(inv => inv.invoice_id !== selectedInvoice.invoice_id));
+        setShowModal(false);
       } else {
         setErrorMsg(data.message || 'Failed to process payment');
       }
@@ -384,7 +409,9 @@ const Payment = ({ onBackToHome }) => {
                     <td style={styles.td}>
                       <div style={styles.userInfo}>
                         <FaUser size={12} />
-                        User ID: {inv.user_id}
+                        {userDetails[inv.user_id]?.firstName || ''} {userDetails[inv.user_id]?.lastName || ''}
+                        <br />
+                        <span style={{ fontSize: '12px', color: '#64748b' }}>{userDetails[inv.user_id]?.email || `User ID: ${inv.user_id}`}</span>
                       </div>
                     </td>
                     <td style={styles.td}>
@@ -408,7 +435,10 @@ const Payment = ({ onBackToHome }) => {
                     </td>
                     <td style={styles.td}>
                       <button 
-                        onClick={() => handlePayment(inv.invoice_id, inv.amount)}
+                        onClick={() => {
+                          setSelectedInvoice(inv);
+                          setShowModal(true);
+                        }}
                         disabled={processingId === inv.invoice_id}
                         style={{
                           ...styles.payButton,
@@ -416,17 +446,8 @@ const Payment = ({ onBackToHome }) => {
                         }}
                         className="pay-button"
                       >
-                        {processingId === inv.invoice_id ? (
-                          <>
-                            <div style={styles.spinner}></div>
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            <FaDollarSign size={12} />
-                            Process Payment
-                          </>
-                        )}
+                        <FaDollarSign size={12} />
+                        Process Payment
                       </button>
                     </td>
                   </tr>
@@ -436,6 +457,135 @@ const Payment = ({ onBackToHome }) => {
           )}
         </div>
       </div>
+      {/* Payment Modal */}
+      {showModal && selectedInvoice && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.25)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 16,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            padding: 32,
+            minWidth: 340,
+            maxWidth: 400
+          }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Process Payment</h2>
+            <div style={{ marginBottom: 12 }}>
+              <strong>Invoice:</strong> #{selectedInvoice.invoice_id}<br />
+              <strong>User:</strong> {userDetails[selectedInvoice.user_id]?.firstName || ''} {userDetails[selectedInvoice.user_id]?.lastName || ''}<br />
+              <strong>Email:</strong> {userDetails[selectedInvoice.user_id]?.email || ''}<br />
+              <strong>Amount:</strong> ₱{parseFloat(selectedInvoice.amount).toFixed(2)}<br />
+              <strong>Description:</strong> {selectedInvoice.description || 'No description'}
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label htmlFor="payment-method" style={{ fontWeight: 600, marginRight: 8 }}>Payment Method:</label>
+              <select
+                id="payment-method"
+                value={paymentMethod}
+                onChange={e => setPaymentMethod(e.target.value)}
+                style={{ padding: '8px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+              >
+                <option value="cash">Cash</option>
+                <option value="bank">Bank Transfer</option>
+                <option value="gcash">GCash</option>
+                <option value="card">Credit/Debit Card</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+              <button
+                onClick={handlePayment}
+                style={{
+                  ...styles.payButton,
+                  minWidth: 120
+                }}
+                disabled={processingId === selectedInvoice.invoice_id}
+              >
+                {processingId === selectedInvoice.invoice_id ? (
+                  <>
+                    <div style={styles.spinner}></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <FaCheck /> Confirm Payment
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setShowModal(false)}
+                style={{
+                  background: '#fff',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 8,
+                  color: '#374151',
+                  fontWeight: 500,
+                  padding: '12px 24px',
+                  cursor: 'pointer'
+                }}
+              >Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Receipt Dialog */}
+      {receipt && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.18)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 16,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            padding: 32,
+            minWidth: 340,
+            maxWidth: 400
+          }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Payment Receipt</h2>
+            <div style={{ marginBottom: 12 }}>
+              <strong>Invoice:</strong> #{receipt.invoice.invoice_id}<br />
+              <strong>User:</strong> {receipt.user?.firstName || ''} {receipt.user?.lastName || ''}<br />
+              <strong>Email:</strong> {receipt.user?.email || ''}<br />
+              <strong>Amount:</strong> ₱{parseFloat(receipt.invoice.amount).toFixed(2)}<br />
+              <strong>Payment Method:</strong> {receipt.paymentMethod}<br />
+              <strong>Date:</strong> {formatDate(receipt.payment?.processed_at || new Date())}<br />
+              <strong>Description:</strong> {receipt.invoice.description || 'No description'}
+            </div>
+            <button
+              onClick={() => setReceipt(null)}
+              style={{
+                background: '#059669',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontWeight: 500,
+                padding: '12px 24px',
+                cursor: 'pointer',
+                marginTop: 12
+              }}
+            >Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

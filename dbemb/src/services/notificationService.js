@@ -19,6 +19,13 @@ class NotificationService {
         createdAt: new Date().toISOString()
       };
 
+      console.log('📬 Creating notification with data:', {
+        title: newNotification.title,
+        data: newNotification.data,
+        bookingId: newNotification.data?.bookingId,
+        amount: newNotification.data?.amount
+      });
+
       notifications.push(newNotification);
       localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(notifications));
       
@@ -180,12 +187,13 @@ class NotificationService {
       title: 'Booking Confirmed! 🎉',
       message: `Your booking for "${booking.service}" on ${formattedDate} has been confirmed. ${booking.invoice_id ? `Invoice #${booking.invoice_id} has been generated.` : ''} Please proceed with <payment-link>payment</payment-link>.`,
       data: {
-        bookingId: booking.id,
+        bookingId: booking.booking_id || booking.id,
+        amount: totalAmount,
         invoiceId: booking.invoice_id || null,
         service: booking.service,
         date: booking.date,
-        startTime: booking.startTime,
-        endTime: booking.endTime,
+        startTime: booking.startTime || booking.start_time,
+        endTime: booking.endTime || booking.end_time,
         location: booking.location,
         paymentDetails: {
           totalAmount: totalAmount,

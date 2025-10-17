@@ -3,6 +3,18 @@ const router = express.Router();
 const billingService = require('../services/billingService');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
+// GET /api/billing/my-invoices - Get invoices for the logged-in user
+router.get('/my-invoices', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const invoices = await billingService.getInvoicesByUser(userId);
+    res.json({ success: true, invoices });
+  } catch (err) {
+    console.error('Error fetching user invoices:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch invoices' });
+  }
+});
+
 // POST /api/billing/invoices - Generate a new invoice (admin/treasurer)
 router.post('/invoices', authenticateToken, requireAdmin, async (req, res) => {
   try {

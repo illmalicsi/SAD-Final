@@ -32,6 +32,9 @@ app.use('/api/users', usersRoutes);
 app.use('/api/roles', rolesRoutes);
 // Billing routes (invoices, payments, transactions)
 app.use('/api/billing', billingRoutes);
+// Payments route (simulated payment processing)
+const paymentsRoutes = require('./routes/payments');
+app.use('/api/payments', paymentsRoutes);
 // Instrument requests routes (borrow, rent, instruments)
 app.use('/api/instruments', instrumentsRoutes);
 // Membership approval routes

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FaCalendarAlt, FaClock, FaUser, FaUsers, FaEnvelope, FaPhone, FaMapMarkerAlt, FaMusic, FaCheckCircle, FaSpinner, FaChevronLeft, FaChevronRight, FaInfoCircle, FaGuitar, FaDrum, FaKeyboard, FaPlus } from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaUser, FaUsers, FaEnvelope, FaPhone, FaMapMarkerAlt, FaMusic, FaCheckCircle, FaSpinner, FaChevronLeft, FaChevronRight, FaInfoCircle, FaGuitar, FaDrum, FaKeyboard, FaPlus, FaCreditCard } from 'react-icons/fa';
 
 // --- Data for Dynamic Form ---
 
@@ -28,6 +28,18 @@ const instruments = {
 };
 
 const musicArrangementBasePrice = 3000;
+
+const modalStyles = {
+  overlay: {
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(0,0,0,0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
+  },
+  modal: {
+    background: '#fff', borderRadius: '12px', padding: '32px', minWidth: '340px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column', alignItems: 'center'
+  },
+  input: { width: '100%', padding: '10px', margin: '8px 0', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '15px' },
+  button: { marginTop: '18px', padding: '12px 24px', borderRadius: '8px', border: 'none', background: '#0b62d6', color: 'white', fontWeight: 700, cursor: 'pointer', fontSize: '16px' }
+};
 
 const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) => {
   const today = new Date();

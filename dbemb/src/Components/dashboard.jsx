@@ -7,6 +7,7 @@ const UserManagement = React.lazy(() => import('./usermanagement'));
 const Inventory = React.lazy(() => import('./inventory'));
 const CustomerManagement = React.lazy(() => import('./CustomerManagement'));
 const Invoice = React.lazy(() => import('./Invoice'));
+const MyInvoices = React.lazy(() => import('./MyInvoices'));
 const TransactionHistory = React.lazy(() => import('./TransactionHistory'));
 const Approval = React.lazy(() => import('./Approval'));
 const MembershipApproval = React.lazy(() => import('./MembershipApproval'));
@@ -141,8 +142,9 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     {
       title: 'Finance',
       items: [
-        { id: 'invoice', icon: <FaClipboardList size={18} />, text: 'Invoices', view: 'invoice', adminOnly: true },
-        { id: 'payment', icon: <FaDollarSign size={18} />, text: 'Payments', view: 'payment', adminOnly: true },
+        { id: 'my-invoices', icon: <FaClipboardList size={18} />, text: 'My Invoices', view: 'my-invoices', adminOnly: false },
+        { id: 'invoice', icon: <FaClipboardList size={18} />, text: 'Create Invoice', view: 'invoice', adminOnly: true },
+        { id: 'payment', icon: <FaDollarSign size={18} />, text: 'Process Payments', view: 'payment', adminOnly: true },
         { id: 'transactions', icon: <FaHistory size={18} />, text: 'Transactions', view: 'transactions', adminOnly: false }
       ]
     },
@@ -1371,6 +1373,13 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
               onLogout={onLogout}
               embedded={true}
             />
+          </Suspense>
+        );
+
+      case 'my-invoices':
+        return (
+          <Suspense fallback={<div>Loading My Invoices...</div>}>
+            <MyInvoices user={user} />
           </Suspense>
         );
 

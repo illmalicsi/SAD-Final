@@ -1,3 +1,11 @@
+// Get invoices for a specific user
+async function getInvoicesByUser(userId) {
+  const [rows] = await pool.execute(
+    `SELECT * FROM invoices WHERE user_id = ? ORDER BY created_at DESC`,
+    [userId]
+  );
+  return rows;
+}
 const { pool } = require('../config/database');
 
 // Generate a new invoice
@@ -79,5 +87,6 @@ module.exports = {
   approveInvoice,
   processPayment,
   getUserTransactions,
-  getAllInvoices
+  getAllInvoices,
+  getInvoicesByUser
 };

@@ -31,6 +31,44 @@ router.get('/', authenticateToken, requireMember, async (req, res) => {
   }
 });
 
+// GET /api/users/:id - return single user by ID
+router.get('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.execute(`
+      SELECT u.id, u.first_name, u.last_name, u.email, u.phone, u.birthday, u.instrument, u.address, 
+             u.is_active, u.is_blocked, r.role_name, u.created_at
+      FROM users u
+      JOIN roles r ON u.role_id = r.role_id
+      WHERE u.id = ?
+    `, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const user = {
+      id: rows[0].id,
+      firstName: rows[0].first_name,
+      lastName: rows[0].last_name,
+      email: rows[0].email,
+      phone: rows[0].phone,
+      birthday: rows[0].birthday,
+      instrument: rows[0].instrument,
+      address: rows[0].address,
+      role: rows[0].role_name,
+      isActive: !!rows[0].is_active,
+      isBlocked: !!rows[0].is_blocked,
+      createdAt: rows[0].created_at
+    };
+
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('GET /api/users/:id error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch user' });
+  }
+});
+
 // POST /api/users - create new user (admin only)
 router.post('/', authenticateToken, requireMember, async (req, res) => {
   try {

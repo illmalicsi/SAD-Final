@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock, FaUser, FaMusic, FaCreditCard, FaMobileAlt, FaUniversity, FaStore, FaWallet } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock, FaUser, FaMusic, FaCreditCard, FaMobileAlt, FaUniversity, FaStore, FaWallet, FaFileInvoiceDollar, FaCheckCircle, FaSpinner, FaCalendarAlt } from 'react-icons/fa';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import bg2 from "./Assets/bg2.jpg";
 import bandGigs from "./Assets/bandGigs.jpg";
@@ -1402,6 +1402,17 @@ const servicesHeaderRightStyle = {
   const [openNotificationMenu, setOpenNotificationMenu] = useState(null); // Track which notification menu is open
   const [showPaymentModal, setShowPaymentModal] = useState(false); // Payment modal
   const [selectedPaymentNotification, setSelectedPaymentNotification] = useState(null); // Notification with payment data
+  const [paymentMethod, setPaymentMethod] = useState('gcash'); // Selected payment method
+  const [paymentForm, setPaymentForm] = useState({
+    cardholderName: '',
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+    gcashNumber: '',
+    referenceNumber: ''
+  });
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
   const today = new Date();
   const [calendarYear, setCalendarYear] = useState(today.getFullYear());
   const [calendarMonth, setCalendarMonth] = useState(today.getMonth()); // 0-11
@@ -1846,6 +1857,113 @@ const servicesHeaderRightStyle = {
     }
   };
 
+  // Handle payment submission
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
+    setPaymentProcessing(true);
+
+    try {
+      // Get booking ID from notification with multiple fallbacks
+      console.log('=== PAYMENT SUBMIT DEBUG ===');
+      console.log('Full selectedPaymentNotification:', JSON.stringify(selectedPaymentNotification, null, 2));
+      console.log('selectedPaymentNotification?.data:', selectedPaymentNotification?.data);
+      
+      // Try multiple paths to find booking ID
+      const bookingId = selectedPaymentNotification?.data?.bookingId 
+                     || selectedPaymentNotification?.bookingId
+                     || selectedPaymentNotification?.data?.booking_id;
+                     
+      const amount = selectedPaymentNotification?.data?.amount 
+                  || selectedPaymentNotification?.amount
+                  || selectedPaymentNotification?.data?.paymentDetails?.totalAmount
+                  || selectedPaymentNotification?.data?.estimated_value;
+
+      console.log('Extracted bookingId:', bookingId);
+      console.log('Extracted amount:', amount);
+
+      if (!bookingId) {
+        console.error('❌ Booking ID not found!');
+        console.error('Available keys in data:', Object.keys(selectedPaymentNotification?.data || {}));
+        console.error('Full notification structure:', selectedPaymentNotification);
+        alert('Booking information not found. Please use "My Bookings" to make payment instead.');
+        setPaymentProcessing(false);
+        return;
+      }
+
+      // Simulate payment API call
+      const token = localStorage.getItem('authToken');
+      console.log('Using auth token:', token ? 'Token exists' : 'No token found');
+      
+      const response = await fetch('http://localhost:5000/api/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          bookingId,
+          amount,
+          paymentMethod,
+          ...paymentForm
+        })
+      });
+      
+      console.log('Payment API response status:', response.status);
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setPaymentSuccess(true);
+        
+        // Create success notification
+        if (data.booking) {
+          NotificationService.createNotification(user.email, {
+            type: 'success',
+            title: 'Payment Successful! 💳',
+            message: `Your payment of ₱${amount.toLocaleString()} for "${data.booking.service}" on ${data.booking.date} has been confirmed. Your booking is now fully paid!`,
+            data: {
+              bookingId: data.bookingId,
+              invoiceId: data.invoiceId,
+              amount: amount,
+              paymentMethod: paymentMethod,
+              service: data.booking.service,
+              date: data.booking.date
+            }
+          });
+          
+          // Trigger notification refresh
+          loadNotifications();
+        }
+        
+        // Wait 2 seconds then close modal
+        setTimeout(() => {
+          setShowPaymentModal(false);
+          setPaymentSuccess(false);
+          setPaymentForm({
+            cardholderName: '',
+            cardNumber: '',
+            expiryDate: '',
+            cvv: '',
+            gcashNumber: '',
+            referenceNumber: ''
+          });
+          
+          // Reload bookings to show updated status
+          window.dispatchEvent(new CustomEvent('bookingsUpdated', {
+            detail: { reload: true }
+          }));
+        }, 2000);
+      } else {
+        alert(data.message || 'Payment failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Payment processing failed. Please try again later.');
+    } finally {
+      setPaymentProcessing(false);
+    }
+  };
+
   // Render notification message with clickable payment link
   const renderNotificationMessage = (notification) => {
     const message = notification.message || '';
@@ -1870,7 +1988,11 @@ const servicesHeaderRightStyle = {
                 key={index}
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log('Payment link clicked!', notification);
+                  console.log('Payment link clicked!');
+                  console.log('Full notification object:', notification);
+                  console.log('Notification.data:', notification.data);
+                  console.log('Notification.data.bookingId:', notification.data?.bookingId);
+                  console.log('Notification.data.amount:', notification.data?.amount);
                   setSelectedPaymentNotification(notification);
                   setShowPaymentModal(true);
                 }}
@@ -1937,7 +2059,13 @@ const servicesHeaderRightStyle = {
       if (authenticatedUser.role === 'admin') {
         setCurrentView('dashboard');
       } else {
-        setCurrentView('home');
+        // If user was trying to access invoices, restore that view
+        const lastView = localStorage.getItem('davaoBlueEaglesLastView');
+        if (lastView === 'invoices') {
+          setCurrentView('invoices');
+        } else {
+          setCurrentView('home');
+        }
       }
       return;
     }
@@ -3332,10 +3460,185 @@ const servicesHeaderRightStyle = {
         </div>
       )}
 
-      {/* Payment Modal */}
-      {showPaymentModal && selectedPaymentNotification && selectedPaymentNotification.data && selectedPaymentNotification.data.paymentDetails && (
+      {/* My Bookings Modal */}
+      {showMyBookings && (
         <div 
-          onClick={() => setShowPaymentModal(false)}
+          onClick={() => setShowMyBookings(false)}
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            background: 'rgba(0, 0, 0, 0.7)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 9999,
+            padding: '20px'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{ 
+              background: 'white', 
+              borderRadius: '16px', 
+              maxWidth: '900px', 
+              width: '100%', 
+              maxHeight: '90vh', 
+              overflow: 'auto',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+            }}
+          >
+            {/* Header */}
+            <div style={{ 
+              padding: '24px', 
+              borderBottom: '1px solid #e2e8f0',
+              background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+              borderRadius: '16px 16px 0 0'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ margin: 0, color: 'white', fontSize: 24, fontWeight: 800 }}>My Bookings</h2>
+                <button 
+                  onClick={() => setShowMyBookings(false)}
+                  style={{ 
+                    background: 'rgba(255, 255, 255, 0.2)', 
+                    border: 'none', 
+                    color: 'white', 
+                    fontSize: 24, 
+                    width: 36, 
+                    height: 36, 
+                    borderRadius: '50%', 
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Bookings List */}
+            <div style={{ padding: '24px' }}>
+              {bookings.filter(b => b.email === user?.email).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748b' }}>
+                  <FaCalendarAlt style={{ fontSize: 48, marginBottom: 16, color: '#cbd5e1' }} />
+                  <h3 style={{ margin: '0 0 8px 0', color: '#475569' }}>No Bookings Yet</h3>
+                  <p style={{ margin: 0 }}>You haven't made any bookings yet.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  {bookings.filter(b => b.email === user?.email).map(booking => (
+                    <div 
+                      key={booking.id} 
+                      style={{ 
+                        background: booking.status === 'approved' ? '#f0f9ff' : '#f8fafc',
+                        border: `2px solid ${booking.status === 'approved' ? '#bae6fd' : '#e2e8f0'}`, 
+                        borderRadius: 12, 
+                        padding: 20,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+                            Booking #{booking.id} - {booking.service}
+                          </h3>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginTop: 12 }}>
+                            <div>
+                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Date</div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: '#475569' }}>
+                                {new Date(booking.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Time</div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: '#475569' }}>
+                                {booking.startTime} - {booking.endTime}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Location</div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: '#475569' }}>{booking.location}</div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Amount</div>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: '#0369a1' }}>
+                                ₱{booking.estimatedValue?.toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+                          {booking.notes && (
+                            <div style={{ marginTop: 12, padding: 12, background: '#f1f5f9', borderRadius: 8 }}>
+                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Notes</div>
+                              <div style={{ fontSize: 13, color: '#475569', whiteSpace: 'pre-wrap' }}>{booking.notes}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{
+                            padding: '6px 12px',
+                            borderRadius: 20,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: booking.status === 'approved' ? '#d1fae5' : booking.status === 'pending' ? '#fef3c7' : booking.status === 'paid' ? '#dbeafe' : '#fee2e2',
+                            color: booking.status === 'approved' ? '#065f46' : booking.status === 'pending' ? '#92400e' : booking.status === 'paid' ? '#1e40af' : '#991b1b'
+                          }}>
+                            {booking.status === 'approved' ? '✓ Approved' : booking.status === 'pending' ? '⏳ Pending' : booking.status === 'paid' ? '💳 Paid' : booking.status === 'rejected' ? '✕ Rejected' : booking.status}
+                          </span>
+                        </div>
+
+                        {booking.status === 'approved' && (
+                          <button 
+                            onClick={() => {
+                              setSelectedPaymentNotification({
+                                data: {
+                                  bookingId: booking.id,
+                                  amount: booking.estimatedValue,
+                                  service: booking.service,
+                                  date: booking.date
+                                }
+                              });
+                              setShowPaymentModal(true);
+                              setShowMyBookings(false);
+                            }}
+                            style={{
+                              padding: '10px 20px',
+                              borderRadius: 8,
+                              background: '#059669',
+                              border: 'none',
+                              color: 'white',
+                              fontWeight: 700,
+                              fontSize: 14,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8
+                            }}
+                          >
+                            <FaCreditCard />
+                            Proceed to Payment
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedPaymentNotification && (
+        <div 
+          onClick={() => !paymentProcessing && setShowPaymentModal(false)}
           style={{ 
             position: 'fixed', 
             top: 0, 
@@ -3362,170 +3665,223 @@ const servicesHeaderRightStyle = {
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
             }}
           >
-            {/* Header */}
-            <div style={{ 
-              padding: '24px', 
-              borderBottom: '1px solid #e2e8f0',
-              background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-              borderRadius: '16px 16px 0 0'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h2 style={{ margin: 0, color: 'white', fontSize: 24, fontWeight: 800 }}>Payment Details</h2>
-                  <p style={{ margin: '4px 0 0 0', color: 'rgba(255, 255, 255, 0.9)', fontSize: 14 }}>
-                    {selectedPaymentNotification.data.service} - {selectedPaymentNotification.data.date}
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setShowPaymentModal(false)}
-                  style={{ 
-                    background: 'rgba(255, 255, 255, 0.2)', 
-                    border: 'none', 
-                    color: 'white', 
-                    fontSize: 24, 
-                    width: 36, 
-                    height: 36, 
-                    borderRadius: '50%', 
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  ×
-                </button>
+            {paymentSuccess ? (
+              <div style={{ padding: '60px 40px', textAlign: 'center' }}>
+                <FaCheckCircle style={{ fontSize: 80, color: '#10b981', marginBottom: 20 }} />
+                <h2 style={{ margin: '0 0 12px 0', color: '#0f172a', fontSize: 28, fontWeight: 800 }}>Payment Successful!</h2>
+                <p style={{ margin: 0, color: '#64748b', fontSize: 16 }}>Your payment has been processed successfully.</p>
               </div>
-            </div>
-
-            {/* Payment Amount */}
-            <div style={{ padding: '24px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>Total Amount</div>
-                <div style={{ fontSize: 36, fontWeight: 800, color: '#0c4a6e' }}>
-                  ₱{selectedPaymentNotification.data.paymentDetails.totalAmount.toLocaleString()}
-                </div>
-                <div style={{ fontSize: 14, color: '#64748b', marginTop: 8 }}>
-                  Down Payment (50%): <span style={{ fontWeight: 700, color: '#0284c7' }}>₱{selectedPaymentNotification.data.paymentDetails.downPayment.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment Methods */}
-            <div style={{ padding: '24px' }}>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>Choose Payment Method</h3>
-              
-              {/* Credit/Debit Card */}
-              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
-                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0ea5e9'}
-                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <FaCreditCard style={{ fontSize: 28, color: '#0ea5e9' }} />
-                  ₱{selectedPaymentNotification.data.paymentDetails.totalAmount.toLocaleString()}
-                </div>
-                <div style={{ fontSize: 14, color: '#64748b', marginTop: 8 }}>
-                  Down Payment (50%): <span style={{ fontWeight: 700, color: '#0284c7' }}>₱{selectedPaymentNotification.data.paymentDetails.downPayment.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment Methods */}
-            <div style={{ padding: '24px' }}>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>Choose Payment Method</h3>
-              
-              {/* Credit/Debit Card */}
-              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
-                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0ea5e9'}
-                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <FaCreditCard style={{ fontSize: 28, color: '#0ea5e9' }} />
-                  <div>
-                    <div style={{ fontWeight: 700, color: '#0f172a' }}>Credit / Debit Card</div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>Visa, Mastercard, American Express</div>
+            ) : (
+              <>
+                {/* Header */}
+                <div style={{ 
+                  padding: '24px', 
+                  borderBottom: '1px solid #e2e8f0',
+                  background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                  borderRadius: '16px 16px 0 0'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h2 style={{ margin: 0, color: 'white', fontSize: 24, fontWeight: 800 }}>
+                        <FaCreditCard style={{ marginRight: 8 }} />
+                        Complete Payment
+                      </h2>
+                      <p style={{ margin: '4px 0 0 0', color: 'rgba(255, 255, 255, 0.9)', fontSize: 14 }}>
+                        {selectedPaymentNotification.data?.service || 'Booking Service'}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => setShowPaymentModal(false)}
+                      disabled={paymentProcessing}
+                      style={{ 
+                        background: 'rgba(255, 255, 255, 0.2)', 
+                        border: 'none', 
+                        color: 'white', 
+                        fontSize: 24, 
+                        width: 36, 
+                        height: 36, 
+                        borderRadius: '50%', 
+                        cursor: paymentProcessing ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: paymentProcessing ? 0.5 : 1
+                      }}
+                    >
+                      ×
+                    </button>
                   </div>
                 </div>
-              </div>
 
-              {/* GCash */}
-              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                  <FaMobileAlt style={{ fontSize: 28, color: '#0284c7' }} />
-                  <div>
-                    <div style={{ fontWeight: 700, color: '#0c4a6e' }}>GCash</div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>Instant mobile payment</div>
+                {/* Payment Amount */}
+                <div style={{ padding: '24px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>Total Amount</div>
+                    <div style={{ fontSize: 36, fontWeight: 800, color: '#0c4a6e' }}>
+                      ₱{(selectedPaymentNotification.data?.amount || selectedPaymentNotification.data?.paymentDetails?.totalAmount || 0).toLocaleString()}
+                    </div>
                   </div>
                 </div>
-                <div style={{ padding: 12, background: 'white', borderRadius: 8, fontSize: 13, color: '#475569' }}>
-                  <div><strong>Number:</strong> {selectedPaymentNotification.data.paymentDetails.gcashNumber}</div>
-                  <div><strong>Name:</strong> {selectedPaymentNotification.data.paymentDetails.gcashName}</div>
-                </div>
-              </div>
 
-              {/* PayMaya */}
-              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
-                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#10b981'}
-                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <FaWallet style={{ fontSize: 28, color: '#10b981' }} />
-                  <div>
-                    <div style={{ fontWeight: 700, color: '#0f172a' }}>PayMaya</div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>Fast and secure mobile payment</div>
+                {/* Payment Form */}
+                <form onSubmit={handlePaymentSubmit} style={{ padding: '24px' }}>
+                  <h3 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>Choose Payment Method</h3>
+                  
+                  {/* Payment Method Selection */}
+                  <div style={{ marginBottom: 20 }}>
+                    {['gcash', 'card', 'bank'].map(method => (
+                      <div 
+                        key={method}
+                        onClick={() => setPaymentMethod(method)}
+                        style={{ 
+                          padding: 16, 
+                          border: `2px solid ${paymentMethod === method ? '#0ea5e9' : '#e2e8f0'}`, 
+                          borderRadius: 12, 
+                          cursor: 'pointer', 
+                          marginBottom: 12,
+                          background: paymentMethod === method ? '#f0f9ff' : 'white',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          {method === 'gcash' && <FaMobileAlt style={{ fontSize: 24, color: '#0284c7' }} />}
+                          {method === 'card' && <FaCreditCard style={{ fontSize: 24, color: '#0ea5e9' }} />}
+                          {method === 'bank' && <FaUniversity style={{ fontSize: 24, color: '#d97706' }} />}
+                          <div>
+                            <div style={{ fontWeight: 700, color: '#0f172a' }}>
+                              {method === 'gcash' && 'GCash'}
+                              {method === 'card' && 'Credit / Debit Card'}
+                              {method === 'bank' && 'Bank Transfer'}
+                            </div>
+                            <div style={{ fontSize: 12, color: '#64748b' }}>
+                              {method === 'gcash' && 'Instant mobile payment'}
+                              {method === 'card' && 'Visa, Mastercard, American Express'}
+                              {method === 'bank' && 'Direct bank deposit'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              </div>
 
-              {/* Bank Transfer */}
-              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fef3c7 100%)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                  <FaUniversity style={{ fontSize: 28, color: '#d97706' }} />
-                  <div>
-                    <div style={{ fontWeight: 700, color: '#78350f' }}>Bank Transfer</div>
-                    <div style={{ fontSize: 12, color: '#92400e' }}>Direct bank deposit</div>
+                  {/* Payment Fields */}
+                  <div style={{ marginTop: 20 }}>
+                    {paymentMethod === 'card' && (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="Cardholder Name"
+                          value={paymentForm.cardholderName}
+                          onChange={(e) => setPaymentForm({...paymentForm, cardholderName: e.target.value})}
+                          required
+                          style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Card Number"
+                          value={paymentForm.cardNumber}
+                          onChange={(e) => setPaymentForm({...paymentForm, cardNumber: e.target.value.replace(/\D/g, '').slice(0, 16)})}
+                          required
+                          maxLength={16}
+                          style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                        />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                          <input
+                            type="text"
+                            placeholder="MM/YY"
+                            value={paymentForm.expiryDate}
+                            onChange={(e) => setPaymentForm({...paymentForm, expiryDate: e.target.value})}
+                            required
+                            maxLength={5}
+                            style={{ padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                          />
+                          <input
+                            type="text"
+                            placeholder="CVV"
+                            value={paymentForm.cvv}
+                            onChange={(e) => setPaymentForm({...paymentForm, cvv: e.target.value.replace(/\D/g, '').slice(0, 4)})}
+                            required
+                            maxLength={4}
+                            style={{ padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {paymentMethod === 'gcash' && (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="GCash Number (09XXXXXXXXX)"
+                          value={paymentForm.gcashNumber}
+                          onChange={(e) => setPaymentForm({...paymentForm, gcashNumber: e.target.value})}
+                          required
+                          maxLength={11}
+                          style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Reference Number"
+                          value={paymentForm.referenceNumber}
+                          onChange={(e) => setPaymentForm({...paymentForm, referenceNumber: e.target.value})}
+                          required
+                          style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                        />
+                      </>
+                    )}
+
+                    {paymentMethod === 'bank' && (
+                      <>
+                        <div style={{ padding: 16, background: '#fef3c7', borderRadius: 8, marginBottom: 12, fontSize: 13 }}>
+                          <div style={{ fontWeight: 700, marginBottom: 8, color: '#78350f' }}>Bank Details:</div>
+                          <div style={{ color: '#92400e' }}>Bank: BDO</div>
+                          <div style={{ color: '#92400e' }}>Account Name: Davao Blue Eagles</div>
+                          <div style={{ color: '#92400e' }}>Account Number: 1234-5678-9012</div>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Reference Number"
+                          value={paymentForm.referenceNumber}
+                          onChange={(e) => setPaymentForm({...paymentForm, referenceNumber: e.target.value})}
+                          required
+                          style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                        />
+                      </>
+                    )}
                   </div>
-                </div>
-                <div style={{ padding: 12, background: 'white', borderRadius: 8, fontSize: 13, color: '#475569' }}>
-                  <div><strong>Bank:</strong> {selectedPaymentNotification.data.paymentDetails.bankName}</div>
-                  <div><strong>Account Name:</strong> {selectedPaymentNotification.data.paymentDetails.accountName}</div>
-                  <div><strong>Account Number:</strong> {selectedPaymentNotification.data.paymentDetails.accountNumber}</div>
-                </div>
-              </div>
 
-              {/* Over the Counter */}
-              <div style={{ marginBottom: 16, padding: 16, border: '2px solid #e2e8f0', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
-                   onMouseEnter={(e) => e.currentTarget.style.borderColor = '#f59e0b'}
-                   onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <FaStore style={{ fontSize: 28, color: '#f59e0b' }} />
-                  <div>
-                    <div style={{ fontWeight: 700, color: '#0f172a' }}>Over the Counter</div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>7-Eleven, SM, Bayad Center</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer Instructions */}
-            <div style={{ padding: '16px 24px 24px 24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FaEnvelope style={{ color: '#64748b' }} />
-                <span>{selectedPaymentNotification.data.paymentDetails.instructions}</span>
-              </div>
-              <button 
-                onClick={() => setShowPaymentModal(false)}
-                style={{ 
-                  width: '100%',
-                  padding: '12px', 
-                  borderRadius: 8, 
-                  background: '#0ea5e9', 
-                  border: 'none', 
-                  color: 'white', 
-                  fontWeight: 700,
-                  fontSize: 14,
-                  cursor: 'pointer'
-                }}
-              >
-                Close
-              </button>
-            </div>
+                  {/* Submit Button */}
+                  <button 
+                    type="submit"
+                    disabled={paymentProcessing}
+                    style={{ 
+                      width: '100%',
+                      padding: 14, 
+                      borderRadius: 8, 
+                      background: paymentProcessing ? '#94a3b8' : '#0ea5e9', 
+                      border: 'none', 
+                      color: 'white', 
+                      fontWeight: 700,
+                      fontSize: 16,
+                      cursor: paymentProcessing ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8
+                    }}
+                  >
+                    {paymentProcessing ? (
+                      <>
+                        <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
+                        Processing...
+                      </>
+                    ) : (
+                      <>Pay ₱{(selectedPaymentNotification.data?.amount || selectedPaymentNotification.data?.paymentDetails?.totalAmount || 0).toLocaleString()}</>
+                    )}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
