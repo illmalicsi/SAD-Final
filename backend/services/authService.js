@@ -76,7 +76,7 @@ class AuthService {
   // Register new user
   async register(userData) {
     try {
-      const { firstName, lastName, email, password } = userData;
+      const { firstName, lastName, email, password, birthday, phone, instrument, address, identityProof } = userData;
 
       // Check if user already exists
       const [existingUser] = await pool.execute(
@@ -95,11 +95,22 @@ class AuthService {
       const [roleRows] = await pool.execute('SELECT role_id FROM roles WHERE role_name = ?', ['user']);
       const roleId = (roleRows && roleRows.length > 0) ? roleRows[0].role_id : 3; // fallback to 3
 
-      // Insert new user with DB role_id
+      // Insert new user with all membership fields
       const [result] = await pool.execute(`
-        INSERT INTO users (first_name, last_name, email, password_hash, role_id)
-        VALUES (?, ?, ?, ?, ?)
-      `, [firstName, lastName, email, passwordStored, roleId]);
+        INSERT INTO users (first_name, last_name, email, password_hash, role_id, birthday, phone, instrument, address, identity_proof)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        firstName, 
+        lastName, 
+        email, 
+        passwordStored, 
+        roleId,
+        birthday || null,
+        phone || null,
+        instrument || null,
+        address || null,
+        identityProof || null
+      ]);
 
       return {
         id: result.insertId,

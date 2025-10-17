@@ -1601,16 +1601,8 @@ const servicesHeaderRightStyle = {
   };
 
   const openBooking = (serviceTitle) => {
-    const svc = serviceTitle || (modalService?.title || '');
-    setBookingService(svc);
-    setBookingForm((f) => ({
-      ...f,
-      service: svc,
-      name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '',
-      email: user?.email || '',
-      phone: user?.phone || ''
-    }));
-    setShowBookingModal(true);
+    // Open the Booking page in a new tab using hash route
+    window.open('/#/booking', '_blank');
   };
 
   const closeBooking = () => {
@@ -2768,7 +2760,7 @@ const servicesHeaderRightStyle = {
 
               {/* Call to Action */}
               <button
-                onClick={handleShowUserSignup}
+                onClick={handleShowSignup}
                 style={{
                   background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                   border: 'none',

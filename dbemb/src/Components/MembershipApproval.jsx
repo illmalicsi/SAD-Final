@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaUserPlus, FaCheck, FaTimes, FaExclamationCircle, FaUsers, FaClock } from 'react-icons/fa';
+import { FaUserPlus, FaCheck, FaTimes, FaExclamationCircle, FaUsers, FaClock, FaChevronDown, FaChevronUp, FaPhone, FaBirthdayCake, FaMusic, FaMapMarkerAlt, FaFileAlt, FaEnvelope, FaCalendarAlt } from 'react-icons/fa';
 import AuthService from '../services/authService';
 
 const MembershipApproval = ({ user, onBackToHome, onLogout, embedded = false }) => {
@@ -7,6 +7,7 @@ const MembershipApproval = ({ user, onBackToHome, onLogout, embedded = false }) 
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [expandedMemberId, setExpandedMemberId] = useState(null);
 
   useEffect(() => {
     fetchPendingMembers();
@@ -90,6 +91,22 @@ const MembershipApproval = ({ user, onBackToHome, onLogout, embedded = false }) 
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  };
+
+  const toggleMemberDetails = (memberId) => {
+    setExpandedMemberId(expandedMemberId === memberId ? null : memberId);
+  };
+
+  const calculateAge = (birthday) => {
+    if (!birthday) return 'N/A';
+    const birthDate = new Date(birthday);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
   };
 
   const styles = {
@@ -455,58 +472,296 @@ const MembershipApproval = ({ user, onBackToHome, onLogout, embedded = false }) 
             <table style={styles.table}>
               <thead style={styles.tableHead}>
                 <tr>
+                  <th style={{...styles.th, textAlign: 'left', minWidth: '50px'}}>Details</th>
                   <th style={{...styles.th, textAlign: 'left', minWidth: '140px'}}>Name</th>
                   <th style={{...styles.th, textAlign: 'left', minWidth: '180px'}}>Email Address</th>
+                  <th style={{...styles.th, width: 'auto', minWidth: '120px'}}>Phone</th>
+                  <th style={{...styles.th, width: 'auto', minWidth: '100px'}}>Instrument</th>
                   <th style={{...styles.th, width: 'auto', minWidth: '100px'}}>Registration Date</th>
-                  <th style={{...styles.th, width: 'auto', minWidth: '80px'}}>Current Role</th>
                   <th style={{...styles.th, width: 'auto', minWidth: '160px'}}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {pendingMembers.map((member) => (
-                  <tr key={member.id} style={styles.tr}>
-                    <td style={{...styles.td, ...styles.tdName}}>
-                      {member.first_name} {member.last_name}
-                    </td>
-                    <td style={{...styles.td, ...styles.tdEmail}}>
-                      {member.email}
-                    </td>
-                    <td style={{...styles.td, ...styles.tdDate}}>
-                      {formatDate(member.created_at)}
-                    </td>
-                  <td style={{...styles.td, textAlign: 'center'}}>
-                    <span style={styles.roleBadge}>{member.role_name || 'USER'}</span>
-                  </td>
-                  <td style={{...styles.td, textAlign: 'center'}}>
-                    <div style={styles.actionButtons}>
-                      <button
-                        onClick={() => handleApprove(member.id)}
-                        disabled={processingId === member.id}
-                        style={{
-                          ...styles.approveButton,
-                          ...(processingId === member.id ? styles.disabledButton : {})
-                        }}
-                      >
-                        <FaCheck size={11} />
-                        {processingId === member.id ? 'Processing...' : 'Approve'}
-                      </button>
-                      <button
-                        onClick={() => handleReject(member.id)}
-                        disabled={processingId === member.id}
-                        style={{
-                          ...styles.rejectButton,
-                          ...(processingId === member.id ? styles.disabledButton : {})
-                        }}
-                      >
-                        <FaTimes size={11} />
-                        {processingId === member.id ? 'Processing...' : 'Reject'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  <React.Fragment key={member.id}>
+                    <tr style={styles.tr}>
+                      <td style={{...styles.td, textAlign: 'center'}}>
+                        <button
+                          onClick={() => toggleMemberDetails(member.id)}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#3b82f6',
+                            padding: '0.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          {expandedMemberId === member.id ? <FaChevronUp size={14} /> : <FaChevronDown size={14} />}
+                        </button>
+                      </td>
+                      <td style={{...styles.td, ...styles.tdName}}>
+                        {member.first_name} {member.last_name}
+                      </td>
+                      <td style={{...styles.td, ...styles.tdEmail}}>
+                        {member.email}
+                      </td>
+                      <td style={{...styles.td}}>
+                        {member.phone || 'N/A'}
+                      </td>
+                      <td style={{...styles.td}}>
+                        {member.instrument || 'N/A'}
+                      </td>
+                      <td style={{...styles.td, ...styles.tdDate}}>
+                        {formatDate(member.created_at)}
+                      </td>
+                      <td style={{...styles.td, textAlign: 'center'}}>
+                        <div style={styles.actionButtons}>
+                          <button
+                            onClick={() => handleApprove(member.id)}
+                            disabled={processingId === member.id}
+                            style={{
+                              ...styles.approveButton,
+                              ...(processingId === member.id ? styles.disabledButton : {})
+                            }}
+                          >
+                            <FaCheck size={11} />
+                            {processingId === member.id ? 'Processing...' : 'Approve'}
+                          </button>
+                          <button
+                            onClick={() => handleReject(member.id)}
+                            disabled={processingId === member.id}
+                            style={{
+                              ...styles.rejectButton,
+                              ...(processingId === member.id ? styles.disabledButton : {})
+                            }}
+                          >
+                            <FaTimes size={11} />
+                            {processingId === member.id ? 'Processing...' : 'Reject'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {expandedMemberId === member.id && (
+                      <tr>
+                        <td colSpan="7" style={{ padding: 0, background: '#f8fafc' }}>
+                          <div style={{
+                            padding: '1.5rem 2rem',
+                            background: 'linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%)',
+                            borderTop: '2px solid #bae6fd',
+                            borderBottom: '2px solid #bae6fd'
+                          }}>
+                            <h3 style={{
+                              margin: '0 0 1.5rem 0',
+                              color: '#0f172a',
+                              fontSize: '1.125rem',
+                              fontWeight: '700',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}>
+                              <FaUserPlus style={{ color: '#3b82f6' }} />
+                              Complete Member Information
+                            </h3>
+                            <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(5, 1fr)',
+                              gap: '1.25rem'
+                            }}>
+                              {/* Personal Information */}
+                              <div style={{
+                                background: 'white',
+                                padding: '1.25rem',
+                                borderRadius: '12px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                                border: '2px solid #222'
+                              }}>
+                                <h4 style={{
+                                  margin: '0 0 1rem 0',
+                                  color: '#3b82f6',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '700',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em'
+                                }}>Personal Details</h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <FaEnvelope style={{ color: '#64748b', fontSize: '0.875rem' }} />
+                                    <div>
+                                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>Email</div>
+                                      <div style={{ fontSize: '0.875rem', color: '#1e293b' }}>{member.email}</div>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <FaPhone style={{ color: '#64748b', fontSize: '0.875rem' }} />
+                                    <div>
+                                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>Phone Number</div>
+                                      <div style={{ fontSize: '0.875rem', color: '#1e293b' }}>{member.phone || 'Not provided'}</div>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <FaBirthdayCake style={{ color: '#64748b', fontSize: '0.875rem' }} />
+                                    <div>
+                                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>Birthday & Age</div>
+                                      <div style={{ fontSize: '0.875rem', color: '#1e293b' }}>
+                                        {member.birthday ? `${formatDate(member.birthday)} (${calculateAge(member.birthday)} years old)` : 'Not provided'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Musical Information */}
+                              <div style={{
+                                background: 'white',
+                                padding: '1.25rem',
+                                borderRadius: '12px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                                border: '2px solid #222'
+                              }}>
+                                <h4 style={{
+                                  margin: '0 0 1rem 0',
+                                  color: '#3b82f6',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '700',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em'
+                                }}>Musical Background</h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <FaMusic style={{ color: '#64748b', fontSize: '0.875rem' }} />
+                                    <div>
+                                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>Instrument</div>
+                                      <div style={{ fontSize: '0.875rem', color: '#1e293b', fontWeight: '600' }}>
+                                        {member.instrument || 'Not specified'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Location Information */}
+                              <div style={{
+                                background: 'white',
+                                padding: '1.25rem',
+                                borderRadius: '12px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                                border: '2px solid #222'
+                              }}>
+                                <h4 style={{
+                                  margin: '0 0 1rem 0',
+                                  color: '#3b82f6',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '700',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em'
+                                }}>Address</h4>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                                  <FaMapMarkerAlt style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '0.25rem' }} />
+                                  <div>
+                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>Location</div>
+                                    <div style={{ fontSize: '0.875rem', color: '#1e293b', lineHeight: '1.5' }}>
+                                      {member.address || 'Not provided'}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Identity Proof */}
+                              <div style={{
+                                background: 'white',
+                                padding: '1.25rem',
+                                borderRadius: '12px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                                border: '2px solid #222'
+                              }}>
+                                <h4 style={{
+                                  margin: '0 0 1rem 0',
+                                  color: '#3b82f6',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '700',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em'
+                                }}>Identity Verification</h4>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                  <FaFileAlt style={{ color: '#64748b', fontSize: '0.875rem' }} />
+                                  <div>
+                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>Identity Proof</div>
+                                    {member.identity_proof ? (
+                                      <a 
+                                        href={`http://localhost:5000/${member.identity_proof}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                          fontSize: '0.875rem',
+                                          color: '#3b82f6',
+                                          textDecoration: 'none',
+                                          fontWeight: '600',
+                                          display: 'inline-block',
+                                          marginTop: '0.25rem'
+                                        }}
+                                      >
+                                        View Document
+                                      </a>
+                                    ) : (
+                                      <div style={{ fontSize: '0.875rem', color: '#94a3b8' }}>Not uploaded</div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Registration Information */}
+                              <div style={{
+                                background: 'white',
+                                padding: '1.25rem',
+                                borderRadius: '12px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                                border: '1px solid #222'
+                              }}>
+                                <h4 style={{
+                                  margin: '0 0 1rem 0',
+                                  color: '#3b82f6',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '700',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em'
+                                }}>Registration Info</h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <FaCalendarAlt style={{ color: '#64748b', fontSize: '0.875rem' }} />
+                                    <div>
+                                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>Applied On</div>
+                                      <div style={{ fontSize: '0.875rem', color: '#1e293b' }}>{formatDate(member.created_at)}</div>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <FaUserPlus style={{ color: '#64748b', fontSize: '0.875rem' }} />
+                                    <div>
+                                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>Current Status</div>
+                                      <div>
+                                        <span style={{
+                                          ...styles.roleBadge,
+                                          backgroundColor: '#fef3c7',
+                                          color: '#92400e'
+                                        }}>
+                                          {member.role_name || 'PENDING'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
