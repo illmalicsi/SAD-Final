@@ -1,5 +1,5 @@
 import React, { useState, Suspense } from 'react';
-import { FaHome, FaBell, FaBoxOpen, FaUsers, FaClipboardList, FaChartLine, FaUser, FaQuestionCircle, FaBars, FaSignOutAlt, FaChevronLeft, FaChevronRight, FaSearch, FaCog, FaCheckCircle, FaDollarSign, FaHistory, FaUserCircle, FaLock, FaClipboard, FaMusic, FaMapMarkerAlt, FaCrown, FaUserPlus } from 'react-icons/fa';
+import { FaHome, FaBell, FaBoxOpen, FaUsers, FaClipboardList, FaChartLine, FaUser, FaQuestionCircle, FaBars, FaSignOutAlt, FaChevronLeft, FaChevronRight, FaSearch, FaCog, FaCheckCircle, FaDollarSign, FaHistory, FaUserCircle, FaLock, FaClipboard, FaMusic, FaMapMarkerAlt, FaCrown, FaUserPlus, FaTimes } from 'react-icons/fa';
 import AuthService from '../services/authService';
 
 // Import components
@@ -7,7 +7,7 @@ const UserManagement = React.lazy(() => import('./usermanagement'));
 const Inventory = React.lazy(() => import('./inventory'));
 const CustomerManagement = React.lazy(() => import('./CustomerManagement'));
 const Invoice = React.lazy(() => import('./Invoice'));
-const MyInvoices = React.lazy(() => import('./MyInvoices'));
+// ...existing code...
 const TransactionHistory = React.lazy(() => import('./TransactionHistory'));
 const Approval = React.lazy(() => import('./Approval'));
 const MembershipApproval = React.lazy(() => import('./MembershipApproval'));
@@ -89,6 +89,13 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     };
   }, [user]);
 
+  // Ensure admin notifications target the logged-in admin's email
+  React.useEffect(() => {
+    if (user && (user.role === 'admin' || user.role === 'member')) {
+      NotificationService.setAdminRecipients([user.email]);
+    }
+  }, [user]);
+
   // Load user notifications
   React.useEffect(() => {
     const loadNotifications = () => {
@@ -142,7 +149,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     {
       title: 'Finance',
       items: [
-        { id: 'my-invoices', icon: <FaClipboardList size={18} />, text: 'My Invoices', view: 'my-invoices', adminOnly: false },
+  // Removed My Invoices from sidebar
         { id: 'invoice', icon: <FaClipboardList size={18} />, text: 'Create Invoice', view: 'invoice', adminOnly: true },
         { id: 'payment', icon: <FaDollarSign size={18} />, text: 'Process Payments', view: 'payment', adminOnly: true },
         { id: 'transactions', icon: <FaHistory size={18} />, text: 'Transactions', view: 'transactions', adminOnly: false }
@@ -1376,12 +1383,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
           </Suspense>
         );
 
-      case 'my-invoices':
-        return (
-          <Suspense fallback={<div>Loading My Invoices...</div>}>
-            <MyInvoices user={user} />
-          </Suspense>
-        );
+      // Removed my-invoices view
 
       case 'invoice':
         return (

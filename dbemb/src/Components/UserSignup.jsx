@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import authService from '../services/authService';
 import {
   FaUser,
@@ -23,6 +23,10 @@ const UserSignup = ({ onSignup, onClose, onSwitchToLogin }) => {
   const [success, setSuccess] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const googleBtnRef = useRef(null);
+  const [googleReady, setGoogleReady] = useState(false);
+  const [googleErr, setGoogleErr] = useState(null);
+  const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
   const styles = {
     page: {
@@ -265,6 +269,69 @@ const UserSignup = ({ onSignup, onClose, onSwitchToLogin }) => {
     }
   };
 
+  // Google Identity Services setup
+  useEffect(() => {
+    // Skip if no client id configured
+    if (!GOOGLE_CLIENT_ID) return;
+
+    const initGoogle = () => {
+      if (!window.google || !window.google.accounts || !googleBtnRef.current) return;
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: async (response) => {
+            try {
+              setSubmitting(true);
+              const cred = response.credential;
+              const data = await authService.googleSignIn(cred);
+              if (data && data.success && onSignup) {
+                onSignup(data.user);
+              }
+            } catch (err) {
+              console.error('Google sign-in failed:', err);
+              setGoogleErr(err.message || 'Google sign-in failed');
+            } finally {
+              setSubmitting(false);
+            }
+          },
+          auto_select: false,
+          ux_mode: 'popup'
+        });
+        // Render the Google button
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: 'outline',
+          size: 'large',
+          text: 'signup_with',
+          shape: 'rectangular',
+          width: 360
+        });
+        setGoogleReady(true);
+      } catch (e) {
+        console.error('Google init error:', e);
+        setGoogleErr('Failed to initialize Google Sign-In');
+      }
+    };
+
+    // Load script if needed
+    if (!window.google) {
+      const scriptId = 'google-identity-services';
+      if (!document.getElementById(scriptId)) {
+        const s = document.createElement('script');
+        s.src = 'https://accounts.google.com/gsi/client';
+        s.async = true;
+        s.defer = true;
+        s.id = scriptId;
+        s.onload = initGoogle;
+        s.onerror = () => setGoogleErr('Failed to load Google script');
+        document.body.appendChild(s);
+      } else {
+        initGoogle();
+      }
+    } else {
+      initGoogle();
+    }
+  }, [GOOGLE_CLIENT_ID]);
+
   return (
     <div style={styles.page}>
       <form style={styles.card} onSubmit={handleSubmit} noValidate>
@@ -434,6 +501,21 @@ const UserSignup = ({ onSignup, onClose, onSwitchToLogin }) => {
         >
           {submitting ? "Creating Account..." : "Sign up"}
         </button>
+
+        {/* Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '14px 0' }}>
+          <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+          <div style={{ color: '#94a3b8', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>or</div>
+          <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+        </div>
+
+        {/* Google Sign Up */}
+        {GOOGLE_CLIENT_ID ? (
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+            <div ref={googleBtnRef} />
+          </div>
+        ) : null}
+        {googleErr && <div style={{ ...styles.err, textAlign: 'center' }}>{googleErr}</div>}
 
         <div style={styles.linkText}>
           Already have an account?{' '}

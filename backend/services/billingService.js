@@ -31,19 +31,33 @@ async function approveInvoice(invoiceId) {
   return result.affectedRows > 0;
 }
 
-// Process payment for an invoice
-async function processPayment(invoiceId, processedBy, amountPaid) {
-  // Insert payment record
+// Process payment for an invoice (supports partial payments)
+async function processPayment(invoiceId, processedBy, amountPaid, paymentMethod = 'cash') {
+  // Insert payment record (with method)
   const [payRes] = await pool.execute(
-    `INSERT INTO payments (invoice_id, amount_paid, processed_by) VALUES (?, ?, ?)`,
-    [invoiceId, amountPaid, processedBy]
+    `INSERT INTO payments (invoice_id, amount_paid, payment_method, processed_by) VALUES (?, ?, ?, ?)`,
+    [invoiceId, amountPaid, paymentMethod, processedBy]
   );
 
-  // Update invoice status to paid
-  await pool.execute(
-    `UPDATE invoices SET status = 'paid' WHERE invoice_id = ?`,
+  // Compute total paid vs invoice amount
+  const [[sumRow]] = await pool.execute(
+    `SELECT i.amount AS invoice_amount, COALESCE(SUM(p.amount_paid), 0) AS total_paid
+       FROM invoices i
+       LEFT JOIN payments p ON p.invoice_id = i.invoice_id
+      WHERE i.invoice_id = ?`,
     [invoiceId]
   );
+
+  const invoiceAmount = Number(sumRow?.invoice_amount || 0);
+  const totalPaid = Number(sumRow?.total_paid || 0);
+
+  // Mark invoice paid only when fully covered
+  if (totalPaid >= invoiceAmount && invoiceAmount > 0) {
+    await pool.execute(
+      `UPDATE invoices SET status = 'paid' WHERE invoice_id = ?`,
+      [invoiceId]
+    );
+  }
 
   // Insert transaction record
   await pool.execute(
@@ -58,7 +72,8 @@ async function processPayment(invoiceId, processedBy, amountPaid) {
     `SELECT * FROM payments WHERE payment_id = ?`,
     [payRes.insertId]
   );
-  return paymentRows[0];
+  // Return payment plus updated totals
+  return { ...paymentRows[0], total_paid: totalPaid, invoice_amount: invoiceAmount };
 }
 
 // Get transactions for a user

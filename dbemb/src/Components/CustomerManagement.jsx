@@ -46,6 +46,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
   const [viewMode, setViewMode] = useState("cards");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [customerStatusOverrides, setCustomerStatusOverrides] = useState(new Map());
+  // No board tabs; single unified dataset
 
   // Static booking data - this will be replaced by props from your booking system
   const defaultBookingsData = [
@@ -96,10 +97,10 @@ const CustomerManagement = ({ bookingsData = [] }) => {
   // State to hold all booking data
   const [allBookingsData, setAllBookingsData] = useState([]);
 
-  // Load bookings from API ONLY (no localStorage)
+  // Load all bookings from API
   const getStoredBookings = async () => {
     try {
-      console.log('CustomerManagement: Fetching bookings from API...');
+      console.log('CustomerManagement: Fetching bookings from API');
       const response = await fetch('http://localhost:5000/api/bookings', {
         headers: {
           'Content-Type': 'application/json'
@@ -108,7 +109,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('CustomerManagement: API Response:', data);
+        console.log('CustomerManagement: API Bookings Response:', data);
         if (data.success && Array.isArray(data.bookings)) {
           // Convert database format to frontend format
           const bookings = data.bookings.map(b => ({
@@ -118,7 +119,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
             email: b.email,
             phone: b.phone,
             service: b.service,
-            date: b.date ? b.date.split('T')[0] : b.date,
+            date: b.date ? (typeof b.date === 'string' ? b.date.split('T')[0] : b.date) : b.date,
             startTime: b.start_time,
             endTime: b.end_time,
             location: b.location,
@@ -127,7 +128,17 @@ const CustomerManagement = ({ bookingsData = [] }) => {
             notes: b.notes,
             createdAt: b.created_at
           }));
-          console.log('CustomerManagement: Loaded', bookings.length, 'bookings from API');
+          // Sort by date (ASC) and time (NULLs last)
+          bookings.sort((a, b) => {
+            const da = new Date(a.date);
+            const db = new Date(b.date);
+            if (da.getTime() !== db.getTime()) return da - db;
+            if (!a.startTime && !b.startTime) return a.id - b.id;
+            if (!a.startTime) return 1;
+            if (!b.startTime) return -1;
+            return a.startTime.localeCompare(b.startTime) || (a.id - b.id);
+          });
+          console.log(`CustomerManagement: Loaded ${bookings.length} bookings from API`);
           return bookings;
         }
       } else {
@@ -149,7 +160,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
   // Load and combine all booking data
   useEffect(() => {
     const loadAllBookings = async () => {
-      console.log('CustomerManagement: Loading bookings...');
+      console.log('CustomerManagement: Loading bookings');
       const apiBookings = await getStoredBookings();
       console.log('CustomerManagement: API returned:', apiBookings.length, 'bookings');
       
@@ -177,7 +188,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
     // Check for changes more frequently
     const interval = setInterval(() => {
       loadAllBookings();
-    }, 1000); // Check every 1 second
+    }, 5000); // Poll every 5 seconds to reduce load
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -504,6 +515,21 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         
         // Send notification to customer with invoice info
         NotificationService.notifyBookingConfirmed(updatedBooking);
+        // Notify admins that a booking was approved
+        NotificationService.createAdminNotification({
+          type: 'success',
+          title: 'Booking Approved ✅',
+          message: `Booking #${updatedBooking.booking_id || booking.id} for ${updatedBooking.customer_name || booking.customerName || updatedBooking.email} has been approved.`,
+          data: {
+            bookingId: updatedBooking.booking_id || booking.id,
+            customer: updatedBooking.customer_name || booking.customerName || updatedBooking.email,
+            email: updatedBooking.email,
+            service: updatedBooking.service,
+            date: updatedBooking.date,
+            invoiceId: updatedBooking.invoice_id || null,
+            status: 'approved'
+          }
+        });
         
         // Dispatch event to update other components
         window.dispatchEvent(new CustomEvent('bookingsUpdated', {
@@ -561,6 +587,20 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         
         // Send notification to customer
         NotificationService.notifyBookingRejected(booking);
+        // Notify admins that a booking was rejected
+        NotificationService.createAdminNotification({
+          type: 'info',
+          title: 'Booking Rejected',
+          message: `Booking #${booking.id} for ${booking.customerName || booking.email} was rejected.`,
+          data: {
+            bookingId: booking.id,
+            customer: booking.customerName || booking.email,
+            email: booking.email,
+            service: booking.service,
+            date: booking.date,
+            status: 'rejected'
+          }
+        });
         
         // Dispatch event to update other components
         window.dispatchEvent(new CustomEvent('bookingsUpdated', {
@@ -908,6 +948,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
           <FaUsers /> Customer Management
         </h1>
         <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+          {/* Board tabs removed */}
           <div style={styles.viewToggle}>
             <button
               style={{

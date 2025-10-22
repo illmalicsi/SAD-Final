@@ -35,6 +35,9 @@ app.use('/api/billing', billingRoutes);
 // Payments route (simulated payment processing)
 const paymentsRoutes = require('./routes/payments');
 app.use('/api/payments', paymentsRoutes);
+// Stripe payment route
+const stripeRoutes = require('./routes/stripe');
+app.use('/api/payments/stripe', stripeRoutes);
 // Instrument requests routes (borrow, rent, instruments)
 app.use('/api/instruments', instrumentsRoutes);
 // Membership approval routes

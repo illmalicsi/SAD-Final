@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { FaCalendarAlt, FaClock, FaUser, FaUsers, FaEnvelope, FaPhone, FaMapMarkerAlt, FaMusic, FaCheckCircle, FaSpinner, FaChevronLeft, FaChevronRight, FaInfoCircle, FaGuitar, FaDrum, FaKeyboard, FaPlus, FaCreditCard } from 'react-icons/fa';
+import NotificationService from '../services/notificationService';
 
 // --- Data for Dynamic Form ---
 
@@ -277,6 +278,13 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         };
         setBookings(prev => [...prev, formattedBooking]);
         setShowSuccess(true);
+
+        // Notify admins and customer about new booking request
+        try {
+          NotificationService.notifyNewBooking(data.booking);
+        } catch (e) {
+          console.error('Notification error (new booking):', e);
+        }
         
         // Reset form
         setService('');

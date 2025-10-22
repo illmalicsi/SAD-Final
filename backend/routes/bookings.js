@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const { pool } = require('../config/database');
+// Removed timezone utils as board endpoint is no longer needed
 const billingService = require('../services/billingService');
 
 // Get all bookings (public endpoint for calendar display)
@@ -33,6 +34,8 @@ router.get('/', async (req, res) => {
     });
   }
 });
+
+// Removed board endpoint (/api/bookings/board)
 
 // Get bookings by user email (for customers)
 router.get('/user/:email', async (req, res) => {

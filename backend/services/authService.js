@@ -1,6 +1,14 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 const { pool } = require('../config/database');
+
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+let googleClient = null;
+if (GOOGLE_CLIENT_ID) {
+  googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+}
 
 class AuthService {
   // Login user
@@ -73,6 +81,97 @@ class AuthService {
     }
   }
 
+  // Google login/register using ID token
+  async googleLoginOrRegister(idToken) {
+    try {
+      if (!GOOGLE_CLIENT_ID) {
+        throw new Error('Server missing GOOGLE_CLIENT_ID');
+      }
+      if (!googleClient) {
+        googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+      }
+
+      // Verify the token with Google
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: GOOGLE_CLIENT_ID
+      });
+      const payload = ticket.getPayload();
+      if (!payload) {
+        throw new Error('Invalid Google token payload');
+      }
+
+      const email = payload.email;
+      const emailVerified = payload.email_verified;
+      const givenName = payload.given_name || '';
+      const familyName = payload.family_name || '';
+      const fullName = payload.name || '';
+
+      if (!email || !emailVerified) {
+        throw new Error('Email not verified by Google');
+      }
+
+      // Try to find existing user
+      const [existingUserRows] = await pool.execute(
+        'SELECT u.id, u.first_name, u.last_name, u.email, u.is_active, u.is_blocked, r.role_name FROM users u JOIN roles r ON u.role_id = r.role_id WHERE u.email = ?',
+        [email]
+      );
+
+      let userRecord;
+      if (existingUserRows.length > 0) {
+        userRecord = existingUserRows[0];
+        if (!userRecord.is_active) throw new Error('Account is deactivated');
+        if (userRecord.is_blocked) throw new Error('Account is blocked');
+      } else {
+        // Create new user with role 'user'
+        const [roleRows] = await pool.execute('SELECT role_id FROM roles WHERE role_name = ?', ['user']);
+        const roleId = (roleRows && roleRows.length > 0) ? roleRows[0].role_id : 3;
+        const randPassword = crypto.randomBytes(16).toString('hex');
+        const firstName = givenName || (fullName.split(' ')[0] || '');
+        const lastName = familyName || (fullName.split(' ').slice(1).join(' ') || '');
+
+        const [insertResult] = await pool.execute(`
+          INSERT INTO users (first_name, last_name, email, password_hash, role_id)
+          VALUES (?, ?, ?, ?, ?)
+        `, [firstName || 'Google', lastName || 'User', email, randPassword, roleId]);
+
+        userRecord = {
+          id: insertResult.insertId,
+          first_name: firstName || 'Google',
+          last_name: lastName || 'User',
+          email,
+          role_name: 'user',
+          is_active: 1,
+          is_blocked: 0
+        };
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          userId: userRecord.id,
+          email: userRecord.email,
+          role_name: userRecord.role_name || 'user'
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+      );
+
+      return {
+        token,
+        user: {
+          id: userRecord.id,
+          firstName: userRecord.first_name,
+          lastName: userRecord.last_name,
+          email: userRecord.email,
+          role: userRecord.role_name || 'user'
+        }
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+ 
   // Register new user
   async register(userData) {
     try {

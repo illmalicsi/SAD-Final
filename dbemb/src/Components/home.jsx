@@ -1912,154 +1912,85 @@ const servicesHeaderRightStyle = {
   // Handle payment submission
   const handlePaymentSubmit = async (e) => {
     console.log('🔵 PAYMENT FORM SUBMITTED - handlePaymentSubmit called');
-    console.log('Event type:', e.type);
-    console.log('Event target:', e.target);
     e.preventDefault();
     setPaymentProcessing(true);
 
     try {
-      // Get booking ID from notification with multiple fallbacks
-      console.log('=== PAYMENT SUBMIT DEBUG ===');
-      console.log('Full selectedPaymentNotification:', JSON.stringify(selectedPaymentNotification, null, 2));
-      console.log('selectedPaymentNotification?.data:', selectedPaymentNotification?.data);
-      
-      // Try multiple paths to find booking ID
-      const bookingId = selectedPaymentNotification?.data?.bookingId 
-                     || selectedPaymentNotification?.bookingId
-                     || selectedPaymentNotification?.data?.booking_id;
-                     
-      const amount = selectedPaymentNotification?.data?.amount 
-                  || selectedPaymentNotification?.amount
-                  || selectedPaymentNotification?.data?.paymentDetails?.totalAmount
-                  || selectedPaymentNotification?.data?.estimated_value;
-
-      console.log('Extracted bookingId:', bookingId);
-      console.log('Extracted amount:', amount);
+      // Derive bookingId from the selected notification
+      const bookingId = selectedPaymentNotification?.data?.bookingId
+        || selectedPaymentNotification?.bookingId
+        || selectedPaymentNotification?.data?.booking_id;
 
       if (!bookingId) {
-        console.error('❌ Booking ID not found!');
-        console.error('Available keys in data:', Object.keys(selectedPaymentNotification?.data || {}));
-        console.error('Full notification structure:', selectedPaymentNotification);
         alert('Booking information not found. Please use "My Bookings" to make payment instead.');
         setPaymentProcessing(false);
         return;
       }
 
-      // Use selected amount (down payment or full payment)
-      const paymentAmount = paymentForm.selectedAmount || amount;
-      const paymentType = paymentForm.paymentOption || 'fullpayment';
-      
-      console.log('Payment details:', { paymentAmount, paymentType, originalAmount: amount });
+      // Map UI payment method to backend enum
+      const methodMap = { gcash: 'online', card: 'card', bank: 'bank_transfer' };
+      const methodValue = methodMap[paymentMethod] || 'cash';
 
-      // Simulate payment processing (store in localStorage instead of API call)
-      console.log('💳 Processing simulated payment...');
-      
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Store payment record in localStorage
-      const payments = JSON.parse(localStorage.getItem('payments') || '[]');
-      const newPayment = {
-        id: Date.now(),
-        bookingId,
-        amount: paymentAmount,
-        totalAmount: amount,
-        paymentType,
-        paymentMethod,
-        timestamp: new Date().toISOString(),
-        service: selectedPaymentNotification.data?.service,
-        date: selectedPaymentNotification.data?.date,
-        status: 'completed',
-        ...paymentForm
-      };
-      payments.push(newPayment);
-      localStorage.setItem('payments', JSON.stringify(payments));
-      
-      console.log('✅ Payment stored in localStorage:', newPayment);
-      
-      // Mark as successful
-      const data = {
-        success: true,
-        booking: {
-          id: bookingId,
-          service: selectedPaymentNotification.data?.service,
-          date: selectedPaymentNotification.data?.date,
-          email: user?.email,
-          amount: paymentAmount,
-          paymentMethod: paymentMethod
-        },
-        bookingId,
-        invoiceId: newPayment.id
-      };
-      
-      console.log('✅ Payment successful - Creating success notification');
-      
-      // Create success notification (only if user is logged in)
-      if (data.booking && user && user.email) {
-        try {
-          const paymentStatusText = paymentType === 'downpayment' 
-            ? `Down payment (50%) of ₱${paymentAmount.toLocaleString()} has been received. Remaining balance: ₱${(amount - paymentAmount).toLocaleString()}`
-            : 'Your booking is now fully paid!';
-          
-          // Format date safely
-          const formattedDate = data.booking.date || 'your booking date';
-            
-          NotificationService.createNotification(user.email, {
-            type: 'success',
-            title: 'Payment Successful! 💳',
-            message: `Your payment of ₱${paymentAmount.toLocaleString()} for "${data.booking.service}" on ${formattedDate} has been confirmed. ${paymentStatusText}`,
-            data: {
-              bookingId: data.bookingId,
-              invoiceId: data.invoiceId,
-              amount: paymentAmount,
-              totalAmount: amount,
-              paymentType: paymentType,
-              paymentMethod: paymentMethod,
-              service: data.booking.service,
-              date: data.booking.date
-            }
-          });
-          
-          console.log('✅ Notification created successfully');
-          
-          // Trigger notification refresh
-          loadNotifications();
-        } catch (notifError) {
-          console.error('⚠️ Failed to create notification, but payment was successful:', notifError);
-          // Don't throw - payment was successful, just notification failed
-        }
+      // Use selected option (downpayment/fullpayment); server computes amount from booking price
+      const paymentType = paymentForm.paymentOption || 'fullpayment';
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const email = (currentUser && currentUser.email)
+        || selectedPaymentNotification?.data?.email
+        || selectedPaymentNotification?.userEmail
+        || '';
+
+      if (!email) {
+        alert('Missing email for payment. Please login and try again.');
+        setPaymentProcessing(false);
+        return;
       }
-      
-      // Set success state AFTER notification is created (or skipped)
+
+      console.log('💳 Calling backend to record payment:', { bookingId, email, paymentOption: paymentType, paymentMethod: methodValue });
+      const resp = await fetch('http://localhost:5000/api/billing/pay-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId, email, paymentOption: paymentType, paymentMethod: methodValue })
+      });
+      const payData = await resp.json();
+      console.log('🔙 Payment API response:', resp.status, payData);
+      if (!resp.ok || !payData.success) {
+        throw new Error(payData.message || 'Payment failed');
+      }
+
+      // Create success notification for the user
+      NotificationService.createNotification(email, {
+        type: 'success',
+        title: 'Payment Recorded 💰',
+        message: `Your ${paymentType === 'downpayment' ? 'down payment' : 'full payment'} for booking #${bookingId} has been recorded.`,
+        data: {
+          bookingId,
+          invoiceId: payData.invoiceId,
+          paymentId: payData.payment?.payment_id,
+          amount: payData.payment?.amount_paid,
+          method: methodValue,
+          totalPaid: payData.payment?.total_paid,
+          invoiceAmount: payData.payment?.invoice_amount,
+          service: selectedPaymentNotification.data?.service,
+          date: selectedPaymentNotification.data?.date
+        }
+      });
+
       setPaymentSuccess(true);
-      
-      // Wait 2 seconds then close modal
       setTimeout(() => {
+        setPaymentProcessing(false);
         setShowPaymentModal(false);
         setPaymentSuccess(false);
-        setPaymentForm({
-          cardholderName: '',
-          cardNumber: '',
-          expiryDate: '',
-          cvv: '',
-          gcashNumber: '',
-          referenceNumber: ''
-        });
-        
-        // Reload bookings to show updated status
-        window.dispatchEvent(new CustomEvent('bookingsUpdated', {
-          detail: { reload: true }
-        }));
-      }, 2000);
+        // Let other pages (e.g., transactions) refresh
+        window.dispatchEvent(new CustomEvent('transactionsUpdated'));
+      }, 1200);
     } catch (error) {
       console.error('❌ Payment error caught:', error);
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
       alert(`Payment processing failed: ${error.message}. Please try again later.`);
     } finally {
-      console.log('🔵 Payment processing completed, setting paymentProcessing to false');
-      setPaymentProcessing(false);
+      if (paymentProcessing) {
+        console.log('🔵 Payment processing completed, setting paymentProcessing to false');
+        setPaymentProcessing(false);
+      }
     }
   };
 

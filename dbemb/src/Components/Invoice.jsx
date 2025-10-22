@@ -1,346 +1,109 @@
-import React, { useState, useEffect } from 'react';
-import { FaFileInvoiceDollar, FaUser, FaDollarSign, FaEdit, FaCheck, FaTimes, FaArrowLeft } from 'react-icons/fa';
+
+import React, { useEffect, useState } from 'react';
+import { FaFileInvoiceDollar } from 'react-icons/fa';
 import AuthService from '../services/authService';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const Invoice = () => {
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-const Invoice = ({ user, onBackToHome }) => {
-  const [users, setUsers] = useState([]);
-  const [userId, setUserId] = useState('');
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await AuthService.makeAuthenticatedRequest(
-          `${API_BASE_URL}/users`
-        );
-        const data = await res.json();
-        if (res.ok) {
-          setUsers(data.users);
-        } else {
-          console.error('Failed to fetch users:', data);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchUsers();
+    fetchInvoices();
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
-    setIsSubmitting(true);
-    
-    if (!userId || !amount) {
-      setErrorMsg('Please fill in required fields');
-      setIsSubmitting(false);
-      return;
-    }
+  const fetchInvoices = async () => {
     try {
-      const res = await AuthService.makeAuthenticatedRequest(
-        `${API_BASE_URL}/billing/invoices`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ userId, amount: parseFloat(amount), description }),
-        }
-      );
-      const data = await res.json();
-      if (res.ok) {
-        setSuccessMsg(`Invoice #${data.invoice.invoice_id} created successfully`);
-        setUserId('');
-        setAmount('');
-        setDescription('');
+      setLoading(true);
+      // Use AuthService to make an authenticated request
+      const data = await AuthService.get('/billing/invoices');
+      if (data && data.invoices) {
+        setInvoices(data.invoices);
       } else {
-        setErrorMsg(data.message || 'Failed to create invoice');
+        setError(data.message || 'Failed to load invoices');
       }
     } catch (err) {
-      setErrorMsg(err.message);
+      setError(err.message);
     } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const styles = {
-    container: {
-      padding: '24px',
-      backgroundColor: '#f8fafc',
-      minHeight: '100vh',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    },
-    header: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '16px',
-      marginBottom: '32px'
-    },
-    backButton: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      padding: '12px 20px',
-      backgroundColor: '#fff',
-      border: '1px solid #e2e8f0',
-      borderRadius: '10px',
-      color: '#64748b',
-      cursor: 'pointer',
-      fontSize: '14px',
-      fontWeight: '500',
-      transition: 'all 0.2s ease',
-      textDecoration: 'none'
-    },
-    title: {
-      fontSize: '28px',
-      fontWeight: '700',
-      color: '#0f172a',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px'
-    },
-    titleIcon: {
-      color: '#3b82f6',
-      fontSize: '24px'
-    },
-    card: {
-      backgroundColor: '#ffffff',
-      borderRadius: '16px',
-      padding: '32px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      border: '1px solid #e2e8f0',
-      maxWidth: '600px'
-    },
-    alert: {
-      padding: '16px',
-      borderRadius: '12px',
-      marginBottom: '24px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      fontSize: '14px',
-      fontWeight: '500'
-    },
-    alertSuccess: {
-      backgroundColor: '#f0fdf4',
-      color: '#166534',
-      border: '1px solid #bbf7d0'
-    },
-    alertError: {
-      backgroundColor: '#fef2f2',
-      color: '#dc2626',
-      border: '1px solid #fecaca'
-    },
-    form: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '24px'
-    },
-    inputGroup: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px'
-    },
-    label: {
-      fontSize: '14px',
-      fontWeight: '600',
-      color: '#374151',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px'
-    },
-    labelIcon: {
-      color: '#6b7280',
-      fontSize: '16px'
-    },
-    input: {
-      padding: '12px 16px',
-      border: '1px solid #d1d5db',
-      borderRadius: '10px',
-      fontSize: '16px',
-      transition: 'all 0.2s ease',
-      fontFamily: 'inherit'
-    },
-    select: {
-      padding: '12px 16px',
-      border: '1px solid #d1d5db',
-      borderRadius: '10px',
-      fontSize: '16px',
-      backgroundColor: '#fff',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      fontFamily: 'inherit'
-    },
-    textarea: {
-      padding: '12px 16px',
-      border: '1px solid #d1d5db',
-      borderRadius: '10px',
-      fontSize: '16px',
-      fontFamily: 'inherit',
-      resize: 'vertical',
-      minHeight: '100px',
-      transition: 'all 0.2s ease'
-    },
-    submitButton: {
-      padding: '16px 32px',
-      backgroundColor: '#3b82f6',
-      color: '#fff',
-      border: 'none',
-      borderRadius: '12px',
-      fontSize: '16px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '8px',
-      marginTop: '16px'
-    },
-    submitButtonDisabled: {
-      backgroundColor: '#9ca3af',
-      cursor: 'not-allowed'
-    },
-    spinner: {
-      width: '20px',
-      height: '20px',
-      border: '2px solid #ffffff',
-      borderTop: '2px solid transparent',
-      borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
+      setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-          
-          .input-focus:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-          }
-          
-          .back-button:hover {
-            background-color: #f8fafc;
-            border-color: #3b82f6;
-            color: #3b82f6;
-          }
-          
-          .submit-button:hover:not(:disabled) {
-            background-color: #2563eb;
-            transform: translateY(-1px);
-            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
-          }
-        `}
-      </style>
-      
-      <div style={styles.header}>
-        <h1 style={styles.title}>
-          <FaFileInvoiceDollar style={styles.titleIcon} />
-          Create New Invoice
+    <div style={{ padding: '24px', backgroundColor: '#f8fafc', minHeight: '100vh', fontFamily: 'Segoe UI, Roboto, sans-serif' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <FaFileInvoiceDollar style={{ color: '#3b82f6', fontSize: '24px' }} />
+          Customer Invoices
         </h1>
       </div>
-
-      <div style={styles.card}>
-        {successMsg && (
-          <div style={{...styles.alert, ...styles.alertSuccess}}>
-            <FaCheck />
-            {successMsg}
+  <div style={{ backgroundColor: '#fff', borderRadius: '14px', padding: '28px 24px', boxShadow: '0 4px 12px -2px rgba(16,30,54,0.10)', border: '1px solid #e2e8f0', maxWidth: '100%', margin: '0 auto' }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', color: '#64748b' }}>Loading...</div>
+        ) : error ? (
+          <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'separate',
+              borderSpacing: 0,
+              fontSize: 15,
+              background: '#fff',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+              tableLayout: 'fixed',
+              minWidth: 900
+            }}>
+              <colgroup>
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '24%' }} />
+                <col style={{ width: '16%' }} />
+              </colgroup>
+              <thead>
+                <tr style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%)', color: '#fff' }}>
+                  <th style={{ padding: '12px 10px', borderTopLeftRadius: 10, border: 'none', fontWeight: 700, letterSpacing: 0.5 }}>Invoice #</th>
+                  <th style={{ padding: '12px 10px', border: 'none', fontWeight: 700, letterSpacing: 0.5 }}>Customer ID</th>
+                  <th style={{ padding: '12px 10px', border: 'none', fontWeight: 700, letterSpacing: 0.5 }}>Amount Due</th>
+                  <th style={{ padding: '12px 10px', border: 'none', fontWeight: 700, letterSpacing: 0.5 }}>Status</th>
+                  <th style={{ padding: '12px 10px', border: 'none', fontWeight: 700, letterSpacing: 0.5 }}>Description</th>
+                  <th style={{ padding: '12px 10px', borderTopRightRadius: 10, border: 'none', fontWeight: 700, letterSpacing: 0.5 }}>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoices.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: '#64748b', fontStyle: 'italic', fontSize: 15 }}>No invoices found.</td>
+                  </tr>
+                ) : (
+                  invoices.map((inv, idx) => (
+                    <tr key={inv.invoice_id} style={{ background: idx % 2 === 0 ? '#f8fafc' : '#fff', transition: 'background 0.2s' }}>
+                      <td style={{ padding: '10px 8px', border: 'none', textAlign: 'center', borderLeft: '4px solid #3b82f6', borderTopLeftRadius: 6, fontWeight: 600 }}>{inv.invoice_id}</td>
+                      <td style={{ padding: '10px 8px', border: 'none', textAlign: 'center' }}>{inv.user_id}</td>
+                      <td style={{ padding: '10px 8px', border: 'none', textAlign: 'right', color: '#059669', fontWeight: 700 }}>₱{parseFloat(inv.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td style={{ padding: '10px 8px', border: 'none', textAlign: 'center' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '3px 12px',
+                          borderRadius: 14,
+                          background: inv.status === 'paid' ? '#d1fae5' : inv.status === 'pending' ? '#fef9c3' : '#fee2e2',
+                          color: inv.status === 'paid' ? '#059669' : inv.status === 'pending' ? '#b45309' : '#dc2626',
+                          fontWeight: 600,
+                          fontSize: 14
+                        }}>{inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}</span>
+                      </td>
+                      <td style={{ padding: '10px 8px', border: 'none', fontStyle: inv.description ? 'normal' : 'italic', color: inv.description ? '#0f172a' : '#64748b' }}>{inv.description || '-'}</td>
+                      <td style={{ padding: '10px 8px', border: 'none', textAlign: 'center', borderTopRightRadius: 6 }}>{new Date(inv.created_at).toLocaleString()}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         )}
-        {errorMsg && (
-          <div style={{...styles.alert, ...styles.alertError}}>
-            <FaTimes />
-            {errorMsg}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>
-              <FaUser style={styles.labelIcon} />
-              Select User *
-            </label>
-            <select 
-              value={userId} 
-              onChange={(e) => setUserId(e.target.value)} 
-              required
-              style={styles.select}
-              className="input-focus"
-            >
-              <option value="">Choose a user...</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.firstName} {u.lastName} ({u.email})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>
-              <FaDollarSign style={styles.labelIcon} />
-              Amount *
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-              placeholder="0.00"
-              style={styles.input}
-              className="input-focus"
-            />
-          </div>
-
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>
-              <FaEdit style={styles.labelIcon} />
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter invoice description or notes..."
-              style={styles.textarea}
-              className="input-focus"
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={isSubmitting}
-            style={{
-              ...styles.submitButton, 
-              ...(isSubmitting ? styles.submitButtonDisabled : {})
-            }}
-            className="submit-button"
-          >
-            {isSubmitting ? (
-              <>
-                <div style={styles.spinner}></div>
-                Creating Invoice...
-              </>
-            ) : (
-              <>
-                <FaFileInvoiceDollar />
-                Generate Invoice
-              </>
-            )}
-          </button>
-        </form>
       </div>
     </div>
   );

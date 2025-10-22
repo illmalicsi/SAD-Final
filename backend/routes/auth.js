@@ -113,6 +113,27 @@ router.post('/register', upload.single('identityProof'), async (req, res) => {
   }
 });
 
+// Google OAuth login/register
+router.post('/google', async (req, res) => {
+  try {
+    const { idToken } = req.body || {};
+    if (!idToken) {
+      return res.status(400).json({ success: false, message: 'Missing Google ID token' });
+    }
+
+    const result = await authService.googleLoginOrRegister(idToken);
+
+    res.json({
+      success: true,
+      message: 'Google authentication successful',
+      ...result
+    });
+  } catch (error) {
+    console.error('Google auth error:', error);
+    res.status(401).json({ success: false, message: error.message || 'Google authentication failed' });
+  }
+});
+
 // Get current user profile
 router.get('/profile', async (req, res) => {
   try {
