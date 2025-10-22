@@ -161,6 +161,11 @@ router.post('/pay-booking', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
     const booking = bookRows[0];
+    // Prevent duplicate payments: if booking is already marked paid, refuse further payments
+    if (String(booking.status).toLowerCase() === 'paid') {
+      console.warn(`Attempt to pay already-paid booking ${bookingId}`);
+      return res.status(400).json({ success: false, message: 'This booking has already been paid.' });
+    }
     if ((booking.email || '').toLowerCase() !== String(email).toLowerCase()) {
       return res.status(403).json({ success: false, message: 'Email does not match booking' });
     }
@@ -192,7 +197,18 @@ router.post('/pay-booking', async (req, res) => {
     }
     const toPay = paymentOption === 'downpayment' ? Math.round(baseAmount * 0.5) : baseAmount;
 
-    // 4) Find or create an invoice for this booking
+    // 4) Prevent duplicate invoice/payment: if there's already a paid invoice for this booking, refuse
+    const paidCheckDesc = `%Booking #${booking.booking_id}%`;
+    const [paidInvRows] = await pool.execute(
+      `SELECT * FROM invoices WHERE user_id = ? AND description LIKE ? AND status = 'paid' LIMIT 1`,
+      [userId, paidCheckDesc]
+    );
+    if (paidInvRows.length > 0) {
+      console.warn(`Attempt to pay booking ${bookingId} but invoice ${paidInvRows[0].invoice_id} is already paid`);
+      return res.status(400).json({ success: false, message: 'An invoice for this booking is already marked as paid.' , invoiceId: paidInvRows[0].invoice_id});
+    }
+
+    // Find or create an invoice for this booking (only consider pending/approved invoices)
     const description = `Booking #${booking.booking_id} - ${booking.service} on ${booking.date}`;
     const [existInv] = await pool.execute(
       `SELECT * FROM invoices WHERE user_id = ? AND description LIKE ? AND status IN ('pending','approved') ORDER BY created_at DESC LIMIT 1`,

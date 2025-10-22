@@ -1974,8 +1974,24 @@ const servicesHeaderRightStyle = {
           date: selectedPaymentNotification.data?.date
         }
       });
+      // Mark original notification as read and update its data to indicate payment completed
+      try {
+        if (selectedPaymentNotification && selectedPaymentNotification.id) {
+          // mark as read
+          NotificationService.markAsRead(selectedPaymentNotification.id);
+          // update notification data locally so renderNotificationMessage won't show payment link again
+          const updated = { ...selectedPaymentNotification, data: { ...(selectedPaymentNotification.data || {}), paid: true }, read: true };
+          const all = NotificationService.getAllNotifications().map(n => n.id === selectedPaymentNotification.id ? updated : n);
+          localStorage.setItem('userNotifications', JSON.stringify(all));
+          window.dispatchEvent(new Event('notificationsUpdated'));
+        }
+      } catch (e) {
+        console.warn('Failed to update original notification after payment', e);
+      }
 
       setPaymentSuccess(true);
+      // Clear selected payment notification to prevent reopening the modal via stale click
+      setSelectedPaymentNotification(null);
       setTimeout(() => {
         setPaymentProcessing(false);
         setShowPaymentModal(false);
@@ -1997,7 +2013,7 @@ const servicesHeaderRightStyle = {
   // Render notification message with clickable payment link
   const renderNotificationMessage = (notification) => {
     const message = notification.message || '';
-    const hasPaymentLink = message.includes('<payment-link>');
+    const hasPaymentLink = message.includes('<payment-link>') && !(notification.data && notification.data.paid);
     
     console.log('Rendering notification:', { message, hasPaymentLink, notification });
     
