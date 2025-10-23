@@ -158,16 +158,16 @@ router.post('/pay-booking', async (req, res) => {
       [bookingId]
     );
     if (bookRows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Booking not found' });
+      return res.status(404).json({ success: false, message: 'Reservation not found' });
     }
     const booking = bookRows[0];
     // Prevent duplicate payments: if booking is already marked paid, refuse further payments
     if (String(booking.status).toLowerCase() === 'paid') {
       console.warn(`Attempt to pay already-paid booking ${bookingId}`);
-      return res.status(400).json({ success: false, message: 'This booking has already been paid.' });
+      return res.status(400).json({ success: false, message: 'This reservation has already been paid.' });
     }
     if ((booking.email || '').toLowerCase() !== String(email).toLowerCase()) {
-      return res.status(403).json({ success: false, message: 'Email does not match booking' });
+  return res.status(403).json({ success: false, message: 'Email does not match reservation' });
     }
 
     // 2) Ensure there is a user for this email; create basic user if missing
@@ -193,7 +193,7 @@ router.post('/pay-booking', async (req, res) => {
     // 3) Determine amount based on service price (booking.estimated_value)
     const baseAmount = Number(booking.estimated_value || 0);
     if (!(baseAmount > 0)) {
-      return res.status(400).json({ success: false, message: 'Booking has no estimated amount' });
+      return res.status(400).json({ success: false, message: 'Reservation has no estimated amount' });
     }
     const toPay = paymentOption === 'downpayment' ? Math.round(baseAmount * 0.5) : baseAmount;
 
@@ -204,15 +204,15 @@ router.post('/pay-booking', async (req, res) => {
       [userId, paidCheckDesc]
     );
     if (paidInvRows.length > 0) {
-      console.warn(`Attempt to pay booking ${bookingId} but invoice ${paidInvRows[0].invoice_id} is already paid`);
-      return res.status(400).json({ success: false, message: 'An invoice for this booking is already marked as paid.' , invoiceId: paidInvRows[0].invoice_id});
+  console.warn(`Attempt to pay booking ${bookingId} but invoice ${paidInvRows[0].invoice_id} is already paid`);
+  return res.status(400).json({ success: false, message: 'An invoice for this reservation is already marked as paid.' , invoiceId: paidInvRows[0].invoice_id});
     }
 
     // Find or create an invoice for this booking (only consider pending/approved invoices)
-    const description = `Booking #${booking.booking_id} - ${booking.service} on ${booking.date}`;
+  const description = `Reservation ID ${booking.booking_id} - ${booking.service} on ${booking.date}`;
     const [existInv] = await pool.execute(
       `SELECT * FROM invoices WHERE user_id = ? AND description LIKE ? AND status IN ('pending','approved') ORDER BY created_at DESC LIMIT 1`,
-      [userId, `%Booking #${booking.booking_id}%`]
+  [userId, `%Booking #${booking.booking_id}%`]
     );
     let invoiceId;
     if (existInv.length > 0) {
@@ -229,7 +229,7 @@ router.post('/pay-booking', async (req, res) => {
     // 5) Record payment to Finance (processed_by = userId)
     const payment = await billingService.processPayment(invoiceId, userId, toPay, paymentMethod);
 
-    return res.json({ success: true, message: 'Payment recorded', invoiceId, payment });
+  return res.json({ success: true, message: 'Payment recorded', invoiceId, payment, reservationId: booking.booking_id });
   } catch (err) {
     console.error('❌ Error in /api/billing/pay-booking:', err);
     res.status(500).json({ success: false, message: 'Failed to pay booking' });

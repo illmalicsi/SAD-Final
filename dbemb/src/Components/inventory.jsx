@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { FaDrum, FaWind, FaCheckCircle, FaBoxOpen, FaTools } from 'react-icons/fa';
+import React, { useState, useRef, useEffect } from 'react';
+import { FaDrum, FaWind, FaCheckCircle, FaBoxOpen, FaTools, FaEllipsisH, FaEye, FaEdit, FaArchive, FaUndo } from 'react-icons/fa';
 
 
 const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRequestRent }) => {
@@ -7,10 +7,26 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
   const [searchTerm, setSearchTerm] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
   const [showArchived, setShowArchived] = useState(false);
   const [viewNote, setViewNote] = useState(null);
   const [viewDetails, setViewDetails] = useState(null);
   const [requestStatuses, setRequestStatuses] = useState({});
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRefs = useRef({});
+
+  useEffect(() => {
+    if (openMenuId !== null) {
+      // focus first menu item when opening
+      const firstRef = menuRefs.current[openMenuId]?.[0];
+      if (firstRef && firstRef.focus) firstRef.focus();
+      const handleKey = (e) => {
+        if (e.key === 'Escape') setOpenMenuId(null);
+      };
+      window.addEventListener('keydown', handleKey);
+      return () => window.removeEventListener('keydown', handleKey);
+    }
+  }, [openMenuId]);
 
 
   // Initial inventory data with archived property
@@ -320,6 +336,45 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       transition: 'all 0.3s ease',
       minWidth: '70px'
     },
+    /* Three-dot menu button */
+    menuButton: {
+      backgroundColor: 'transparent',
+      border: 'none',
+      cursor: 'pointer',
+      padding: '6px',
+      borderRadius: '6px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#64748b'
+    },
+    menuDropdown: {
+      position: 'absolute',
+      top: '36px',
+      right: 0,
+      background: '#ffffff',
+      border: '1px solid #e2e8f0',
+      borderRadius: '8px',
+      boxShadow: '0 8px 24px rgba(2,6,23,0.12)',
+      zIndex: 2000,
+      display: 'flex',
+      flexDirection: 'row',
+      gap: 8,
+      padding: '6px',
+      alignItems: 'center'
+    },
+    menuItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding: '8px 10px',
+      fontSize: 14,
+      color: '#0f172a',
+      cursor: 'pointer',
+      background: 'transparent',
+      border: 'none',
+      borderRadius: 6
+    },
     modalOverlay: {
       position: 'fixed',
       top: 0,
@@ -338,9 +393,12 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       borderRadius: '12px',
       padding: '30px',
       width: '100%',
-      maxWidth: '500px',
+      maxWidth: '640px',
       backdropFilter: 'blur(10px)',
-      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)'
+      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+      maxHeight: '80vh',
+      overflowY: 'auto',
+      boxSizing: 'border-box'
     },
     modalHeader: {
       display: 'flex',
@@ -348,7 +406,12 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       alignItems: 'center',
       marginBottom: '20px',
       paddingBottom: '15px',
-      borderBottom: '1px solid #e2e8f0'
+      borderBottom: '1px solid #e2e8f0',
+      position: 'sticky',
+      top: 0,
+      background: '#ffffff',
+      zIndex: 10,
+      paddingTop: 8
     },
     modalTitle: {
       fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -393,6 +456,19 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       fontSize: '14px',
       outline: 'none',
       transition: 'all 0.3s ease'
+    },
+
+    modalFooter: {
+      position: 'sticky',
+      bottom: 0,
+      background: '#ffffff',
+      paddingTop: 12,
+      paddingBottom: 12,
+      display: 'flex',
+      justifyContent: 'flex-end',
+      gap: 12,
+      boxShadow: '0 -8px 20px rgba(2,6,23,0.04)',
+      zIndex: 12
     },
     formSelect: {
       backgroundColor: '#f8fafc',
@@ -657,6 +733,7 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
   const handleEdit = (item) => setEditingItem({ ...item });
 
 
+
   const handleArchive = (id) => {
     setInventory(inventory.map(item =>
       item.id === id ? { ...item, archived: true } : item
@@ -672,6 +749,17 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
 
 
   const handleSave = () => {
+    // Basic validation
+    const errors = {};
+    if (!editingItem?.name || editingItem.name.trim().length < 2) errors.name = 'Name is required (min 2 characters)';
+    if (!editingItem?.brand || editingItem.brand.trim().length < 2) errors.brand = 'Brand is required';
+    if (editingItem?.quantity !== '' && (isNaN(editingItem.quantity) || editingItem.quantity < 0)) errors.quantity = 'Quantity must be a positive number';
+
+    if (Object.keys(errors).length) {
+      setFormErrors(errors);
+      return;
+    }
+
     if (editingItem.id) {
       setInventory(inventory.map(item =>
         item.id === editingItem.id ? { ...editingItem, archived: item.archived } : item
@@ -679,13 +767,14 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
     } else {
       const newItem = {
         ...editingItem,
-        id: Math.max(...inventory.map(i => i.id)) + 1,
+        id: inventory.length ? Math.max(...inventory.map(i => i.id)) + 1 : 1,
         archived: false
       };
       setInventory([...inventory, newItem]);
     }
     setEditingItem(null);
     setShowAddModal(false);
+    setFormErrors({});
   };
 
 
@@ -701,6 +790,7 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       locations: [{ name: '', quantity: '' }],
       archived: false
     });
+    setFormErrors({});
     setShowAddModal(true);
   };
 
@@ -883,114 +973,80 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
                     )}
                   </td>
                   <td style={{ ...styles.td, textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
                       <button
-                        style={styles.editButton}
-                        onClick={() => setViewDetails(item)}
+                        style={styles.menuButton}
+                        onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
+                        aria-haspopup="true"
+                        aria-expanded={openMenuId === item.id}
+                        title="Actions"
                       >
-                        View Details
+                        <FaEllipsisH />
                       </button>
-                      {!viewOnly && !showArchived && (
-                        <button
-                          style={styles.editButton}
-                          onClick={() => handleEdit(item)}
-                          disabled={item.archived}
-                        >
-                          Edit
-                        </button>
+
+                      {openMenuId === item.id && (
+                        <div style={styles.menuDropdown} onMouseLeave={() => setOpenMenuId(null)}>
+                          {(() => {
+                            // prepare refs container
+                            if (!menuRefs.current[item.id]) menuRefs.current[item.id] = [];
+                            const refs = menuRefs.current[item.id];
+                            let idx = 0;
+                            return (
+                              <>
+                                <button
+                                  ref={el => { refs[0] = el; }}
+                                  style={styles.menuItem}
+                                  onClick={() => {
+                                    setViewDetails(item);
+                                    setOpenMenuId(null);
+                                  }}
+                                >
+                                  <FaEye /> View
+                                </button>
+                                {!viewOnly && !showArchived && (
+                                  <button
+                                    ref={el => { refs[1] = el; }}
+                                    style={styles.menuItem}
+                                    onClick={() => {
+                                      handleEdit(item);
+                                      setOpenMenuId(null);
+                                    }}
+                                  >
+                                    <FaEdit /> Edit
+                                  </button>
+                                )}
+                                {viewOnly && item.status === 'Available' && (onRequestBorrow || onRequestRent) && (
+                                  <button
+                                    ref={el => { refs[2] = el; }}
+                                    style={styles.menuItem}
+                                    onClick={() => {
+                                      const requestType = onRequestBorrow ? 'borrow' : 'rent';
+                                      const statusKey = `${requestType}-${item.id}`;
+                                      if (onRequestBorrow) onRequestBorrow(item.id, item.name);
+                                      if (onRequestRent) onRequestRent(item.id, item.name);
+                                      setRequestStatuses(prev => ({ ...prev, [statusKey]: 'pending' }));
+                                      setOpenMenuId(null);
+                                    }}
+                                  >
+                                    {onRequestBorrow ? <><FaBoxOpen /> Request</> : <><FaBoxOpen /> Request</>}
+                                  </button>
+                                )}
+                                <button
+                                  ref={el => { refs[3] = el; }}
+                                  style={styles.menuItem}
+                                  onClick={() => {
+                                    if (showArchived) handleUnarchive(item.id);
+                                    else handleArchive(item.id);
+                                    setOpenMenuId(null);
+                                  }}
+                                >
+                                  {showArchived ? <><FaUndo /> Unarchive</> : <><FaArchive /> Archive</>}
+                                </button>
+                              </>
+                            );
+                          })()}
+                        </div>
                       )}
-                      {viewOnly && item.status === 'Available' && (onRequestBorrow || onRequestRent) && (() => {
-                        const requestType = onRequestBorrow ? 'borrow' : 'rent';
-                        const statusKey = `${requestType}-${item.id}`;
-                        const currentStatus = requestStatuses[statusKey];
-
-                        // Determine button text and style based on status
-                        let buttonText = onRequestBorrow ? 'Request Borrow' : 'Request Rent';
-                        let buttonStyle = { ...styles.borrowButton };
-                        let isDisabled = false;
-
-                        if (currentStatus === 'pending') {
-                          buttonText = 'Pending';
-                          buttonStyle = {
-                            ...styles.borrowButton,
-                            borderColor: '#fbbf24',
-                            color: '#fbbf24',
-                            cursor: 'not-allowed'
-                          };
-                          isDisabled = true;
-                        } else if (currentStatus === 'approved') {
-                          buttonText = 'Approved';
-                          buttonStyle = {
-                            ...styles.borrowButton,
-                            borderColor: '#22c55e',
-                            color: '#22c55e',
-                            cursor: 'not-allowed'
-                          };
-                          isDisabled = true;
-                        } else if (currentStatus === 'rejected') {
-                          buttonText = 'Rejected';
-                          buttonStyle = {
-                            ...styles.borrowButton,
-                            borderColor: '#ef4444',
-                            color: '#ef4444',
-                            cursor: 'default'
-                          };
-                          isDisabled = false; // Allow re-request after rejection
-                        }
-
-                        return (
-                          <button
-                            style={buttonStyle}
-                            disabled={isDisabled}
-                            onClick={() => {
-                              if (isDisabled) return;
-
-                              if (onRequestBorrow) {
-                                onRequestBorrow(item.id, item.name);
-                              } else if (onRequestRent) {
-                                onRequestRent(item.id, item.name);
-                              }
-
-                              // Immediately update local state to show pending
-                              setRequestStatuses(prev => ({
-                                ...prev,
-                                [statusKey]: 'pending'
-                              }));
-                            }}
-                            onMouseEnter={(e) => {
-                              if (!isDisabled) {
-                                e.target.style.backgroundColor = 'rgba(100, 255, 218, 0.1)';
-                                e.target.style.borderColor = 'rgba(100, 255, 218, 0.8)';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (!isDisabled) {
-                                e.target.style.backgroundColor = 'transparent';
-                                e.target.style.borderColor = '#64ffda';
-                              }
-                            }}
-                          >
-                            {buttonText}
-                          </button>
-                        );
-                      })()}
-                      {!viewOnly && (showArchived ? (
-                        <button
-                          style={styles.unarchiveButton}
-                          onClick={() => handleUnarchive(item.id)}
-                          title="Unarchive"
-                        >
-                          Unarchive
-                        </button>
-                      ) : (
-                        <button
-                          style={styles.archiveButton}
-                          onClick={() => handleArchive(item.id)}
-                          title="Archive"
-                        >
-                          Archive
-                        </button>
-                      ))}
                     </div>
                   </td>
                 </tr>
@@ -1022,84 +1078,95 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
                 ×
               </button>
             </div>
-            <div style={styles.form}>
-              <div style={styles.formRow}>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Instrument Name</label>
-                  <input
-                    type="text"
-                    style={styles.formInput}
-                    value={editingItem?.name || ''}
-                    onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
-                  />
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+              <div style={{ flex: '2 1 520px', minWidth: 360 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>Instrument Name</label>
+                    <input
+                      type="text"
+                      style={styles.formInput}
+                      value={editingItem?.name || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                    />
+                    {formErrors.name && <div style={{ color: '#ef4444', marginTop: 6 }}>{formErrors.name}</div>}
+                  </div>
+
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>Category</label>
+                    <select
+                      style={styles.formSelect}
+                      value={editingItem?.category || 'percussion'}
+                      onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                    >
+                      <option value="percussion">Percussion</option>
+                      <option value="wind">Wind Instruments</option>
+                    </select>
+                  </div>
                 </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Category</label>
-                  <select
-                    style={styles.formSelect}
-                    value={editingItem?.category || 'percussion'}
-                    onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
-                  >
-                    <option value="percussion">Percussion</option>
-                    <option value="wind">Wind Instruments</option>
-                  </select>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 12 }}>
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>Subcategory</label>
+                    <input
+                      type="text"
+                      style={styles.formInput}
+                      value={editingItem?.subcategory || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, subcategory: e.target.value })}
+                      placeholder="e.g., Snare Drums, Bass Drums, Woodwinds, etc."
+                    />
+                  </div>
+
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>Brand</label>
+                    <input
+                      type="text"
+                      style={styles.formInput}
+                      value={editingItem?.brand || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, brand: e.target.value })}
+                    />
+                    {formErrors.brand && <div style={{ color: '#ef4444', marginTop: 6 }}>{formErrors.brand}</div>}
+                  </div>
                 </div>
-              </div>
-              <div style={styles.formField}>
-                <label style={styles.formLabel}>Subcategory</label>
-                <input
-                  type="text"
-                  style={styles.formInput}
-                  value={editingItem?.subcategory || ''}
-                  onChange={(e) => setEditingItem({ ...editingItem, subcategory: e.target.value })}
-                  placeholder="e.g., Snare Drums, Bass Drums, Woodwinds, etc."
-                />
-              </div>
-              <div style={styles.formRow}>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Brand</label>
-                  <input
-                    type="text"
-                    style={styles.formInput}
-                    value={editingItem?.brand || ''}
-                    onChange={(e) => setEditingItem({ ...editingItem, brand: e.target.value })}
-                  />
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 12 }}>
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>Quantity</label>
+                    <input
+                      type="number"
+                      style={styles.formInput}
+                      value={editingItem?.quantity || ''}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? '' : parseFloat(e.target.value);
+                        if (value < 0) return;
+                        setEditingItem({ ...editingItem, quantity: value || '' });
+                      }}
+                      min="0"
+                      step="0.1"
+                      placeholder="Enter quantity"
+                    />
+                    {formErrors.quantity && <div style={{ color: '#ef4444', marginTop: 6 }}>{formErrors.quantity}</div>}
+                  </div>
+
+                  <div style={styles.formField}>
+                    <label style={styles.formLabel}>Condition</label>
+                    <select
+                      style={styles.formSelect}
+                      value={editingItem?.condition || 'Good'}
+                      onChange={(e) => setEditingItem({ ...editingItem, condition: e.target.value })}
+                    >
+                      <option value="Excellent">Excellent</option>
+                      <option value="Good">Good</option>
+                      <option value="Fair">Fair</option>
+                      <option value="Poor">Poor</option>
+                    </select>
+                  </div>
                 </div>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Quantity</label>
-                  <input
-                    type="number"
-                    style={styles.formInput}
-                    value={editingItem?.quantity || ''}
-                    onChange={(e) => {
-                      const value = e.target.value === '' ? '' : parseFloat(e.target.value);
-                      if (value < 0) return;
-                      setEditingItem({ ...editingItem, quantity: value || '' });
-                    }}
-                    min="0"
-                    step="0.1"
-                    placeholder="Enter quantity"
-                  />
-                </div>
-              </div>
-              <div style={styles.formRow}>
-                <div style={styles.formField}>
-                  <label style={styles.formLabel}>Condition</label>
-                  <select
-                    style={styles.formSelect}
-                    value={editingItem?.condition || 'Good'}
-                    onChange={(e) => setEditingItem({ ...editingItem, condition: e.target.value })}
-                  >
-                    <option value="Excellent">Excellent</option>
-                    <option value="Good">Good</option>
-                    <option value="Fair">Fair</option>
-                    <option value="Poor">Poor</option>
-                  </select>
-                </div>
-                <div style={styles.formField}>
+
+                <div style={{ marginTop: 12 }}>
                   <label style={styles.formLabel}>Status</label>
                   <select
-                    style={styles.formSelect}
+                    style={{ ...styles.formSelect, width: '220px' }}
                     value={editingItem?.status || 'Available'}
                     onChange={(e) => setEditingItem({ ...editingItem, status: e.target.value })}
                   >
@@ -1109,84 +1176,100 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
                   </select>
                 </div>
               </div>
-              <div style={styles.formField}>
-                <label style={styles.formLabel}>Notes</label>
-                <textarea
-                  style={styles.formTextarea}
-                  value={editingItem?.notes || ''}
-                  onChange={(e) => setEditingItem({ ...editingItem, notes: e.target.value })}
-                  placeholder="Additional notes about the instrument..."
-                />
-              </div>
-              <div style={styles.formField}>
-                <label style={styles.formLabel}>Locations</label>
-                {editingItem?.locations?.map((loc, index) => (
-                  <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                    <input
-                      type="text"
-                      style={{ ...styles.formInput, flex: 1 }}
-                      value={loc.name}
-                      onChange={(e) => {
-                        const newLocations = [...editingItem.locations];
-                        newLocations[index].name = e.target.value;
-                        setEditingItem({ ...editingItem, locations: newLocations });
-                      }}
-                      placeholder="Location name"
-                    />
-                    <input
-                      type="number"
-                      style={{ ...styles.formInput, width: '120px' }}
-                      value={loc.quantity}
-                      onChange={(e) => {
-                        const value = e.target.value === '' ? '' : parseFloat(e.target.value);
-                        if (value < 0) return;
-                        const newLocations = [...editingItem.locations];
-                        newLocations[index].quantity = value || '';
-                        setEditingItem({ ...editingItem, locations: newLocations });
-                      }}
-                      min="0"
-                      step="0.1"
-                      placeholder="Qty"
-                    />
+
+              <div style={{ flex: '1 1 260px', minWidth: 260 }}>
+                <div style={styles.formField}>
+                  <label style={styles.formLabel}>Notes</label>
+                  <textarea
+                    style={{ ...styles.formTextarea, minHeight: 160 }}
+                    value={editingItem?.notes || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, notes: e.target.value })}
+                    placeholder="Additional notes about the instrument..."
+                  />
+                </div>
+
+                <div style={{ marginTop: 12 }}>
+                  <label style={styles.formLabel}>Locations</label>
+                  <div>
+                    {editingItem?.locations?.map((loc, index) => (
+                      <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          style={{ ...styles.formInput, flex: 1 }}
+                          value={loc.name}
+                          onChange={(e) => {
+                            const newLocations = [...editingItem.locations];
+                            newLocations[index].name = e.target.value;
+                            setEditingItem({ ...editingItem, locations: newLocations });
+                          }}
+                          placeholder="Location name"
+                        />
+                        <input
+                          type="number"
+                          style={{ ...styles.formInput, width: '120px' }}
+                          value={loc.quantity}
+                          onChange={(e) => {
+                            const value = e.target.value === '' ? '' : parseFloat(e.target.value);
+                            if (value < 0) return;
+                            const newLocations = [...editingItem.locations];
+                            newLocations[index].quantity = value || '';
+                            setEditingItem({ ...editingItem, locations: newLocations });
+                          }}
+                          min="0"
+                          step="0.1"
+                          placeholder="Qty"
+                        />
+                        <button
+                          style={{
+                            ...styles.deleteButton,
+                            padding: '8px 12px',
+                            minWidth: '40px',
+                            display: loc.name ? 'flex' : 'none',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          onClick={() => {
+                            const newLocations = editingItem.locations.filter((_, i) => i !== index);
+                            setEditingItem({ ...editingItem, locations: newLocations });
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                     <button
                       style={{
-                        ...styles.deleteButton,
-                        padding: '8px 12px',
-                        minWidth: '40px',
-                        display: loc.name ? 'flex' : 'none',
+                        ...styles.createButton,
+                        padding: '10px 20px',
+                        marginTop: '10px',
+                        display: 'flex',
                         alignItems: 'center',
+                        gap: '8px',
                         justifyContent: 'center'
                       }}
                       onClick={() => {
-                        const newLocations = editingItem.locations.filter((_, i) => i !== index);
-                        setEditingItem({ ...editingItem, locations: newLocations });
+                        const newLocation = { name: '', quantity: '' };
+                        setEditingItem({ ...editingItem, locations: [...editingItem.locations, newLocation] });
                       }}
                     >
-                      ×
+                      + Add Location
                     </button>
                   </div>
-                ))}
-                <button
-                  style={{
-                    ...styles.createButton,
-                    padding: '10px 20px',
-                    marginTop: '10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    justifyContent: 'center'
-                  }}
-                  onClick={() => {
-                    const newLocation = { name: '', quantity: '' };
-                    setEditingItem({ ...editingItem, locations: [...editingItem.locations, newLocation] });
-                  }}
-                >
-                  + Add Location
-                </button>
+                </div>
               </div>
+
+            </div>
+
+            <div style={styles.modalFooter}>
+              <button
+                style={{ ...styles.closeButton, background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', padding: '10px 16px', borderRadius: 8 }}
+                onClick={() => { setEditingItem(null); setShowAddModal(false); setFormErrors({}); }}
+              >
+                Cancel
+              </button>
               <button
                 type="button"
-                style={styles.submitButton}
+                style={{ ...styles.submitButton, padding: '10px 20px' }}
                 onClick={handleSave}
               >
                 {editingItem?.id ? 'Update Instrument' : 'Add Instrument'}
@@ -1199,12 +1282,12 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
 
       {viewNote && (
         <div style={styles.modalOverlay} onClick={() => setViewNote(null)}>
-          <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+      <div style={{ ...styles.modalContent, color: '#0f172a' }} onClick={e => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>Full Note</h2>
               <button style={styles.closeButton} onClick={() => setViewNote(null)}>×</button>
             </div>
-            <div style={{ color: '#e5e7eb', fontSize: 15, whiteSpace: 'pre-wrap' }}>
+            <div style={{ color: '#0f172a', fontSize: 15, whiteSpace: 'pre-wrap' }}>
               {viewNote}
             </div>
           </div>
@@ -1219,22 +1302,38 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
               <h2 style={styles.modalTitle}>Instrument Details</h2>
               <button style={styles.closeButton} onClick={() => setViewDetails(null)}>×</button>
             </div>
-            <div style={{ color: '#e5e7eb', fontSize: 15 }}>
-              <div><strong>Name:</strong> {viewDetails.name}</div>
-              <div><strong>Category:</strong> {categoryNames[viewDetails.category] || viewDetails.category}</div>
-              <div><strong>Subcategory:</strong> {viewDetails.subcategory}</div>
-              <div><strong>Brand:</strong> {viewDetails.brand}</div>
-              <div><strong>Condition:</strong> {viewDetails.condition}</div>
-              <div><strong>Status:</strong> {viewDetails.status}</div>
-              <div><strong>Notes:</strong> {viewDetails.notes}</div>
-              <div style={{ marginTop: 12 }}>
-                <strong>Locations:</strong>
-                <ul>
-                  {viewDetails.locations.map((loc, idx) => (
-                    <li key={idx}>{loc.name}: {loc.quantity}</li>
-                  ))}
-                </ul>
-                <div><strong>Total Quantity:</strong> {getTotalQuantity(viewDetails)}</div>
+            <div style={{ color: '#0f172a', fontSize: 15 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '10px 20px', alignItems: 'start' }}>
+                <div style={{ fontWeight: 700, color: '#475569' }}>Name</div>
+                <div style={{ fontWeight: 600 }}>{viewDetails.name}</div>
+
+                <div style={{ fontWeight: 700, color: '#475569' }}>Category</div>
+                <div>{categoryNames[viewDetails.category] || viewDetails.category}</div>
+
+                <div style={{ fontWeight: 700, color: '#475569' }}>Subcategory</div>
+                <div>{viewDetails.subcategory}</div>
+
+                <div style={{ fontWeight: 700, color: '#475569' }}>Brand</div>
+                <div>{viewDetails.brand}</div>
+
+                <div style={{ fontWeight: 700, color: '#475569' }}>Condition</div>
+                <div>{viewDetails.condition}</div>
+
+                <div style={{ fontWeight: 700, color: '#475569' }}>Status</div>
+                <div>{viewDetails.status}</div>
+
+                <div style={{ fontWeight: 700, color: '#475569' }}>Notes</div>
+                <div style={{ whiteSpace: 'pre-wrap' }}>{viewDetails.notes || '—'}</div>
+
+                <div style={{ fontWeight: 700, color: '#475569' }}>Locations</div>
+                <div>
+                  <ul style={{ margin: 0, paddingLeft: 18 }}>
+                    {viewDetails.locations.map((loc, idx) => (
+                      <li key={idx}>{loc.name}: {loc.quantity}</li>
+                    ))}
+                  </ul>
+                  <div style={{ marginTop: 8 }}><strong>Total Quantity:</strong> {getTotalQuantity(viewDetails)}</div>
+                </div>
               </div>
             </div>
           </div>

@@ -66,7 +66,9 @@ const Payment = ({ onBackToHome }) => {
       );
       const data = await res.json();
       if (res.ok) {
-        setSuccessMsg(`Payment recorded successfully for Invoice #${selectedInvoice.invoice_id}`);
+  // Prefer using invoice description (if present) for a clearer message
+  const invoiceLabel = selectedInvoice.description ? selectedInvoice.description : `Invoice ${selectedInvoice.invoice_id}`;
+  setSuccessMsg(`Payment recorded successfully for ${invoiceLabel}`);
         setReceipt({
           invoice: selectedInvoice,
           user: userDetails[selectedInvoice.user_id],

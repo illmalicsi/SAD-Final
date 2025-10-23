@@ -40,6 +40,8 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    console.log(`Auth route: login attempt for email=${email}`);
+
     const result = await authService.login(email, password);
 
     res.json({

@@ -54,6 +54,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [lastSubmissionType, setLastSubmissionType] = useState('booking');
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   
   // --- Dynamic State based on Service ---
@@ -67,6 +68,10 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
   const [selectedInstrument, setSelectedInstrument] = useState('');
   const [rentalStartDate, setRentalStartDate] = useState('');
   const [rentalEndDate, setRentalEndDate] = useState('');
+  const [purpose, setPurpose] = useState('');
+
+  // current logged-in user (if any)
+  const [user, setUser] = useState(null);
 
   // For Music Arrangement
   const [numPieces, setNumPieces] = useState(1);
@@ -118,6 +123,54 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
 
   const getStoredBookings = async () => {
     try {
+      // If this is an instrument rental/borrow request, route it to the Approval queue
+      if (service === 'Instrument Rentals') {
+        try {
+          const type = (user && user.role && user.role !== 'user') ? 'borrow' : 'rent';
+          const storageKey = type === 'borrow' ? 'borrowRequests' : 'rentRequests';
+          const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+          const request = {
+            id: Date.now(),
+            userId: user?.id || null,
+            userName: name.trim(),
+            userEmail: email.trim().toLowerCase(),
+            phone: phone.trim(),
+            instrument: instruments[selectedInstrument]?.label || selectedInstrument,
+            startDate: rentalStartDate,
+            endDate: rentalEndDate,
+            purpose: purpose ? purpose.trim() : null,
+            notes: notes ? notes.trim() : null,
+            status: 'pending',
+            createdAt: new Date().toISOString()
+          };
+          existing.unshift(request);
+          localStorage.setItem(storageKey, JSON.stringify(existing));
+          // Notify approval UI
+          window.dispatchEvent(new Event(`${type}RequestsUpdated`));
+          setLastSubmissionType(type === 'borrow' ? 'borrow' : 'rent');
+        } catch (e) {
+          console.error('Failed to save instrument request to localStorage', e);
+        }
+
+        // Show success and reset form locally (do not create a booking record)
+  setShowSuccess(true);
+        setService('');
+        setName('');
+        setEmail('');
+        setPhone('');
+        setLocation('');
+        setNotes('');
+        setPurpose('');
+        setBandPackage('');
+        setSelectedInstrument('');
+        setRentalStartDate('');
+        setRentalEndDate('');
+        setEventDate('');
+        setNumPieces(1);
+        setEstimatedValue(0);
+        setTimeout(() => setShowSuccess(false), 5000);
+        return;
+      }
       const response = await fetch('http://localhost:5000/api/bookings');
       if (response.ok) {
         const data = await response.json();
@@ -146,6 +199,19 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
   };
 
   useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('davaoBlueEaglesUser') || 'null');
+      if (stored) {
+        setUser(stored);
+        // Prefill name and email for logged-in users
+        if (stored.firstName || stored.email) {
+          setName(stored.firstName ? `${stored.firstName} ${stored.lastName || ''}`.trim() : (stored.email || ''));
+          setEmail(stored.email || '');
+        }
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
     const loadBookings = async () => {
       const stored = await getStoredBookings();
       setLocalBookings(stored);
@@ -240,9 +306,9 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
     if (service === 'Band Gigs' || service === 'Parade Events') {
         bookingNotes = `Package: ${bandPackages[bandPackage]?.label}\n\n${notes}`;
         bookingDate = eventDate; // Use the selected event date
-    } else if (service === 'Instrument Rentals') {
-        bookingNotes = `Instrument: ${instruments[selectedInstrument]?.label}\nRental Period: ${rentalStartDate} to ${rentalEndDate} (${rentalDays} days)\n\n${notes}`;
-        bookingDate = rentalStartDate;
+  } else if (service === 'Instrument Rentals') {
+    bookingNotes = `Instrument: ${instruments[selectedInstrument]?.label}\nRental Period: ${rentalStartDate} to ${rentalEndDate} (${rentalDays} days)\nPurpose: ${purpose || ''}\n\n${notes}`;
+    bookingDate = rentalStartDate;
     } else if (service === 'Music Arrangement') {
         bookingNotes = `Number of Pieces: ${numPieces}\n\n${notes}`;
     }
@@ -259,7 +325,8 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         endTime,
         location: location.trim(),
         estimatedValue: estimatedValue,
-        notes: bookingNotes.trim() || null
+        notes: bookingNotes.trim() || null,
+        purpose: purpose ? purpose.trim() : null
       };
 
       const response = await fetch('http://localhost:5000/api/bookings', {
@@ -292,7 +359,8 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         setEmail('');
         setPhone('');
         setLocation('');
-        setNotes('');
+  setNotes('');
+  setPurpose('');
         setBandPackage('');
         setSelectedInstrument('');
         setRentalStartDate('');
@@ -319,7 +387,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       return !!bandPackage && !!eventDate;
     }
     if (service === 'Instrument Rentals') {
-      return !!selectedInstrument && !!rentalStartDate && !!rentalEndDate;
+      return !!selectedInstrument && !!rentalStartDate && !!rentalEndDate && !!purpose;
     }
     if (service === 'Music Arrangement') {
       return numPieces > 0;
@@ -367,6 +435,10 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
                 ))}
               </select>
             </div>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}><FaInfoCircle /> Purpose <span style={styles.required}>*</span></label>
+              <input type="text" value={purpose} onChange={e => setPurpose(e.target.value)} style={styles.input} placeholder="e.g., Wedding performance, rehearsal, practice sessions" required />
+            </div>
             <div style={styles.gridTwo}>
                 <div style={styles.inputGroup}>
                     <label style={styles.label}><FaCalendarAlt /> Rental Start Date <span style={styles.required}>*</span></label>
@@ -382,6 +454,17 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
                     <FaInfoCircle />
                     <span>Duration: <strong>{rentalDays} day{rentalDays > 1 && 's'}</strong></span>
                 </div>
+            )}
+            {/* Member-only borrow form fields */}
+            {user && user.role && user.role !== 'user' && (
+              <div style={{ marginTop: 12, padding: 12, border: '1px dashed #c7e6d8', borderRadius: 8, background: '#f8fdf9' }}>
+                <div style={{ fontWeight: 700, color: '#065f46', marginBottom: 8 }}>Member Borrow Request</div>
+                <div style={{ marginBottom: 8, color: '#065f46' }}>As a member, you can borrow select instruments. Please confirm the borrow details below.</div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Borrowing Duration Notes (optional)</label>
+                  <input type="text" value={notes} onChange={e => setNotes(e.target.value)} style={styles.input} placeholder="Additional instructions for borrowing (e.g., pickup person, ID to present)" />
+                </div>
+              </div>
             )}
           </>
         );
@@ -740,7 +823,9 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       {showSuccess && (
         <div style={styles.successMessage}>
           <FaCheckCircle />
-          Booking submitted successfully! We'll contact you soon.
+          {lastSubmissionType === 'rent' && 'Instrument rental request submitted for approval. We will contact you soon.'}
+          {lastSubmissionType === 'borrow' && 'Borrow request submitted for approval. We will contact you soon.'}
+          {lastSubmissionType === 'booking' && 'Booking submitted successfully! We will contact you soon.'}
         </div>
       )}
 
@@ -808,7 +893,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
                         <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} style={styles.input} placeholder="e.g., 09171234567" required readOnly={isUserLoggedIn} />
                       </div>
                       <div style={styles.inputGroup}>
-                        <label style={styles.label}><FaMapMarkerAlt /> Event Location / Address <span style={styles.required}>*</span></label>
+                        <label style={styles.label}><FaMapMarkerAlt /> Address <span style={styles.required}>*</span></label>
                         <input type="text" value={location} onChange={e => setLocation(e.target.value)} style={styles.input} placeholder="e.g., 123 Rizal St, Metro Manila" required />
                       </div>
                     </div>
@@ -839,7 +924,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
           <div style={styles.calendarHeader}>
             <div style={styles.calendarTitle}>
               <FaCalendarAlt size={16} />
-              {service === 'Instrument Rentals' ? 'Select Rental Dates' : 'Availability Calendar'}
+              Availability Calendar
             </div>
           </div>
           <div style={styles.calendarNav}>

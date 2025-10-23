@@ -48,8 +48,8 @@ router.post('/', authenticateToken, async (req, res) => {
       // Use user ID or default to 1 (admin) if not available
       const processedBy = req.user?.id || 1;
       const paymentNote = paymentType === 'downpayment' 
-        ? `Down payment (50%) for booking #${bookingId} - ₱${amount.toLocaleString()}. Remaining: ₱${((totalAmount || amount * 2) - amount).toLocaleString()}`
-        : `Full payment for booking #${bookingId} - Customer self-payment`;
+        ? `Down payment (50%) for reservation ID ${bookingId} - ₱${amount.toLocaleString()}. Remaining: ₱${((totalAmount || amount * 2) - amount).toLocaleString()}`
+        : `Full payment for reservation ID ${bookingId} - Customer self-payment`;
         
       const [paymentResult] = await pool.query(
         'INSERT INTO payments (invoice_id, amount_paid, payment_method, processed_by, notes) VALUES (?, ?, ?, ?, ?)',
@@ -95,7 +95,7 @@ router.post('/', authenticateToken, async (req, res) => {
     
     res.json({ 
       success: true,
-      message: 'Payment successful! Your booking has been marked as paid.',
+      message: 'Payment successful. The reservation has been marked as paid.',
       bookingId: bookingId,
       invoiceId: invoiceId,
       booking: {

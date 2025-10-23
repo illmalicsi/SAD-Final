@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { FaEnvelope, FaLock, FaTimes, FaEye, FaEyeSlash } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaEnvelope, FaLock, FaTimes, FaEye, FaEyeSlash, FaGoogle } from 'react-icons/fa';
 import authService from '../services/authService'; // Use real backend auth service
 
 const sharedStyles = {
@@ -159,6 +159,76 @@ const Login = ({ onBack, onLogin, onSwitchToSignup, error, onClearError }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const googleButtonRef = useRef(null);
+  const [gsiAvailable, setGsiAvailable] = useState(false);
+
+  const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+
+  useEffect(() => {
+    let scriptTag;
+      const initGSI = () => {
+      try {
+        if (!window.google || !window.google.accounts || !window.google.accounts.id) return;
+
+        // Initialize once
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: async (resp) => {
+            try {
+              const idToken = resp.credential;
+              if (!idToken) throw new Error('Missing Google credential');
+              setIsLoading(true);
+              const data = await authService.googleSignIn(idToken);
+              if (data && data.user && onLogin) onLogin(data.user);
+            } catch (e) {
+              console.error('Google sign-in callback error:', e);
+              setLoginError(e.message || 'Google sign-in failed');
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        });
+
+        // Render the Google button into our container
+        if (googleButtonRef.current) {
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
+            theme: 'outline',
+            size: 'large',
+            width: '100%'
+          });
+          // Indicate that GIS rendered the button / is available
+          setGsiAvailable(true);
+        }
+      } catch (err) {
+        console.error('GSI init error:', err);
+      }
+    };
+
+    // If client id missing, nothing to load
+    if (!GOOGLE_CLIENT_ID) {
+      console.warn('REACT_APP_GOOGLE_CLIENT_ID not set; Google Sign-In will be disabled');
+      return;
+    }
+
+    // If script already present, try init immediately
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      initGSI();
+      return;
+    }
+
+    // Dynamically load the Google Identity Services script
+    scriptTag = document.createElement('script');
+    scriptTag.src = 'https://accounts.google.com/gsi/client';
+    scriptTag.async = true;
+    scriptTag.defer = true;
+    scriptTag.onload = initGSI;
+    scriptTag.onerror = () => console.error('Failed to load Google Identity Services script');
+    document.body.appendChild(scriptTag);
+
+    return () => {
+      if (scriptTag && scriptTag.parentNode) scriptTag.parentNode.removeChild(scriptTag);
+    };
+  }, [GOOGLE_CLIENT_ID, onLogin]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -317,6 +387,45 @@ const Login = ({ onBack, onLogin, onSwitchToSignup, error, onClearError }) => {
             </span>
           </div>
         </form>
+
+        {/* Google Sign-In area */}
+        <div style={{ marginTop: 18 }}>
+          {/* Container where Google's button will render if GIS loaded */}
+          <div ref={googleButtonRef} />
+
+            {/* Fallback stylized button shown only when GIS is not available */}
+            {!gsiAvailable && (
+              <button
+                onClick={() => {
+                  setLoginError('');
+                  if (window.google && window.google.accounts && window.google.accounts.id) {
+                    try {
+                      window.google.accounts.id.prompt();
+                    } catch (e) {
+                      console.error('prompt error', e);
+                      setLoginError('Unable to open Google sign-in.');
+                    }
+                  } else {
+                    setLoginError('Google sign-in is not available.');
+                  }
+                }}
+                disabled={isLoading}
+                style={{
+                  ...sharedStyles.btnPrimary,
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  justifyContent: 'center',
+                  border: '1px solid #e2e8f0'
+                }}
+              >
+                <FaGoogle style={{ color: '#de5246' }} />
+                {isLoading ? 'Please wait...' : 'Sign in with Google'}
+              </button>
+            )}
+        </div>
       </div>
     </div>
   );

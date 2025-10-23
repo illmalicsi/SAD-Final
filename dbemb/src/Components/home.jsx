@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock, FaUser, FaMusic, FaCreditCard, FaMobileAlt, FaUniversity, FaStore, FaWallet, FaFileInvoiceDollar, FaCheckCircle, FaSpinner, FaCalendarAlt } from 'react-icons/fa';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import bg2 from "./Assets/bg2.jpg";
@@ -16,6 +17,7 @@ import TestPaymentGateway from './TestPaymentGateway'
 
 
 const Home = () => {
+  const navigate = useNavigate();
   const containerStyle = {
     minHeight: '100vh',
     display: 'flex',
@@ -1381,7 +1383,7 @@ const servicesHeaderRightStyle = {
   const [bookings, setBookings] = useState([]);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingService, setBookingService] = useState(null);
-  const [showMyBookings, setShowMyBookings] = useState(false);
+  // Removed showMyBookings state (now handled by dedicated page)
   const [bookingForm, setBookingForm] = useState({
     service: '',
     name: '',
@@ -1539,6 +1541,7 @@ const servicesHeaderRightStyle = {
             }));
             console.log('Home: Loaded', formatted.length, 'bookings from API');
             setBookings(formatted);
+            localStorage.setItem('dbeInventoryBookings', JSON.stringify(formatted));
           }
         }
       } catch (error) {
@@ -1860,6 +1863,8 @@ const servicesHeaderRightStyle = {
 
   const unreadCount = () => notifications.filter(n => !n.read).length;
 
+  
+
   const markAllRead = () => {
     if (user && user.email) {
       NotificationService.markAllAsRead(user.email);
@@ -1958,10 +1963,14 @@ const servicesHeaderRightStyle = {
       }
 
       // Create success notification for the user
+      // Format paid amount for display (fallback to invoice amount if available)
+      const paidAmount = payData.payment?.amount_paid || payData.payment?.amount || payData.amount || 0;
+      const paidFormatted = Number(paidAmount).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
+
       NotificationService.createNotification(email, {
         type: 'success',
-        title: 'Payment Recorded 💰',
-        message: `Your ${paymentType === 'downpayment' ? 'down payment' : 'full payment'} for booking #${bookingId} has been recorded.`,
+        title: `Payment Recorded ${paidFormatted} 💰`,
+        message: `Your ${paymentType === 'downpayment' ? 'down payment' : 'full payment'} of ${paidFormatted} for ${selectedPaymentNotification?.data?.service ? `${selectedPaymentNotification.data.service}${selectedPaymentNotification.data?.date ? ` on ${selectedPaymentNotification.data.date}` : ''}` : `reservation ID ${bookingId}`} has been recorded.`,
         data: {
           bookingId,
           invoiceId: payData.invoiceId,
@@ -2825,23 +2834,37 @@ const servicesHeaderRightStyle = {
                         <div style={{ marginTop: '12px', display: 'grid', gap: '8px' }}>
                           {/* Avatar controls for all users */}
                           {/* Avatar editing moved to profile page. Preview only shown above. */}
-                          <a href="#profile" onClick={(e) => { e.preventDefault(); openProfile(); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                          <a href="#profile" onClick={(e) => { e.preventDefault(); openProfile(); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
                             <FaUser style={{ color: '#0b62d6', minWidth: '18px' }} />
                             <span>View Profile</span>
                           </a>
 
-                          <a href="#bookings" onClick={(e) => { e.preventDefault(); setShowMyBookings(true); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                          <a href="#bookings" onClick={(e) => { e.preventDefault(); navigate('/bookings'); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             <span>Bookings</span>
                           </a>
 
-                          <a href="#instruments" onClick={(e) => { e.preventDefault(); handleOpenInstrumentRequest(); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                          
+
+                          <a href="#instruments" onClick={(e) => { e.preventDefault(); setShowUserMenu(false); window.open('/#/instrument-booking', '_blank'); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
                             <FaMusic style={{ color: '#0b62d6', minWidth: '18px' }} />
                             <span>{user.role === 'user' ? 'Rent Instrument' : 'Borrow Instrument'}</span>
                           </a>
 
                           {user.role === 'admin' && (
-                            <a href="#dashboard" onClick={(e) => { e.preventDefault(); if (user?.role === 'admin') { setCurrentView('dashboard'); } else { alert('Dashboard access is restricted to administrators.'); } setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                            <a href="#dashboard" onClick={(e) => { e.preventDefault(); if (user?.role === 'admin') { setCurrentView('dashboard'); } else { alert('Dashboard access is restricted to administrators.'); } setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                               <span>Admin Dashboard</span>
                             </a>
@@ -3507,180 +3530,7 @@ const servicesHeaderRightStyle = {
         </div>
       )}
 
-      {/* My Bookings Modal */}
-      {showMyBookings && (
-        <div 
-          onClick={() => setShowMyBookings(false)}
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            background: 'rgba(0, 0, 0, 0.7)', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            zIndex: 9999,
-            padding: '20px'
-          }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{ 
-              background: 'white', 
-              borderRadius: '16px', 
-              maxWidth: '900px', 
-              width: '100%', 
-              maxHeight: '90vh', 
-              overflow: 'auto',
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
-            }}
-          >
-            {/* Header */}
-            <div style={{ 
-              padding: '24px', 
-              borderBottom: '1px solid #e2e8f0',
-              background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-              borderRadius: '16px 16px 0 0'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0, color: 'white', fontSize: 24, fontWeight: 800 }}>My Bookings</h2>
-                <button 
-                  onClick={() => setShowMyBookings(false)}
-                  style={{ 
-                    background: 'rgba(255, 255, 255, 0.2)', 
-                    border: 'none', 
-                    color: 'white', 
-                    fontSize: 24, 
-                    width: 36, 
-                    height: 36, 
-                    borderRadius: '50%', 
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-
-            {/* Bookings List */}
-            <div style={{ padding: '24px' }}>
-              {bookings.filter(b => b.email === user?.email).length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748b' }}>
-                  <FaCalendarAlt style={{ fontSize: 48, marginBottom: 16, color: '#cbd5e1' }} />
-                  <h3 style={{ margin: '0 0 8px 0', color: '#475569' }}>No Bookings Yet</h3>
-                  <p style={{ margin: 0 }}>You haven't made any bookings yet.</p>
-                </div>
-              ) : (
-                <div style={{ display: 'grid', gap: '16px' }}>
-                  {bookings.filter(b => b.email === user?.email).map(booking => (
-                    <div 
-                      key={booking.id} 
-                      style={{ 
-                        background: booking.status === 'approved' ? '#f0f9ff' : '#f8fafc',
-                        border: `2px solid ${booking.status === 'approved' ? '#bae6fd' : '#e2e8f0'}`, 
-                        borderRadius: 12, 
-                        padding: 20,
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                        <div style={{ flex: 1 }}>
-                          <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
-                            Booking #{booking.id} - {booking.service}
-                          </h3>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginTop: 12 }}>
-                            <div>
-                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Date</div>
-                              <div style={{ fontSize: 14, fontWeight: 600, color: '#475569' }}>
-                                {formatDate(booking.date)}
-                              </div>
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Time</div>
-                              <div style={{ fontSize: 14, fontWeight: 600, color: '#475569' }}>
-                                {booking.startTime} - {booking.endTime}
-                              </div>
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Location</div>
-                              <div style={{ fontSize: 14, fontWeight: 600, color: '#475569' }}>{booking.location}</div>
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Amount</div>
-                              <div style={{ fontSize: 16, fontWeight: 700, color: '#0369a1' }}>
-                                ₱{booking.estimatedValue?.toLocaleString()}
-                              </div>
-                            </div>
-                          </div>
-                          {booking.notes && (
-                            <div style={{ marginTop: 12, padding: 12, background: '#f1f5f9', borderRadius: 8 }}>
-                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Notes</div>
-                              <div style={{ fontSize: 13, color: '#475569', whiteSpace: 'pre-wrap' }}>{booking.notes}</div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{
-                            padding: '6px 12px',
-                            borderRadius: 20,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            background: booking.status === 'approved' ? '#d1fae5' : booking.status === 'pending' ? '#fef3c7' : booking.status === 'paid' ? '#dbeafe' : '#fee2e2',
-                            color: booking.status === 'approved' ? '#065f46' : booking.status === 'pending' ? '#92400e' : booking.status === 'paid' ? '#1e40af' : '#991b1b'
-                          }}>
-                            {booking.status === 'approved' ? '✓ Approved' : booking.status === 'pending' ? '⏳ Pending' : booking.status === 'paid' ? '💳 Paid' : booking.status === 'rejected' ? '✕ Rejected' : booking.status}
-                          </span>
-                        </div>
-
-                        {booking.status === 'approved' && (
-                          <button 
-                            onClick={() => {
-                              setSelectedPaymentNotification({
-                                data: {
-                                  bookingId: booking.id,
-                                  amount: booking.estimatedValue,
-                                  service: booking.service,
-                                  date: booking.date
-                                }
-                              });
-                              setShowPaymentModal(true);
-                              setShowMyBookings(false);
-                            }}
-                            style={{
-                              padding: '10px 20px',
-                              borderRadius: 8,
-                              background: '#059669',
-                              border: 'none',
-                              color: 'white',
-                              fontWeight: 700,
-                              fontSize: 14,
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 8
-                            }}
-                          >
-                            <FaCreditCard />
-                            Proceed to Payment
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Booking History Modal code removed. Now handled by dedicated page. */}
 
       {/* Payment Modal */}
       {showPaymentModal && selectedPaymentNotification && (

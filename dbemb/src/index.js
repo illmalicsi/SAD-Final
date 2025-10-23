@@ -4,8 +4,9 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-// Simple hash routing for /#/booking
+// Simple hash routing for /#/booking and /#/instrument-booking
 const BookStandalone = React.lazy(() => import('./Components/Booking'));
+const InstrumentBookStandalone = React.lazy(() => import('./Components/InstrumentBooking'));
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const HashRouter = () => {
@@ -19,6 +20,13 @@ const HashRouter = () => {
     return (
       <React.Suspense fallback={<div />}> 
         <BookStandalone />
+      </React.Suspense>
+    );
+  }
+  if (route === '#/instrument-booking') {
+    return (
+      <React.Suspense fallback={<div />}> 
+        <InstrumentBookStandalone />
       </React.Suspense>
     );
   }

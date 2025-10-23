@@ -496,7 +496,7 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
               style={styles.input}
               value={form.email}
               onChange={(e) => handleChange("email", e.target.value)}
-              placeholder="your.email@example.com"
+              placeholder="Enter your email address"
               onFocus={(e) => {
                 e.target.style.borderColor = '#0b4f8a';
                 e.target.style.background = '#ffffff';

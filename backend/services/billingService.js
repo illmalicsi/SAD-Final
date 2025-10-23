@@ -40,10 +40,11 @@ async function processPayment(invoiceId, processedBy, amountPaid, paymentMethod 
   );
 
   // Compute total paid vs invoice amount
+  // Compute invoice amount and total paid using a subquery to avoid GROUP BY issues
   const [[sumRow]] = await pool.execute(
-    `SELECT i.amount AS invoice_amount, COALESCE(SUM(p.amount_paid), 0) AS total_paid
+    `SELECT i.amount AS invoice_amount,
+            COALESCE((SELECT SUM(p.amount_paid) FROM payments p WHERE p.invoice_id = i.invoice_id), 0) AS total_paid
        FROM invoices i
-       LEFT JOIN payments p ON p.invoice_id = i.invoice_id
       WHERE i.invoice_id = ?`,
     [invoiceId]
   );

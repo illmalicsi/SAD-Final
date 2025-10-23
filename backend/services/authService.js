@@ -24,6 +24,8 @@ class AuthService {
       `, [email]);
 
       if (rows.length === 0) {
+        // No user found for this email
+        console.warn(`AuthService.login: no user found for email=${email}`);
         throw new Error('Invalid email or password');
       }
 
@@ -51,6 +53,8 @@ class AuthService {
       }
       
       if (!passwordValid) {
+        // Password mismatch - log for diagnostics (do not log the password)
+        console.warn(`AuthService.login: password mismatch for userId=${user.id} email=${email}`);
         throw new Error('Invalid email or password');
       }
 
