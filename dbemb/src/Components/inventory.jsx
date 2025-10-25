@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaDrum, FaWind, FaCheckCircle, FaBoxOpen, FaTools, FaEllipsisH, FaEye, FaEdit, FaArchive, FaUndo } from 'react-icons/fa';
+import theme from '../theme';
 
 
 const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRequestRent }) => {
@@ -75,6 +76,26 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
     { id: 17, name: 'Fernando Tuba', category: 'wind', subcategory: 'Brass', brand: 'Fernando', condition: 'Good', status: 'Available', notes: '', locations: [{ name: 'Shrine Hills, Matina', quantity: 2 }], archived: false }
   ]);
 
+  // Load inventory from localStorage if present (persisted inventory)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('dbeInventory');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length) setInventory(parsed);
+      }
+    } catch (e) {
+      // ignore parsing errors and keep default
+    }
+  }, []);
+
+  // Persist inventory to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('dbeInventory', JSON.stringify(inventory));
+    } catch (e) {}
+  }, [inventory]);
+
 
   // Load and monitor borrow/rent request statuses
   React.useEffect(() => {
@@ -118,10 +139,10 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
   const styles = {
     container: {
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f8fafc, #e0e7ff)',
+      background: `linear-gradient(135deg, ${theme.palette.bg}, #e0e7ff)`,
       padding: '28px',
       color: '#0f172a',
-      fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+      fontFamily: theme.fonts.base
     },
 
 
@@ -130,7 +151,7 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       fontSize: '28px',
       fontWeight: '600',
       margin: 0,
-      background: 'linear-gradient(45deg, #3b82f6, #1d4ed8)',
+      background: `linear-gradient(45deg, ${theme.palette.primary}, ${theme.palette.primaryDark})`,
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent'
     },
@@ -227,11 +248,11 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       minWidth: '150px'
     },
     createButton: {
-      backgroundColor: '#3b82f6',
-      border: '2px solid #3b82f6',
+      backgroundColor: theme.palette.primary,
+      border: `2px solid ${theme.palette.primary}`,
       color: '#ffffff',
       padding: '10px 20px',
-      borderRadius: '8px',
+      borderRadius: theme.borderRadius,
       fontWeight: '600',
       fontSize: '14px',
       cursor: 'pointer',
@@ -243,8 +264,8 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       gap: '20px'
     },
     inventoryCard: {
-      backgroundColor: '#ffffff',
-      border: '1px solid #e2e8f0',
+      backgroundColor: theme.palette.card,
+      border: `1px solid ${theme.palette.border}`,
       borderRadius: '12px',
       padding: '20px',
       transition: 'all 0.3s ease',
@@ -313,8 +334,8 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
     },
     editButton: {
       backgroundColor: 'transparent',
-      border: '1px solid #3b82f6',
-      color: '#3b82f6',
+      border: `1px solid ${theme.palette.primary}`,
+      color: theme.palette.primary,
       padding: '8px 16px',
       borderRadius: '6px',
       cursor: 'pointer',
@@ -326,8 +347,8 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
     },
     deleteButton: {
       backgroundColor: 'transparent',
-      border: '1px solid #ef4444',
-      color: '#ef4444',
+      border: `1px solid ${theme.palette.danger}`,
+      color: theme.palette.danger,
       padding: '8px 16px',
       borderRadius: '6px',
       cursor: 'pointer',
@@ -541,11 +562,11 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
     },
     categoryHeader: {
       background: '#eff6ff',
-      color: '#3b82f6',
+      color: theme.palette.primary,
       fontWeight: 700,
       fontSize: '18px',
       padding: '12px 8px',
-      borderBottom: '2px solid #3b82f6',
+      borderBottom: `2px solid ${theme.palette.primary}`,
     },
     archiveButton: {
       backgroundColor: 'transparent',
@@ -934,6 +955,7 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
                 <th style={{ ...styles.th, textAlign: 'center' }}>Status</th>
                 <th style={{ ...styles.th, textAlign: 'center' }}>Condition</th>
                 <th style={{ ...styles.th, textAlign: 'center' }}>Quantity</th>
+                <th style={{ ...styles.th, textAlign: 'center' }}>Primary Location</th>
                 <th style={{ ...styles.th, textAlign: 'center' }}>Notes</th>
                 <th style={{ ...styles.th, textAlign: 'center' }}>Actions</th>
               </tr>
@@ -952,6 +974,14 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
                   </td>
                   <td style={{ ...styles.td, textAlign: 'center' }}>
                     <span style={{ fontWeight: '600', color: '#64ffda' }}>{getTotalQuantity(item)}</span>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'center' }}>
+                    {(() => {
+                      const primary = item.locations && item.locations.length
+                        ? item.locations.find(l => Number(l.quantity) > 0) || item.locations[0]
+                        : null;
+                      return primary ? `${primary.name} (${primary.quantity})` : '—';
+                    })()}
                   </td>
                   <td style={{ ...styles.td, textAlign: 'center', maxWidth: 160, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     <span title={item.notes}>{item.notes}</span>
@@ -1333,6 +1363,15 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
                     ))}
                   </ul>
                   <div style={{ marginTop: 8 }}><strong>Total Quantity:</strong> {getTotalQuantity(viewDetails)}</div>
+                  <div style={{ marginTop: 8 }}>
+                    <strong>Primary Location:</strong>{' '}
+                    {(() => {
+                      const primary = viewDetails.locations && viewDetails.locations.length
+                        ? viewDetails.locations.find(l => Number(l.quantity) > 0) || viewDetails.locations[0]
+                        : null;
+                      return primary ? `${primary.name} (${primary.quantity})` : '—';
+                    })()}
+                  </div>
                 </div>
               </div>
             </div>

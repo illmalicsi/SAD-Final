@@ -11,6 +11,8 @@ const Invoice = React.lazy(() => import('./Invoice'));
 const TransactionHistory = React.lazy(() => import('./TransactionHistory'));
 const Approval = React.lazy(() => import('./Approval'));
 const MembershipApproval = React.lazy(() => import('./MembershipApproval'));
+const InventoryReport = React.lazy(() => import('./InventoryReport'));
+const SalesReport = React.lazy(() => import('./SalesReport'));
 import Payment from './Payment';
 import NotificationService from '../services/notificationService';
 
@@ -134,9 +136,11 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       title: 'Management',
       items: [
         { id: 'inventory', icon: <FaBoxOpen size={18} />, text: 'Equipments', view: 'inventory-management', adminOnly: false },
+        { id: 'inventory-report', icon: <FaClipboardList size={18} />, text: 'Inventory Report', view: 'inventory-report', adminOnly: false },
         { id: 'customers', icon: <FaUsers size={18} />, text: 'Customers & Bookings', view: 'customer-management', adminOnly: false },
         { id: 'performances', icon: <FaChartLine size={18} />, text: 'Performances', view: 'performance-history', adminOnly: false },
-        { id: 'approval', icon: <FaCheckCircle size={18} />, text: 'Approval', view: 'approval', adminOnly: false }
+        { id: 'approval', icon: <FaCheckCircle size={18} />, text: 'Approval', view: 'approval', adminOnly: false },
+        { id: 'sales-report', icon: <FaChartLine size={18} />, text: 'Sales Report', view: 'sales-report', adminOnly: true }
       ]
     },
     {
@@ -1365,6 +1369,20 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             />
           </Suspense>
         );
+
+        case 'inventory-report':
+          return (
+            <Suspense fallback={<div style={styles.loadingContainer}><div style={styles.loadingSpinner}></div><div>Loading Inventory Report...</div></div>}>
+              <InventoryReport />
+            </Suspense>
+          );
+
+        case 'sales-report':
+          return (
+            <Suspense fallback={<div style={styles.loadingContainer}><div style={styles.loadingSpinner}></div><div>Loading Sales Report...</div></div>}>
+              <SalesReport />
+            </Suspense>
+          );
 
       case 'customer-management':
         return (

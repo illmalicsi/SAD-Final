@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { FaCheck, FaTimes, FaArrowLeft, FaMusic, FaUserFriends, FaUser } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaArrowLeft, FaMusic, FaUserFriends, FaUser, FaFileAlt } from 'react-icons/fa';
+import NotificationService from '../services/notificationService';
+import AuthService from '../services/authService';
 
 const Approval = ({ onBackToHome }) => {
   const [borrowRequests, setBorrowRequests] = useState([]);
@@ -32,32 +34,92 @@ const Approval = ({ onBackToHome }) => {
     
     window.addEventListener('borrowRequestsUpdated', handleBorrowUpdate);
     window.addEventListener('rentRequestsUpdated', handleRentUpdate);
+  // Also listen for notification updates to refresh UI if needed
+  const notifHandler = () => fetchInstrumentRequests();
+  window.addEventListener('notificationsUpdated', notifHandler);
     
     return () => {
       window.removeEventListener('borrowRequestsUpdated', handleBorrowUpdate);
       window.removeEventListener('rentRequestsUpdated', handleRentUpdate);
+      window.removeEventListener('notificationsUpdated', notifHandler);
     };
   }, []);
 
-  const handleInstrumentRequestAction = (requestId, action, type) => {
+  const handleInstrumentRequestAction = async (requestId, action, type) => {
+    setProcessingId(requestId);
+    try {
+      const endpointBase = type === 'borrow' ? '/instruments/borrow-request' : '/instruments/rent-request';
+      const resp = await AuthService.put(`${endpointBase}/${requestId}/${action}`);
+
+      if (!resp || resp.success !== true) {
+        const msg = (resp && resp.message) ? resp.message : 'Failed to update request';
+        alert(msg);
+        return;
+      }
+
+      // Update local UI/state (keep localStorage in sync for the embedded UI flows)
+      const storageKey = type === 'borrow' ? 'borrowRequests' : 'rentRequests';
+      const requests = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const updatedRequests = requests.map(r => r.id === requestId ? { ...r, status: action } : r);
+      localStorage.setItem(storageKey, JSON.stringify(updatedRequests));
+      if (type === 'borrow') setBorrowRequests(updatedRequests); else setRentRequests(updatedRequests);
+
+      // On approval, send notification and emit realtime event
+      const reqObj = updatedRequests.find(r => r.id === requestId);
+      if (action === 'approved' && reqObj) {
+        try {
+          if (type === 'rent') {
+            NotificationService.createNotification(reqObj.userEmail, {
+              type: 'success',
+              title: 'Instrument Rental Approved ✅',
+              message: `Your rental request for ${reqObj.instrumentName || reqObj.instrument || 'an instrument'} has been approved. Please complete full payment to secure the booking.`,
+              data: { requestId }
+            });
+          } else {
+            NotificationService.createNotification(reqObj.userEmail, {
+              type: 'success',
+              title: 'Borrow Request Approved ✅',
+              message: `Your borrow request for ${reqObj.instrumentName || reqObj.instrument || 'an instrument'} has been approved. Please bring a valid ID during meetup.`,
+              data: { requestId }
+            });
+          }
+        } catch (e) {
+          console.error('Failed to create notification on approval', e);
+        }
+        window.dispatchEvent(new CustomEvent('instrumentRequestApproved', { detail: { userEmail: reqObj.userEmail, userId: reqObj.userId, type } }));
+      }
+
+      window.dispatchEvent(new Event(`${type}RequestsUpdated`));
+    } catch (err) {
+      console.error('Failed to update request', err);
+      const msg = (err && err.message) ? err.message : 'Failed to update request';
+      alert(msg);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleMarkPaid = (requestId, type) => {
     setProcessingId(requestId);
     try {
       const storageKey = type === 'borrow' ? 'borrowRequests' : 'rentRequests';
       const requests = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      const updatedRequests = requests.map(req =>
-        req.id === requestId ? { ...req, status: action } : req
-      );
-      localStorage.setItem(storageKey, JSON.stringify(updatedRequests));
-      
-      if (type === 'borrow') {
-        setBorrowRequests(updatedRequests);
-      } else {
-        setRentRequests(updatedRequests);
+      const updated = requests.map(r => r.id === requestId ? { ...r, status: 'paid' } : r);
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      if (type === 'borrow') setBorrowRequests(updated); else setRentRequests(updated);
+      // Notify user about payment confirmation
+      const paidReq = updated.find(r => r.id === requestId);
+      if (paidReq) {
+        NotificationService.createNotification(paidReq.userEmail, {
+          type: 'success',
+          title: 'Payment Received ✅',
+          message: `We have recorded full payment for your ${type === 'rent' ? 'rental' : 'borrow'} request (${paidReq.instrument || paidReq.instrumentName}). Thank you!`,
+          data: { requestId: paidReq.id }
+        });
       }
-      
       window.dispatchEvent(new Event(`${type}RequestsUpdated`));
     } catch (err) {
-      setErrorMsg('Failed to update request');
+      console.error('Failed to mark paid', err);
     } finally {
       setProcessingId(null);
     }
@@ -213,6 +275,62 @@ const Approval = ({ onBackToHome }) => {
       display: 'flex',
       alignItems: 'center',
       gap: '12px'
+    },
+    requestCard: {
+      background: '#fff',
+      border: '1px solid #e6eef8',
+      borderRadius: 12,
+      padding: 16,
+      boxShadow: '0 6px 18px rgba(2,6,23,0.03)'
+    },
+    requestHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 10
+    },
+    requestBody: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: 12
+    },
+    requestMeta: {
+      flex: 1,
+      minWidth: 200
+    },
+    requestActions: {
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center'
+    },
+    primaryBtn: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 8,
+      padding: '8px 12px',
+      backgroundColor: '#10b981',
+      color: '#ffffff',
+      border: 'none',
+      borderRadius: 8,
+      cursor: 'pointer',
+      fontWeight: 600
+    },
+    dangerBtn: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 8,
+      padding: '8px 12px',
+      backgroundColor: '#ef4444',
+      color: '#ffffff',
+      border: 'none',
+      borderRadius: 8,
+      cursor: 'pointer',
+      fontWeight: 600
+    },
+    disabledBtn: {
+      opacity: 0.6,
+      cursor: 'not-allowed'
     },
     invoiceId: {
       fontWeight: '600',
@@ -413,111 +531,61 @@ const Approval = ({ onBackToHome }) => {
               <div style={styles.emptyState}>
                 <FaUserFriends style={styles.emptyIcon} />
                 <div style={styles.emptyTitle}>No Borrow Requests</div>
-                <div style={styles.emptyDescription}>
-                  No borrow requests have been submitted yet.
-                </div>
+                <div style={styles.emptyDescription}>No borrow requests have been submitted yet.</div>
               </div>
             ) : (
-              <table style={styles.table}>
-                <thead style={styles.tableHeader}>
-                  <tr>
-                    <th style={styles.th}>Request ID</th>
-                    <th style={styles.th}>Member</th>
-                    <th style={styles.th}>Instrument</th>
-                    <th style={styles.th}>Quantity</th>
-                    <th style={styles.th}>Duration</th>
-                    <th style={styles.th}>Purpose</th>
-                    <th style={styles.th}>Status</th>
-                    <th style={styles.th}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedBorrowRequests.map((req) => (
-                    <tr key={req.id} style={styles.invoiceRow} className="invoice-row">
-                      <td style={styles.td}>
+              <div style={{ display: 'grid', gap: 12 }}>
+                {sortedBorrowRequests.map(req => (
+                  <div key={req.id} style={styles.requestCard} className="invoice-row">
+                    <div style={styles.requestHeader}>
+                      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                         <div style={styles.invoiceId}>#{req.id}</div>
-                      </td>
-                      <td style={styles.td}>
-                        <div>
-                          <div style={{...styles.userInfo, marginBottom: '4px'}}>
-                            <FaUser size={12} />
-                            {req.userName}
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#9ca3af' }}>{req.userEmail}</div>
-                        </div>
-                      </td>
-                      <td style={styles.td}>
-                        <div>
-                          <div style={{ fontWeight: '600', marginBottom: '4px' }}>{req.instrumentName}</div>
-                          <div style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'capitalize' }}>{req.instrumentType}</div>
-                        </div>
-                      </td>
-                      <td style={{...styles.td, textAlign: 'center'}}>{req.quantity}</td>
-                      <td style={styles.td}>
-                        <div style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
-                          {new Date(req.startDate).toLocaleDateString()}
-                        </div>
-                        <div style={{ fontSize: '13px', color: '#64748b' }}>
-                          - {new Date(req.endDate).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td style={styles.td}>
-                        <div style={{ maxWidth: '200px' }}>
-                          <div style={{ textTransform: 'capitalize', marginBottom: '4px' }}>{req.purpose}</div>
-                          {req.notes && <div style={{ fontSize: '12px', color: '#9ca3af' }}>{req.notes}</div>}
-                        </div>
-                      </td>
-                      <td style={styles.td}>
-                        {getStatusBadge(req.status)}
-                      </td>
-                      <td style={styles.td}>
+                      </div>
+                      <div>{getStatusBadge(req.status)}</div>
+                    </div>
+
+                    <div style={styles.requestBody}>
+                      <div style={styles.requestMeta}>
+                        <div style={{ fontWeight: 700 }}>{req.instrumentName || req.instrument}</div>
+                        <div style={{ color: '#6b7280', fontSize: 13 }}>{req.quantity || 1} unit(s)</div>
+                        {/* Borrow requests: only show name and quantity (price not shown for borrow) */}
+                      </div>
+
+                      <div style={styles.requestActions}>
                         {req.status === 'pending' ? (
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <button 
+                          <>
+                            <button
                               onClick={() => handleInstrumentRequestAction(req.id, 'approved', 'borrow')}
                               disabled={processingId === req.id}
-                              style={{
-                                ...styles.actionButton,
-                                ...(processingId === req.id ? styles.actionButtonDisabled : {})
-                              }}
-                              className="approve-button"
+                              style={{ ...styles.primaryBtn, ...(processingId === req.id ? styles.disabledBtn : {}) }}
                             >
-                              {processingId === req.id ? (
-                                <>
-                                  <div style={styles.spinner}></div>
-                                  Processing...
-                                </>
-                              ) : (
-                                <>
-                                  <FaCheck size={12} />
-                                  Approve
-                                </>
-                              )}
+                              {processingId === req.id ? <div style={styles.spinner}></div> : <FaCheck />} Approve
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleInstrumentRequestAction(req.id, 'rejected', 'borrow')}
                               disabled={processingId === req.id}
-                              style={{
-                                ...styles.actionButton,
-                                backgroundColor: '#ef4444',
-                                ...(processingId === req.id ? styles.actionButtonDisabled : {})
-                              }}
-                              className="reject-button"
-                            >
-                              <FaTimes size={12} />
-                              Reject
+                              style={{ ...styles.dangerBtn, ...(processingId === req.id ? styles.disabledBtn : {}) }}
+                            ><FaTimes /> Reject
                             </button>
+                          </>
+                        ) : req.status === 'approved' ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+                            <div style={{ color: '#065f46', fontWeight: 700 }}>✓ Approved</div>
+                            {req.borrowerIdFileName ? (
+                              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                <FaFileAlt />
+                                <div style={{ fontSize: 13 }}>{req.borrowerIdFileName}</div>
+                              </div>
+                            ) : null}
                           </div>
                         ) : (
-                          <div style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
-                            {req.status === 'approved' ? '✓ Approved' : req.status === 'rejected' ? '✗ Rejected' : req.status}
-                          </div>
+                          <div style={{ color: '#6b7280', fontStyle: 'italic' }}>{req.status}</div>
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -538,117 +606,64 @@ const Approval = ({ onBackToHome }) => {
               <div style={styles.emptyState}>
                 <FaMusic style={styles.emptyIcon} />
                 <div style={styles.emptyTitle}>No Rent Requests</div>
-                <div style={styles.emptyDescription}>
-                  No rent requests have been submitted yet.
-                </div>
+                <div style={styles.emptyDescription}>No rent requests have been submitted yet.</div>
               </div>
             ) : (
-              <table style={styles.table}>
-                <thead style={styles.tableHeader}>
-                  <tr>
-                    <th style={styles.th}>Request ID</th>
-                    <th style={styles.th}>Customer</th>
-                    <th style={styles.th}>Instrument</th>
-                    <th style={styles.th}>Quantity</th>
-                    <th style={styles.th}>Duration</th>
-                    <th style={styles.th}>Purpose</th>
-                    <th style={styles.th}>Status</th>
-                    <th style={styles.th}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedRentRequests.map((req) => (
-                    <tr key={req.id} style={styles.invoiceRow} className="invoice-row">
-                      <td style={styles.td}>
+              <div style={{ display: 'grid', gap: 12 }}>
+                {sortedRentRequests.map(req => (
+                  <div key={req.id} style={styles.requestCard} className="invoice-row">
+                    <div style={styles.requestHeader}>
+                      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                         <div style={styles.invoiceId}>#{req.id}</div>
-                      </td>
-                      <td style={styles.td}>
-                        <div>
-                          <div style={{...styles.userInfo, marginBottom: '4px'}}>
-                            <FaUser size={12} />
-                            {req.userName}
+                      </div>
+                      <div>{getStatusBadge(req.status)}</div>
+                    </div>
+
+                    <div style={styles.requestBody}>
+                      <div style={styles.requestMeta}>
+                        <div style={{ fontWeight: 700 }}>{req.instrumentName || req.instrument}</div>
+                        <div style={{ color: '#6b7280', fontSize: 13 }}>{req.quantity || 1} unit(s)</div>
+                        { (req.rental_fee || req.rentalFee) && (
+                          <div style={{ color: '#059669', fontSize: 13, marginTop: 6 }}>
+                            ₱{Number(req.rental_fee || req.rentalFee).toFixed(2)} / day
                           </div>
-                          <div style={{ fontSize: '12px', color: '#9ca3af' }}>{req.userEmail}</div>
-                        </div>
-                      </td>
-                      <td style={styles.td}>
-                        <div>
-                          <div style={{ fontWeight: '600', marginBottom: '4px' }}>{req.instrumentName}</div>
-                          <div style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'capitalize' }}>{req.instrumentType}</div>
-                        </div>
-                      </td>
-                      <td style={{...styles.td, textAlign: 'center'}}>{req.quantity}</td>
-                      <td style={styles.td}>
-                        <div style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>
-                          {new Date(req.startDate).toLocaleDateString()}
-                        </div>
-                        <div style={{ fontSize: '13px', color: '#64748b' }}>
-                          - {new Date(req.endDate).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td style={styles.td}>
-                        <div style={{ maxWidth: '200px' }}>
-                          <div style={{ textTransform: 'capitalize', marginBottom: '4px' }}>{req.purpose}</div>
-                          {req.notes && <div style={{ fontSize: '12px', color: '#9ca3af' }}>{req.notes}</div>}
-                        </div>
-                      </td>
-                      <td style={styles.td}>
-                        {getStatusBadge(req.status)}
-                      </td>
-                      <td style={styles.td}>
+                        )}
+                      </div>
+
+                      <div style={styles.requestActions}>
                         {req.status === 'pending' ? (
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <button 
+                          <>
+                            <button
                               onClick={() => handleInstrumentRequestAction(req.id, 'approved', 'rent')}
                               disabled={processingId === req.id}
-                              style={{
-                                ...styles.actionButton,
-                                ...(processingId === req.id ? styles.actionButtonDisabled : {})
-                              }}
-                              className="approve-button"
+                              style={{ ...styles.primaryBtn, ...(processingId === req.id ? styles.disabledBtn : {}) }}
                             >
-                              {processingId === req.id ? (
-                                <>
-                                  <div style={styles.spinner}></div>
-                                  Processing...
-                                </>
-                              ) : (
-                                <>
-                                  <FaCheck size={12} />
-                                  Approve
-                                </>
-                              )}
+                              {processingId === req.id ? <div style={styles.spinner}></div> : <FaCheck />} Approve
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleInstrumentRequestAction(req.id, 'rejected', 'rent')}
                               disabled={processingId === req.id}
-                              style={{
-                                ...styles.actionButton,
-                                backgroundColor: '#ef4444',
-                                ...(processingId === req.id ? styles.actionButtonDisabled : {})
-                              }}
-                              className="reject-button"
-                            >
-                              <FaTimes size={12} />
-                              Reject
+                              style={{ ...styles.dangerBtn, ...(processingId === req.id ? styles.disabledBtn : {}) }}
+                            ><FaTimes /> Reject
+                            </button>
+                          </>
+                        ) : req.status === 'approved' ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+                            <div style={{ color: '#065f46', fontWeight: 700 }}>✓ Approved</div>
+                            <button onClick={() => handleMarkPaid(req.id, 'rent')} disabled={processingId === req.id} style={{ ...styles.primaryBtn, ...(processingId === req.id ? styles.disabledBtn : {}), backgroundColor: '#0369a1' }}>
+                              Mark Paid
                             </button>
                           </div>
+                        ) : req.status === 'paid' ? (
+                          <div style={{ color: '#0b6623', fontWeight: 700 }}>Paid</div>
                         ) : (
-                          <span style={{ 
-                            fontSize: '13px', 
-                            color: '#64748b',
-                            fontStyle: 'italic'
-                          }}>
-                            {req.status === 'approved' ? 'Request approved' : 
-                             req.status === 'rejected' ? 'Request rejected' : 
-                             'Request returned'}
-                          </span>
+                          <div style={{ color: '#64748b', fontStyle: 'italic' }}>{req.status === 'rejected' ? 'Request rejected' : 'Request returned'}</div>
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>

@@ -7,6 +7,7 @@ import reportWebVitals from './reportWebVitals';
 // Simple hash routing for /#/booking and /#/instrument-booking
 const BookStandalone = React.lazy(() => import('./Components/Booking'));
 const InstrumentBookStandalone = React.lazy(() => import('./Components/InstrumentBooking'));
+const InstrumentBorrowStandalone = React.lazy(() => import('./Components/InstrumentBorrowing'));
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const HashRouter = () => {
@@ -27,6 +28,13 @@ const HashRouter = () => {
     return (
       <React.Suspense fallback={<div />}> 
         <InstrumentBookStandalone />
+      </React.Suspense>
+    );
+  }
+  if (route === '#/instrument-borrowing') {
+    return (
+      <React.Suspense fallback={<div />}>
+        <InstrumentBorrowStandalone />
       </React.Suspense>
     );
   }

@@ -23,6 +23,7 @@ const UserSignup = ({ onSignup, onClose, onSwitchToLogin }) => {
   const [success, setSuccess] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '#ef4444' });
   const googleBtnRef = useRef(null);
   const [googleReady, setGoogleReady] = useState(false);
   const [googleErr, setGoogleErr] = useState(null);
@@ -231,6 +232,50 @@ const UserSignup = ({ onSignup, onClose, onSwitchToLogin }) => {
   const handleChange = (k, v) => {
     setForm((s) => ({ ...s, [k]: v }));
     setErrors((prev) => ({ ...prev, [k]: null }));
+
+    // Live validations
+    if (k === 'password') {
+      const pwd = v || '';
+      const strength = evaluatePassword(pwd);
+      setPasswordStrength(strength);
+      // if confirm password exists, validate matching live
+      if (form.confirmPassword && form.confirmPassword !== pwd) {
+        setErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
+      } else {
+        setErrors(prev => ({ ...prev, confirmPassword: null }));
+      }
+      // also set password length error live
+      if (pwd && pwd.length < 6) {
+        setErrors(prev => ({ ...prev, password: 'Password must be at least 6 characters' }));
+      } else {
+        setErrors(prev => ({ ...prev, password: null }));
+      }
+    }
+    if (k === 'confirmPassword') {
+      const pwd = form.password || '';
+      if (v && v !== pwd) {
+        setErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
+      } else {
+        setErrors(prev => ({ ...prev, confirmPassword: null }));
+      }
+    }
+  };
+
+  // Simple password strength evaluator
+  const evaluatePassword = (pwd) => {
+    let score = 0;
+    if (!pwd) return { score: 0, label: '', color: '#ef4444' };
+    if (pwd.length >= 6) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    let label = 'Very weak';
+    let color = '#ef4444';
+    if (score <= 1) { label = 'Very weak'; color = '#ef4444'; }
+    else if (score === 2) { label = 'Weak'; color = '#f59e0b'; }
+    else if (score === 3) { label = 'Good'; color = '#10b981'; }
+    else if (score >= 4) { label = 'Strong'; color = '#047857'; }
+    return { score, label, color };
   };
 
   const handleSubmit = async (ev) => {
@@ -448,7 +493,14 @@ const UserSignup = ({ onSignup, onClose, onSwitchToLogin }) => {
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </div>
           </div>
-          {errors.password && <div style={styles.err}>{errors.password}</div>}
+            {errors.password && <div style={styles.err}>{errors.password}</div>}
+            {/* Password strength meter */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <div style={{ flex: 1, height: 8, background: '#e6eef8', borderRadius: 6, overflow: 'hidden' }}>
+                <div style={{ width: `${(passwordStrength.score / 4) * 100}%`, height: '100%', background: passwordStrength.color, transition: 'width 220ms ease' }} />
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: passwordStrength.color, minWidth: 72, textAlign: 'right' }}>{passwordStrength.label}</div>
+            </div>
         </div>
 
         <div style={styles.field}>
@@ -526,7 +578,7 @@ const UserSignup = ({ onSignup, onClose, onSwitchToLogin }) => {
             onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
             onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
           >
-            Sign in
+            Login
           </button>
         </div>
 

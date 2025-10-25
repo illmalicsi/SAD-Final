@@ -4,7 +4,7 @@ import NotificationService from '../services/notificationService';
 
 // --- Data for Dynamic Form ---
 
-const services = ['Band Gigs', 'Parade Events', 'Instrument Rentals', 'Music Arrangement', 'Music Workshops'];
+const services = ['Band Gigs', 'Parade Events', 'Music Arrangement', 'Music Workshops'];
 
 const bandPackages = {
   '20-players-with': { label: '20 Players (with Food & Transport)', price: 15000 },
@@ -14,19 +14,7 @@ const bandPackages = {
   'full-band': { label: 'Full Band', price: 35000 },
 };
 
-const instruments = {
-  'trumpet': { label: 'Trumpet', pricePerDay: 500 },
-  'trombone': { label: 'Trombone', pricePerDay: 500 },
-  'french-horn': { label: 'French Horn', pricePerDay: 500 },
-  'tuba': { label: 'Tuba', pricePerDay: 500 },
-  'flute': { label: 'Flute', pricePerDay: 500 },
-  'clarinet': { label: 'Clarinet', pricePerDay: 500 },
-  'saxophone': { label: 'Saxophone', pricePerDay: 500 },
-  'yamaha-snare': { label: 'Yamaha Snare Drum', pricePerDay: 1000 },
-  'pearl-snare': { label: 'Pearl Snare Drum', pricePerDay: 1000 },
-  'bass-drum': { label: 'Bass Drum', pricePerDay: 500 },
-  'cymbals': { label: 'Cymbals', pricePerDay: 500 },
-};
+// Instruments are loaded from the backend so we show actual instrument names, condition and price
 
 const musicArrangementBasePrice = 3000;
 
@@ -64,12 +52,6 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
   const [bandPackage, setBandPackage] = useState('');
   const [eventDate, setEventDate] = useState('');
   
-  // For Instrument Rentals
-  const [selectedInstrument, setSelectedInstrument] = useState('');
-  const [rentalStartDate, setRentalStartDate] = useState('');
-  const [rentalEndDate, setRentalEndDate] = useState('');
-  const [purpose, setPurpose] = useState('');
-
   // current logged-in user (if any)
   const [user, setUser] = useState(null);
 
@@ -81,33 +63,20 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
   const [month, setMonth] = useState(today.getMonth());
 
   // --- Derived State ---
-  const rentalDays = useMemo(() => {
-    if (service === 'Instrument Rentals' && rentalStartDate && rentalEndDate) {
-      const start = new Date(rentalStartDate);
-      const end = new Date(rentalEndDate);
-      if (end < start) return 0;
-      const diffTime = Math.abs(end - start);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive of start and end date
-      return diffDays;
-    }
-    return 0;
-  }, [service, rentalStartDate, rentalEndDate]);
+  // rentalDays removed - rentals are handled in InstrumentBooking.jsx
 
   // --- Effect for Price Calculation ---
   useEffect(() => {
     let value = 0;
     if (service === 'Band Gigs' || service === 'Parade Events') {
       value = bandPackages[bandPackage]?.price || 0;
-    } else if (service === 'Instrument Rentals') {
-      const instrumentPrice = instruments[selectedInstrument]?.pricePerDay || 0;
-      value = instrumentPrice * rentalDays;
     } else if (service === 'Music Arrangement') {
       value = musicArrangementBasePrice * numPieces;
     } else if (service === 'Music Workshops') {
-        value = 5000; // Default value for workshops
+      value = 5000; // Default value for workshops
     }
     setEstimatedValue(value);
-  }, [service, bandPackage, selectedInstrument, rentalDays, numPieces]);
+  }, [service, bandPackage, numPieces]);
 
   // Effect to set service from URL parameter
   useEffect(() => {
@@ -123,54 +92,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
 
   const getStoredBookings = async () => {
     try {
-      // If this is an instrument rental/borrow request, route it to the Approval queue
-      if (service === 'Instrument Rentals') {
-        try {
-          const type = (user && user.role && user.role !== 'user') ? 'borrow' : 'rent';
-          const storageKey = type === 'borrow' ? 'borrowRequests' : 'rentRequests';
-          const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
-          const request = {
-            id: Date.now(),
-            userId: user?.id || null,
-            userName: name.trim(),
-            userEmail: email.trim().toLowerCase(),
-            phone: phone.trim(),
-            instrument: instruments[selectedInstrument]?.label || selectedInstrument,
-            startDate: rentalStartDate,
-            endDate: rentalEndDate,
-            purpose: purpose ? purpose.trim() : null,
-            notes: notes ? notes.trim() : null,
-            status: 'pending',
-            createdAt: new Date().toISOString()
-          };
-          existing.unshift(request);
-          localStorage.setItem(storageKey, JSON.stringify(existing));
-          // Notify approval UI
-          window.dispatchEvent(new Event(`${type}RequestsUpdated`));
-          setLastSubmissionType(type === 'borrow' ? 'borrow' : 'rent');
-        } catch (e) {
-          console.error('Failed to save instrument request to localStorage', e);
-        }
-
-        // Show success and reset form locally (do not create a booking record)
-  setShowSuccess(true);
-        setService('');
-        setName('');
-        setEmail('');
-        setPhone('');
-        setLocation('');
-        setNotes('');
-        setPurpose('');
-        setBandPackage('');
-        setSelectedInstrument('');
-        setRentalStartDate('');
-        setRentalEndDate('');
-        setEventDate('');
-        setNumPieces(1);
-        setEstimatedValue(0);
-        setTimeout(() => setShowSuccess(false), 5000);
-        return;
-      }
+      // Standard booking load (no instrument rentals handled here)
       const response = await fetch('http://localhost:5000/api/bookings');
       if (response.ok) {
         const data = await response.json();
@@ -217,6 +139,8 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       setLocalBookings(stored);
     };
     loadBookings();
+    // Note: instrument rentals are handled in InstrumentBooking.jsx
+
     const handleBookingsUpdate = async () => {
       const updated = await getStoredBookings();
       setLocalBookings(updated);
@@ -278,16 +202,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
 
   const handleDateClick = (dateStr) => {
     if (dateStr >= todayStr && getDateStatus(dateStr) !== 'approved') {
-      if (service === 'Instrument Rentals') {
-        if (!rentalStartDate || rentalEndDate) {
-          setRentalStartDate(dateStr);
-          setRentalEndDate('');
-        } else if (dateStr >= rentalStartDate) {
-          setRentalEndDate(dateStr);
-        } else {
-          setRentalStartDate(dateStr);
-        }
-      } else if (service === 'Band Gigs' || service === 'Parade Events') {
+      if (service === 'Band Gigs' || service === 'Parade Events') {
         setEventDate(dateStr);
       }
     }
@@ -303,15 +218,12 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
     let startTime = '09:00';
     let endTime = '17:00';
 
-    if (service === 'Band Gigs' || service === 'Parade Events') {
-        bookingNotes = `Package: ${bandPackages[bandPackage]?.label}\n\n${notes}`;
-        bookingDate = eventDate; // Use the selected event date
-  } else if (service === 'Instrument Rentals') {
-    bookingNotes = `Instrument: ${instruments[selectedInstrument]?.label}\nRental Period: ${rentalStartDate} to ${rentalEndDate} (${rentalDays} days)\nPurpose: ${purpose || ''}\n\n${notes}`;
-    bookingDate = rentalStartDate;
-    } else if (service === 'Music Arrangement') {
-        bookingNotes = `Number of Pieces: ${numPieces}\n\n${notes}`;
-    }
+  if (service === 'Band Gigs' || service === 'Parade Events') {
+    bookingNotes = `Package: ${bandPackages[bandPackage]?.label}\n\n${notes}`;
+    bookingDate = eventDate; // Use the selected event date
+  } else if (service === 'Music Arrangement') {
+    bookingNotes = `Number of Pieces: ${numPieces}\n\n${notes}`;
+  }
 
     try {
       const newBooking = {
@@ -325,8 +237,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         endTime,
         location: location.trim(),
         estimatedValue: estimatedValue,
-        notes: bookingNotes.trim() || null,
-        purpose: purpose ? purpose.trim() : null
+        notes: bookingNotes.trim() || null
       };
 
       const response = await fetch('http://localhost:5000/api/bookings', {
@@ -353,21 +264,17 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
           console.error('Notification error (new booking):', e);
         }
         
-        // Reset form
-        setService('');
-        setName('');
-        setEmail('');
-        setPhone('');
-        setLocation('');
-  setNotes('');
-  setPurpose('');
-        setBandPackage('');
-        setSelectedInstrument('');
-        setRentalStartDate('');
-        setRentalEndDate('');
-        setEventDate(''); // Reset event date
-        setNumPieces(1);
-        setEstimatedValue(0);
+    // Reset form
+    setService('');
+    setName('');
+    setEmail('');
+    setPhone('');
+    setLocation('');
+    setNotes('');
+    setBandPackage('');
+    setEventDate(''); // Reset event date
+    setNumPieces(1);
+    setEstimatedValue(0);
 
         setTimeout(() => setShowSuccess(false), 5000);
       } else {
@@ -386,9 +293,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
     if (service === 'Band Gigs' || service === 'Parade Events') {
       return !!bandPackage && !!eventDate;
     }
-    if (service === 'Instrument Rentals') {
-      return !!selectedInstrument && !!rentalStartDate && !!rentalEndDate && !!purpose;
-    }
+    // Instrument Rentals handled in InstrumentBooking.jsx
     if (service === 'Music Arrangement') {
       return numPieces > 0;
     }
@@ -396,7 +301,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         return true; // Or add specific validation
     }
     return false;
-  }, [service, name, email, location, bandPackage, eventDate, selectedInstrument, rentalStartDate, rentalEndDate, numPieces]);
+  }, [service, name, email, location, bandPackage, eventDate, numPieces]);
 
   const minDate = today.toISOString().split('T')[0];
 
@@ -423,51 +328,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
             </div>
           </>
         );
-      case 'Instrument Rentals':
-        return (
-          <>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}><FaGuitar /> Instrument <span style={styles.required}>*</span></label>
-              <select value={selectedInstrument} onChange={e => setSelectedInstrument(e.target.value)} style={styles.input} required>
-                <option value="">Select an instrument...</option>
-                {Object.entries(instruments).map(([key, { label, pricePerDay }]) => (
-                  <option key={key} value={key}>{label} - ₱{pricePerDay.toLocaleString()}/day</option>
-                ))}
-              </select>
-            </div>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}><FaInfoCircle /> Purpose <span style={styles.required}>*</span></label>
-              <input type="text" value={purpose} onChange={e => setPurpose(e.target.value)} style={styles.input} placeholder="e.g., Wedding performance, rehearsal, practice sessions" required />
-            </div>
-            <div style={styles.gridTwo}>
-                <div style={styles.inputGroup}>
-                    <label style={styles.label}><FaCalendarAlt /> Rental Start Date <span style={styles.required}>*</span></label>
-                    <input type="date" value={rentalStartDate} onChange={e => setRentalStartDate(e.target.value)} style={styles.input} min={minDate} required />
-                </div>
-                <div style={styles.inputGroup}>
-                    <label style={styles.label}><FaCalendarAlt /> Rental End Date <span style={styles.required}>*</span></label>
-                    <input type="date" value={rentalEndDate} onChange={e => setRentalEndDate(e.target.value)} style={styles.input} min={rentalStartDate || minDate} required />
-                </div>
-            </div>
-            {rentalDays > 0 && (
-                <div style={styles.priceInfo}>
-                    <FaInfoCircle />
-                    <span>Duration: <strong>{rentalDays} day{rentalDays > 1 && 's'}</strong></span>
-                </div>
-            )}
-            {/* Member-only borrow form fields */}
-            {user && user.role && user.role !== 'user' && (
-              <div style={{ marginTop: 12, padding: 12, border: '1px dashed #c7e6d8', borderRadius: 8, background: '#f8fdf9' }}>
-                <div style={{ fontWeight: 700, color: '#065f46', marginBottom: 8 }}>Member Borrow Request</div>
-                <div style={{ marginBottom: 8, color: '#065f46' }}>As a member, you can borrow select instruments. Please confirm the borrow details below.</div>
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>Borrowing Duration Notes (optional)</label>
-                  <input type="text" value={notes} onChange={e => setNotes(e.target.value)} style={styles.input} placeholder="Additional instructions for borrowing (e.g., pickup person, ID to present)" />
-                </div>
-              </div>
-            )}
-          </>
-        );
+        
       case 'Music Arrangement':
         return (
             <>
@@ -959,12 +820,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
               const status = getDateStatus(dateStr);
               const isPast = dateStr < todayStr;
               
-              let isSelected = false;
-              if (service === 'Instrument Rentals') {
-                isSelected = dateStr >= rentalStartDate && dateStr <= rentalEndDate && rentalStartDate && rentalEndDate;
-              } else if (service === 'Band Gigs' || service === 'Parade Events') {
-                isSelected = dateStr === eventDate;
-              }
+                        const isSelected = (service === 'Band Gigs' || service === 'Parade Events') && dateStr === eventDate;
 
               let dayStyle = { ...styles.dayCell };
 

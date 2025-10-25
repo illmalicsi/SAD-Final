@@ -123,15 +123,64 @@ router.post('/rent-request', authenticateToken, async (req, res) => {
 // Approve borrow request
 router.put('/borrow-request/:id/approve', authenticateToken, async (req, res) => {
   try {
-    const requestId = req.params.id;
+    const requestId = Number(req.params.id);
     const approvedBy = req.user.id;
 
-    await pool.query(
-      'UPDATE borrow_requests SET status = ?, approved_by = ?, approved_at = NOW() WHERE request_id = ?',
-      ['approved', approvedBy, requestId]
-    );
+    // Start transaction to ensure inventory consistency
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
 
-    res.json({ success: true, message: 'Borrow request approved' });
+      // Lock the borrow request row
+      const [reqRows] = await conn.query('SELECT * FROM borrow_requests WHERE request_id = ? FOR UPDATE', [requestId]);
+      if (!reqRows || reqRows.length === 0) {
+        await conn.rollback();
+        conn.release();
+        return res.status(404).json({ success: false, message: 'Borrow request not found' });
+      }
+
+      const requestRow = reqRows[0];
+      if (requestRow.status !== 'pending') {
+        await conn.rollback();
+        conn.release();
+        return res.status(400).json({ success: false, message: 'Request is not pending' });
+      }
+
+      const instrumentId = requestRow.instrument_id;
+      const qtyRequested = Number(requestRow.quantity) || 0;
+
+      // Lock instrument row
+      const [instRows] = await conn.query('SELECT * FROM instruments WHERE instrument_id = ? FOR UPDATE', [instrumentId]);
+      if (!instRows || instRows.length === 0) {
+        await conn.rollback();
+        conn.release();
+        return res.status(404).json({ success: false, message: 'Instrument not found' });
+      }
+
+      const instrument = instRows[0];
+      const available = Number(instrument.quantity) || 0;
+      if (available < qtyRequested) {
+        await conn.rollback();
+        conn.release();
+        return res.status(400).json({ success: false, message: 'Insufficient quantity in inventory' });
+      }
+
+      // Decrement inventory
+      await conn.query('UPDATE instruments SET quantity = quantity - ? WHERE instrument_id = ?', [qtyRequested, instrumentId]);
+
+      // Mark request approved
+      await conn.query('UPDATE borrow_requests SET status = ?, approved_by = ?, approved_at = NOW() WHERE request_id = ?', ['approved', approvedBy, requestId]);
+
+      await conn.commit();
+      conn.release();
+
+      res.json({ success: true, message: 'Borrow request approved' });
+    } catch (txErr) {
+      console.error('Transaction error approving borrow request:', txErr);
+      try { await conn.rollback(); } catch (e) {}
+      conn.release();
+      res.status(500).json({ success: false, message: 'Failed to approve request' });
+    }
   } catch (error) {
     console.error('Error approving borrow request:', error);
     res.status(500).json({ success: false, message: 'Failed to approve request' });
@@ -159,15 +208,62 @@ router.put('/borrow-request/:id/reject', authenticateToken, async (req, res) => 
 // Approve rent request
 router.put('/rent-request/:id/approve', authenticateToken, async (req, res) => {
   try {
-    const requestId = req.params.id;
+    const requestId = Number(req.params.id);
     const approvedBy = req.user.id;
 
-    await pool.query(
-      'UPDATE rent_requests SET status = ?, approved_by = ?, approved_at = NOW() WHERE request_id = ?',
-      ['approved', approvedBy, requestId]
-    );
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
 
-    res.json({ success: true, message: 'Rent request approved' });
+      // Lock rent request
+      const [reqRows] = await conn.query('SELECT * FROM rent_requests WHERE request_id = ? FOR UPDATE', [requestId]);
+      if (!reqRows || reqRows.length === 0) {
+        await conn.rollback();
+        conn.release();
+        return res.status(404).json({ success: false, message: 'Rent request not found' });
+      }
+      const requestRow = reqRows[0];
+      if (requestRow.status !== 'pending') {
+        await conn.rollback();
+        conn.release();
+        return res.status(400).json({ success: false, message: 'Request is not pending' });
+      }
+
+      const instrumentId = requestRow.instrument_id;
+      const qtyRequested = Number(requestRow.quantity) || 0;
+
+      // Lock instrument
+      const [instRows] = await conn.query('SELECT * FROM instruments WHERE instrument_id = ? FOR UPDATE', [instrumentId]);
+      if (!instRows || instRows.length === 0) {
+        await conn.rollback();
+        conn.release();
+        return res.status(404).json({ success: false, message: 'Instrument not found' });
+      }
+
+      const instrument = instRows[0];
+      const available = Number(instrument.quantity) || 0;
+      if (available < qtyRequested) {
+        await conn.rollback();
+        conn.release();
+        return res.status(400).json({ success: false, message: 'Insufficient quantity in inventory' });
+      }
+
+      // Decrement inventory
+      await conn.query('UPDATE instruments SET quantity = quantity - ? WHERE instrument_id = ?', [qtyRequested, instrumentId]);
+
+      // Mark rent request approved
+      await conn.query('UPDATE rent_requests SET status = ?, approved_by = ?, approved_at = NOW() WHERE request_id = ?', ['approved', approvedBy, requestId]);
+
+      await conn.commit();
+      conn.release();
+
+      res.json({ success: true, message: 'Rent request approved' });
+    } catch (txErr) {
+      console.error('Transaction error approving rent request:', txErr);
+      try { await conn.rollback(); } catch (e) {}
+      conn.release();
+      res.status(500).json({ success: false, message: 'Failed to approve request' });
+    }
   } catch (error) {
     console.error('Error approving rent request:', error);
     res.status(500).json({ success: false, message: 'Failed to approve request' });
@@ -192,18 +288,51 @@ router.put('/rent-request/:id/reject', authenticateToken, async (req, res) => {
   }
 });
 
-// Get all instruments
-router.get('/instruments', async (req, res) => {
+// Get all instruments - FIXED VERSION with better error handling
+// This is mounted at /api/instruments/ in server.js
+router.get('/', async (req, res) => {
   try {
+    console.log('Fetching instruments from database...'); // Debug log
+    
     const [rows] = await pool.query(`
-      SELECT * FROM instruments 
-      WHERE is_archived = FALSE AND availability_status = 'Available'
+      SELECT 
+        instrument_id,
+        name,
+        category,
+        subcategory,
+        brand,
+        condition_status,
+        availability_status,
+        quantity,
+        price_per_day,
+        location,
+        notes,
+        is_archived,
+        created_at,
+        updated_at
+      FROM instruments 
+      WHERE is_archived = FALSE
       ORDER BY category, name
     `);
-    res.json({ success: true, instruments: rows });
+    
+    console.log(`Successfully fetched ${rows.length} instruments`); // Debug log
+    if (rows.length > 0) {
+      console.log('Sample instrument:', rows[0]); // Debug: show first instrument
+    }
+    
+    res.json({ 
+      success: true, 
+      instruments: rows,
+      count: rows.length 
+    });
   } catch (error) {
     console.error('Error fetching instruments:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch instruments' });
+    console.error('Error stack:', error.stack); // More detailed error
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch instruments',
+      error: error.message // Include error message for debugging
+    });
   }
 });
 

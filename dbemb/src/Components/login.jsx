@@ -372,7 +372,7 @@ const Login = ({ onBack, onLogin, onSwitchToSignup, error, onClearError }) => {
               }
             }}
           >
-            {isLoading ? 'Signing in...' : 'Sign in'}
+            {isLoading ? 'Logging in...' : 'Login'}
           </button>
 
           <div style={sharedStyles.linkText}>
@@ -422,7 +422,7 @@ const Login = ({ onBack, onLogin, onSwitchToSignup, error, onClearError }) => {
                 }}
               >
                 <FaGoogle style={{ color: '#de5246' }} />
-                {isLoading ? 'Please wait...' : 'Sign in with Google'}
+                {isLoading ? 'Please wait...' : 'Login with Google'}
               </button>
             )}
         </div>

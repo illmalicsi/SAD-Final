@@ -1,20 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import AuthService from '../services/authService';
+import InstrumentTerms from './InstrumentTerms';
 import { FaCalendarAlt, FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaCheckCircle, FaSpinner, FaChevronLeft, FaChevronRight, FaInfoCircle, FaGuitar } from 'react-icons/fa';
 
-// --- Data for Instrument Rentals ---
-const instruments = {
-  'trumpet': { label: 'Trumpet', pricePerDay: 500 },
-  'trombone': { label: 'Trombone', pricePerDay: 500 },
-  'french-horn': { label: 'French Horn', pricePerDay: 500 },
-  'tuba': { label: 'Tuba', pricePerDay: 500 },
-  'flute': { label: 'Flute', pricePerDay: 500 },
-  'clarinet': { label: 'Clarinet', pricePerDay: 500 },
-  'saxophone': { label: 'Saxophone', pricePerDay: 500 },
-  'yamaha-snare': { label: 'Yamaha Snare Drum', pricePerDay: 1000 },
-  'pearl-snare': { label: 'Pearl Snare Drum', pricePerDay: 1000 },
-  'bass-drum': { label: 'Bass Drum', pricePerDay: 500 },
-  'cymbals': { label: 'Cymbals', pricePerDay: 500 },
-};
+// Instrument data will be loaded from the backend; no local fallback mapping to force DB-driven options
 
 const InstrumentBooking = () => {
   const today = new Date();
@@ -31,10 +20,14 @@ const InstrumentBooking = () => {
   
   // For Instrument Rentals
   const [selectedInstrument, setSelectedInstrument] = useState('');
+  const [fetchedInstruments, setFetchedInstruments] = useState([]);
+  const [loadingInstruments, setLoadingInstruments] = useState(true);
+  const [instrumentsError, setInstrumentsError] = useState(null);
   const [rentalStartDate, setRentalStartDate] = useState('');
   const [rentalEndDate, setRentalEndDate] = useState('');
   const [purpose, setPurpose] = useState('');
   const [estimatedValue, setEstimatedValue] = useState(0);
+  const [quantity, setQuantity] = useState(1);
 
   // current logged-in user (if any)
   const [user, setUser] = useState(null);
@@ -58,10 +51,21 @@ const InstrumentBooking = () => {
 
   // --- Effect for Price Calculation ---
   useEffect(() => {
-    const instrumentPrice = instruments[selectedInstrument]?.pricePerDay || 0;
+    let instrumentPrice = 0;
+    // If selectedInstrument is a DB item (prefix 'db-<id>') find it
+    if (typeof selectedInstrument === 'string' && selectedInstrument.startsWith('db-')) {
+      const id = parseInt(selectedInstrument.replace('db-', ''), 10);
+      const inst = fetchedInstruments.find(i => Number(i.instrument_id) === id);
+      // support both snake_case (from backend) and camelCase
+      const rawPrice = inst?.price_per_day ?? inst?.pricePerDay ?? 0;
+      instrumentPrice = Number(rawPrice) || 0;
+    } else {
+      // no local fallback: non-db selections have no price
+      instrumentPrice = 0;
+    }
     const value = instrumentPrice * rentalDays;
     setEstimatedValue(value);
-  }, [selectedInstrument, rentalDays]);
+  }, [selectedInstrument, rentalDays, fetchedInstruments]);
 
   // Load user data
   useEffect(() => {
@@ -77,6 +81,64 @@ const InstrumentBooking = () => {
     } catch (e) {
       // ignore parse errors
     }
+  }, []);
+
+  // Fetch available instruments from backend (fallback to localStorage)
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoadingInstruments(true);
+      setInstrumentsError(null);
+      try {
+        const res = await fetch('http://localhost:5000/api/instruments');
+        if (!res.ok) throw new Error('Failed to fetch instruments');
+        const data = await res.json();
+        if (!cancelled) {
+          if (data && Array.isArray(data.instruments)) {
+            setFetchedInstruments(data.instruments);
+            // debug: log fetched instruments to help verify price fields
+            try { console.debug('InstrumentBooking: fetched instruments (instruments):', data.instruments); } catch(e) {}
+          } else if (Array.isArray(data)) {
+            setFetchedInstruments(data);
+            try { console.debug('InstrumentBooking: fetched instruments (array):', data); } catch(e) {}
+          } else {
+            setFetchedInstruments([]);
+          }
+        }
+      } catch (err) {
+        // fallback: try localStorage dbeInventory
+        console.warn('InstrumentBooking: fetch instruments failed, falling back to localStorage', err);
+        try {
+          const saved = localStorage.getItem('dbeInventory');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            // map to expected shape
+            const mapped = (Array.isArray(parsed) ? parsed : []).map(it => ({
+              instrument_id: it.id || it.instrument_id,
+              name: it.name || it.label || '',
+              category: it.category || '',
+              subcategory: it.subcategory || '',
+              quantity: it.locations ? it.locations.reduce((s,l)=>s+(Number(l.quantity)||0),0) : (it.quantity||0),
+              location: it.locations && it.locations.length ? (it.locations[0].name || '') : (it.location||''),
+              availability_status: it.archived ? 'Unavailable' : (it.status || 'Available'),
+              // try to preserve price and condition if present in local saved inventory
+              price_per_day: it.price_per_day ?? it.pricePerDay ?? null,
+              condition_status: it.condition_status ?? it.conditionStatus ?? it.condition ?? null
+            }));
+            if (!cancelled) setFetchedInstruments(mapped.filter(i => i.availability_status === 'Available'));
+            try { console.debug('InstrumentBooking: loaded instruments from localStorage dbeInventory:', mapped); } catch(e) {}
+          } else {
+            if (!cancelled) setFetchedInstruments([]);
+          }
+        } catch (e) {
+          if (!cancelled) setInstrumentsError(String(err || e));
+        }
+      } finally {
+        if (!cancelled) setLoadingInstruments(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   // --- Calendar Utils ---
@@ -116,39 +178,147 @@ const InstrumentBooking = () => {
       }
     }
   };
+    const [borrowerIdFile, setBorrowerIdFile] = useState(null);
+    const [approvalNotification, setApprovalNotification] = useState(null);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // --- Form Submission ---
+  useEffect(() => {
+    const handler = (e) => {
+      if (user && (e.detail.userEmail === user.email || e.detail.userId === user.id)) {
+        setApprovalNotification(e.detail.type === 'rent'
+          ? 'Your instrument rental request has been approved! Please proceed with full payment to secure your booking.'
+          : 'Your borrow request has been approved! Please bring your valid ID during meetup.');
+        setTimeout(() => setApprovalNotification(null), 10000);
+      }
+    };
+    window.addEventListener('instrumentRequestApproved', handler);
+    return () => window.removeEventListener('instrumentRequestApproved', handler);
+  }, [user]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      const type = (user && user.role && user.role !== 'user') ? 'borrow' : 'rent';
-      const storageKey = type === 'borrow' ? 'borrowRequests' : 'rentRequests';
-      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      
-      const request = {
-        id: Date.now(),
-        userId: user?.id || null,
-        userName: name.trim(),
-        userEmail: email.trim().toLowerCase(),
-        phone: phone.trim(),
-        instrument: instruments[selectedInstrument]?.label || selectedInstrument,
-        startDate: rentalStartDate,
-        endDate: rentalEndDate,
-        purpose: purpose ? purpose.trim() : null,
-        notes: notes ? notes.trim() : null,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      };
-      
-      existing.unshift(request);
-      localStorage.setItem(storageKey, JSON.stringify(existing));
-      window.dispatchEvent(new Event(`${type}RequestsUpdated`));
-      setLastSubmissionType(type === 'borrow' ? 'borrow' : 'rent');
+      // Rentals-only: always treat this as a rent request
+      const type = 'rent';
+      const storageKey = 'rentRequests';
 
-      setShowSuccess(true);
-      
+      const selectedLabel = (() => {
+        if (typeof selectedInstrument === 'string' && selectedInstrument.startsWith('db-')) {
+          const id = parseInt(selectedInstrument.replace('db-', ''), 10);
+          const inst = fetchedInstruments.find(i => Number(i.instrument_id) === id);
+          return inst ? inst.name : selectedInstrument;
+        }
+        // no local fallback; return raw value if not a db selection
+        return selectedInstrument;
+      })();
+
+      // If logged in, prefer server-side creation so inventory is tracked in DB
+      if (AuthService.isAuthenticated()) {
+        const instrumentIdVar = (typeof selectedInstrument === 'string' && selectedInstrument.startsWith('db-')) ? parseInt(selectedInstrument.replace('db-', ''), 10) : null;
+        const instMatch = instrumentIdVar ? fetchedInstruments.find(i => Number(i.instrument_id) === instrumentIdVar) : null;
+        const instrumentTypeVar = instMatch ? (instMatch.subcategory || '') : '';
+
+        // foundInstrument for local mirroring and metadata
+        const foundInstrument = instMatch || null;
+
+        const payload = {
+          instrumentId: instrumentIdVar,
+          instrumentName: selectedLabel,
+          instrumentType: instrumentTypeVar,
+          quantity: Number(quantity) || 1,
+          startDate: rentalStartDate,
+          endDate: rentalEndDate,
+          purpose: purpose ? purpose.trim() : null,
+          notes: notes ? notes.trim() : null,
+          rentalFee: estimatedValue || null
+        };
+
+        const endpoint = '/instruments/rent-request';
+        try {
+          const resp = await AuthService.post(endpoint, payload);
+          if (!resp || resp.success !== true) throw new Error(resp && resp.message ? resp.message : 'Failed to submit request');
+
+          // Mirror to localStorage for UI continuity
+          const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+          const request = {
+            id: resp.requestId || Date.now(),
+            userId: user?.id || null,
+            userName: name.trim(),
+            userEmail: email.trim().toLowerCase(),
+            phone: phone.trim(),
+            instrument: selectedLabel,
+            instrumentCondition: foundInstrument ? foundInstrument.condition_status : null,
+            instrumentPricePerDay: foundInstrument ? foundInstrument.price_per_day : null,
+            startDate: rentalStartDate,
+            endDate: rentalEndDate,
+            purpose: payload.purpose,
+            notes: payload.notes,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            ...(type === 'borrow' && borrowerIdFile ? { borrowerIdFileName: borrowerIdFile.name } : {})
+          };
+          existing.unshift(request);
+          localStorage.setItem(storageKey, JSON.stringify(existing));
+          window.dispatchEvent(new Event(`${type}RequestsUpdated`));
+
+          setLastSubmissionType(type === 'borrow' ? 'borrow' : 'rent');
+          setShowSuccess(true);
+        } catch (err) {
+          console.error('Server request failed, falling back to localStorage:', err);
+          // fallback to localStorage behavior
+          const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+          const request = {
+            id: Date.now(),
+            userId: user?.id || null,
+            userName: name.trim(),
+            userEmail: email.trim().toLowerCase(),
+            phone: phone.trim(),
+            instrument: selectedLabel,
+            instrumentCondition: instMatch ? instMatch.condition_status : null,
+            instrumentPricePerDay: instMatch ? instMatch.price_per_day : null,
+            startDate: rentalStartDate,
+            endDate: rentalEndDate,
+            purpose: purpose ? purpose.trim() : null,
+            notes: notes ? notes.trim() : null,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            ...(type === 'borrow' && borrowerIdFile ? { borrowerIdFileName: borrowerIdFile.name } : {})
+          };
+          existing.unshift(request);
+          localStorage.setItem(storageKey, JSON.stringify(existing));
+          window.dispatchEvent(new Event(`${type}RequestsUpdated`));
+          setLastSubmissionType(type === 'borrow' ? 'borrow' : 'rent');
+          setShowSuccess(true);
+        }
+      } else {
+        // Not authenticated: keep storing locally
+        const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const request = {
+          id: Date.now(),
+          userId: user?.id || null,
+          userName: name.trim(),
+          userEmail: email.trim().toLowerCase(),
+          phone: phone.trim(),
+          instrument: selectedLabel,
+          instrumentCondition: (typeof selectedInstrument === 'string' && selectedInstrument.startsWith('db-')) ? (fetchedInstruments.find(i => Number(i.instrument_id) === parseInt(selectedInstrument.replace('db-',''),10))?.condition_status || null) : null,
+          instrumentPricePerDay: (typeof selectedInstrument === 'string' && selectedInstrument.startsWith('db-')) ? (fetchedInstruments.find(i => Number(i.instrument_id) === parseInt(selectedInstrument.replace('db-',''),10))?.price_per_day || null) : null,
+          startDate: rentalStartDate,
+          endDate: rentalEndDate,
+          purpose: purpose ? purpose.trim() : null,
+          notes: notes ? notes.trim() : null,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          ...(type === 'borrow' && borrowerIdFile ? { borrowerIdFileName: borrowerIdFile.name } : {})
+        };
+        existing.unshift(request);
+        localStorage.setItem(storageKey, JSON.stringify(existing));
+        window.dispatchEvent(new Event(`${type}RequestsUpdated`));
+        setLastSubmissionType(type === 'borrow' ? 'borrow' : 'rent');
+        setShowSuccess(true);
+      }
+
       // Reset form
       setSelectedInstrument('');
       setRentalStartDate('');
@@ -157,19 +327,23 @@ const InstrumentBooking = () => {
       setNotes('');
       setLocation('');
       setEstimatedValue(0);
-
+      setBorrowerIdFile(null);
+      setAcceptedTerms(false);
       setTimeout(() => setShowSuccess(false), 5000);
     } catch (error) {
       console.error('Error submitting request:', error);
-      alert('An error occurred.');
+      alert(error.message || 'An error occurred.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const isFormValid = useMemo(() => {
-    return !!selectedInstrument && !!rentalStartDate && !!rentalEndDate && !!purpose && !!name && !!email && !!location;
-  }, [selectedInstrument, rentalStartDate, rentalEndDate, purpose, name, email, location]);
+    const base = !!selectedInstrument && !!rentalStartDate && !!rentalEndDate && !!purpose && !!name && !!email && !!location;
+    const isBorrow = user && user.role && user.role !== 'user';
+    // For rentals (non-members) require terms acceptance
+    return isBorrow ? base : (base && acceptedTerms);
+  }, [selectedInstrument, rentalStartDate, rentalEndDate, purpose, name, email, location, acceptedTerms, user]);
 
   const minDate = today.toISOString().split('T')[0];
 
@@ -520,10 +694,10 @@ const InstrumentBooking = () => {
       <div style={styles.wrapper}>
         <div style={styles.header}>
           <h1 style={styles.title}>
-            Instrument Rental & Borrowing
+            Instrument Rental
           </h1>
           <p style={styles.subtitle}>
-            Rent or borrow instruments for your musical needs.
+            Rent an instruments for your musical needs.
             Fill out the form below and we'll get back to you within 24 hours.
           </p>
         </div>
@@ -551,11 +725,36 @@ const InstrumentBooking = () => {
                   required
                 >
                   <option value="">Select an instrument...</option>
-                  {Object.entries(instruments).map(([key, { label, pricePerDay }]) => (
-                    <option key={key} value={key}>{label} - ₱{pricePerDay.toLocaleString()}/day</option>
-                  ))}
+                  {loadingInstruments && (
+                    <option value="" disabled>Loading instruments...</option>
+                  )}
+                  {!loadingInstruments && fetchedInstruments && fetchedInstruments.length > 0 && (
+                    fetchedInstruments.map(inst => (
+                      <option key={`db-${inst.instrument_id}`} value={`db-${inst.instrument_id}`}>
+                        {inst.name} {inst.availability_status ? `— ${inst.availability_status}` : ''} {inst.condition_status ? `— ${inst.condition_status}` : ''} {inst.price_per_day !== null && inst.price_per_day !== undefined ? `— ₱${Number(inst.price_per_day).toLocaleString()}/day` : ''}
+                      </option>
+                    ))
+                  )}
+
+                  {/* Fallback to static mapping if user wants non-db options */}
+                  {/* No local fallback options: DB-driven selection only */}
                 </select>
               </div>
+
+              {/* Selected instrument summary (show only name, availability, condition, price) */}
+              {selectedInstrument && typeof selectedInstrument === 'string' && selectedInstrument.startsWith('db-') && (() => {
+                const id = parseInt(selectedInstrument.replace('db-', ''), 10);
+                const sel = fetchedInstruments.find(i => Number(i.instrument_id) === id);
+                if (!sel) return null;
+                return (
+                  <div style={{ marginTop: 12, padding: 12, borderRadius: 10, border: '1px solid rgba(3,105,161,0.08)', background: 'rgba(248,250,252,0.8)', maxWidth: 520 }}>
+                    <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>{sel.name}</div>
+                    <div style={{ color: '#475569', fontSize: 13 }}>Availability: <strong style={{ color: sel.availability_status === 'Available' ? '#065f46' : '#b91c1c' }}>{sel.availability_status}</strong></div>
+                    <div style={{ color: '#475569', fontSize: 13 }}>Condition: <strong>{sel.condition_status || 'Unknown'}</strong></div>
+                    <div style={{ color: '#0369a1', fontSize: 16, fontWeight: 700, marginTop: 6 }}>{sel.price_per_day !== null && sel.price_per_day !== undefined ? `₱${Number(sel.price_per_day).toLocaleString()}/day` : 'Price N/A'}</div>
+                  </div>
+                );
+              })()}
 
               {/* Purpose */}
               <div style={styles.inputGroup}>
@@ -716,6 +915,9 @@ const InstrumentBooking = () => {
                   <div style={styles.priceValue}>₱{estimatedValue.toLocaleString()}</div>
                 </div>
               )}
+
+              {/* Terms and Policy for Rentals (required) - extracted to component for cleanliness */}
+              <InstrumentTerms acceptedTerms={acceptedTerms} setAcceptedTerms={setAcceptedTerms} user={user} />
 
               <button type="submit" disabled={!isFormValid || isSubmitting} style={styles.button}>
                 {isSubmitting ? (

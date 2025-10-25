@@ -43,8 +43,26 @@ VALUES (
   password_hash = VALUES(password_hash),
   role_id = VALUES(role_id);
 
-CREATE INDEX IF NOT EXISTS idx_users_role ON users(role_id);
-CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active, is_blocked);
+-- Create indexes only if they don't already exist. MySQL doesn't support
+-- CREATE INDEX IF NOT EXISTS in all environments, so use a small helper
+-- procedure that checks INFORMATION_SCHEMA and runs ALTER TABLE when needed.
+DROP PROCEDURE IF EXISTS add_index_if_missing;
+DELIMITER $$
+CREATE PROCEDURE add_index_if_missing(tbl VARCHAR(64), idx VARCHAR(64), stmt TEXT)
+BEGIN
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE table_schema = DATABASE() AND table_name = tbl AND index_name = idx) = 0 THEN
+    SET @s = stmt;
+    PREPARE st FROM @s;
+    EXECUTE st;
+    DEALLOCATE PREPARE st;
+  END IF;
+END$$
+DELIMITER ;
+
+CALL add_index_if_missing('users','idx_users_role','ALTER TABLE users ADD INDEX idx_users_role (role_id)');
+CALL add_index_if_missing('users','idx_users_active','ALTER TABLE users ADD INDEX idx_users_active (is_active, is_blocked)');
+DROP PROCEDURE IF EXISTS add_index_if_missing;
 
 INSERT INTO users (first_name, last_name, email, password_hash, role_id) VALUES
   ('Harley', 'Cuba', 'hlncuba@addu.edu.ph', 'password123', 2),
@@ -98,8 +116,8 @@ CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
 CREATE INDEX IF NOT EXISTS idx_payments_invoice ON payments(invoice_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
 
-
-CREATE TABLE IF NOT EXISTS instruments (
+DROP TABLE IF EXISTS instruments;
+CREATE TABLE instruments (
   instrument_id INT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
   category ENUM('percussion','wind','brass','woodwind','other') NOT NULL,
@@ -108,12 +126,35 @@ CREATE TABLE IF NOT EXISTS instruments (
   condition_status ENUM('Excellent','Good','Fair','Poor') DEFAULT 'Good',
   availability_status ENUM('Available','Rented','Borrowed','Maintenance','Unavailable') DEFAULT 'Available',
   quantity INT DEFAULT 1,
+  price_per_day DECIMAL(10,2) DEFAULT NULL,
   location VARCHAR(255),
   notes TEXT,
   is_archived BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_instruments_name (name)
 );
+
+INSERT INTO instruments (name, category, subcategory, brand, condition_status, availability_status, quantity, price_per_day, location) VALUES
+  ('Yamaha Black Snare Drum #01', 'percussion', 'Snare Drums', 'Yamaha', 'Good', 'Available', 1, 1000.00, 'Shrine Hills, Matina'),
+  ('Yamaha Black Snare Drum #02', 'percussion', 'Snare Drums', 'Yamaha', 'Good', 'Available', 1, 1000.00, 'Shrine Hills, Matina'),
+  ('Yamaha Black Snare Drum (Evans Drum Head) #03', 'percussion', 'Snare Drums', 'Yamaha', 'Excellent', 'Available', 2, 1000.00, 'Shrine Hills, Matina'),
+  ('Pearl Snare Drum Color White #01', 'percussion', 'Snare Drums', 'Pearl', 'Good', 'Available', 1, 1000.00, 'Shrine Hills, Matina'),
+  ('Pearl Snare Drum Color Dirt White #02', 'percussion', 'Snare Drums', 'Pearl', 'Fair', 'Available', 2, 1000.00, 'Shrine Hills, Matina'),
+  ('Lazer Bass Drum #01', 'percussion', 'Bass Drums', 'Lazer', 'Good', 'Available', 2, 500.00, 'Shrine Hills, Matina'),
+  ('E-lance Bass Drum #02', 'percussion', 'Bass Drums', 'E-lance', 'Good', 'Available', 2, 500.00, 'Shrine Hills, Matina'),
+  ('E-lance Bass Drum #03', 'percussion', 'Bass Drums', 'E-lance', 'Good', 'Available', 2, 500.00, 'Shrine Hills, Matina'),
+  ('E-lance Bass Drum #04', 'percussion', 'Bass Drums', 'E-lance', 'Good', 'Available', 2, 500.00, 'Shrine Hills, Matina'),
+  ('Fernando Bass Drum #02', 'percussion', 'Bass Drums', 'Fernando', 'Good', 'Available', 1, 500.00, 'Shrine Hills, Matina'),
+  ('E-lance Percussion Black Tenor Drums', 'percussion', 'Tenor Drums', 'E-lance', 'Good', 'Available', 2, 500.00, 'Shrine Hills, Matina'),
+  ('Century Percussion White Tenor Drums', 'percussion', 'Tenor Drums', 'Century', 'Good', 'Available', 2, 500.00, 'Shrine Hills, Matina'),
+  ('Zildjian Marching Cymbals', 'percussion', 'Cymbals', 'Zildjian', 'Excellent', 'Available', 2, 500.00, 'Shrine Hills, Matina'),
+  ('E-lance Percussion Marching Glockenspiel #01', 'percussion', 'Other Percussion', 'E-lance', 'Good', 'Available', 2, 500.00, 'Shrine Hills, Matina'),
+  ('E-lance Percussion Marching Glockenspiel #02', 'percussion', 'Other Percussion', 'E-lance', 'Good', 'Available', 15, 500.00, 'Storage A'),
+  ('Yamaha Clarinet', 'woodwind', 'Woodwinds', 'Yamaha', 'Good', 'Available', 2, 500.00, 'Shrine Hills, Matina'),
+  ('Fernando Tuba', 'brass', 'Brass', 'Fernando', 'Good', 'Available', 2, 500.00, 'Shrine Hills, Matina');
+
+
 
 CREATE TABLE IF NOT EXISTS borrow_requests (
   request_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -159,12 +200,31 @@ CREATE TABLE IF NOT EXISTS rent_requests (
   FOREIGN KEY (invoice_id) REFERENCES invoices(invoice_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_borrow_requests_user ON borrow_requests(user_id);
-CREATE INDEX IF NOT EXISTS idx_borrow_requests_status ON borrow_requests(status);
-CREATE INDEX IF NOT EXISTS idx_rent_requests_user ON rent_requests(user_id);
-CREATE INDEX IF NOT EXISTS idx_rent_requests_status ON rent_requests(status);
-CREATE INDEX IF NOT EXISTS idx_instruments_status ON instruments(availability_status);
-CREATE INDEX IF NOT EXISTS idx_instruments_category ON instruments(category);
+
+-- Add other indexes using the same helper approach to avoid duplicate-key errors
+DROP PROCEDURE IF EXISTS add_index_if_missing;
+DELIMITER $$
+CREATE PROCEDURE add_index_if_missing(tbl VARCHAR(64), idx VARCHAR(64), stmt TEXT)
+BEGIN
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE table_schema = DATABASE() AND table_name = tbl AND index_name = idx) = 0 THEN
+    SET @s = stmt;
+    PREPARE st FROM @s;
+    EXECUTE st;
+    DEALLOCATE PREPARE st;
+  END IF;
+END$$
+DELIMITER ;
+
+CALL add_index_if_missing('borrow_requests','idx_borrow_requests_user','ALTER TABLE borrow_requests ADD INDEX idx_borrow_requests_user (user_id)');
+CALL add_index_if_missing('borrow_requests','idx_borrow_requests_status','ALTER TABLE borrow_requests ADD INDEX idx_borrow_requests_status (status)');
+CALL add_index_if_missing('rent_requests','idx_rent_requests_user','ALTER TABLE rent_requests ADD INDEX idx_rent_requests_user (user_id)');
+CALL add_index_if_missing('rent_requests','idx_rent_requests_status','ALTER TABLE rent_requests ADD INDEX idx_rent_requests_status (status)');
+CALL add_index_if_missing('instruments','idx_instruments_status','ALTER TABLE instruments ADD INDEX idx_instruments_status (availability_status)');
+CALL add_index_if_missing('instruments','idx_instruments_category','ALTER TABLE instruments ADD INDEX idx_instruments_category (category)');
+
+-- Drop helper if present
+DROP PROCEDURE IF EXISTS add_index_if_missing;
 
 
 CREATE TABLE IF NOT EXISTS bookings (
@@ -189,10 +249,26 @@ CREATE TABLE IF NOT EXISTS bookings (
   FOREIGN KEY (approved_by) REFERENCES users(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id);
-CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
-CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(date);
-CREATE INDEX IF NOT EXISTS idx_bookings_email ON bookings(email);
+-- Booking indexes
+DROP PROCEDURE IF EXISTS add_index_if_missing;
+DELIMITER $$
+CREATE PROCEDURE add_index_if_missing(tbl VARCHAR(64), idx VARCHAR(64), stmt TEXT)
+BEGIN
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE table_schema = DATABASE() AND table_name = tbl AND index_name = idx) = 0 THEN
+    SET @s = stmt;
+    PREPARE st FROM @s;
+    EXECUTE st;
+    DEALLOCATE PREPARE st;
+  END IF;
+END$$
+DELIMITER ;
+
+CALL add_index_if_missing('bookings','idx_bookings_user','ALTER TABLE bookings ADD INDEX idx_bookings_user (user_id)');
+CALL add_index_if_missing('bookings','idx_bookings_status','ALTER TABLE bookings ADD INDEX idx_bookings_status (status)');
+CALL add_index_if_missing('bookings','idx_bookings_date','ALTER TABLE bookings ADD INDEX idx_bookings_date (date)');
+CALL add_index_if_missing('bookings','idx_bookings_email','ALTER TABLE bookings ADD INDEX idx_bookings_email (email)');
+DROP PROCEDURE IF EXISTS add_index_if_missing;
 
 CREATE TABLE IF NOT EXISTS booking_payments (
   payment_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -202,27 +278,6 @@ CREATE TABLE IF NOT EXISTS booking_payments (
   payment_status VARCHAR(32) NOT NULL,
   FOREIGN KEY (booking_id) REFERENCES bookings(booking_id)
 );
-
-
-INSERT INTO instruments (name, category, subcategory, brand, condition_status, availability_status, quantity, location) VALUES
-  ('Yamaha Black Snare Drum #01', 'percussion', 'Snare Drums', 'Yamaha', 'Good', 'Available', 1, 'Shrine Hills, Matina'),
-  ('Yamaha Black Snare Drum #02', 'percussion', 'Snare Drums', 'Yamaha', 'Good', 'Available', 1, 'Shrine Hills, Matina'),
-  ('Yamaha Black Snare Drum (Evans Drum Head) #03', 'percussion', 'Snare Drums', 'Yamaha', 'Excellent', 'Available', 2, 'Shrine Hills, Matina'),
-  ('Pearl Snare Drum Color White #01', 'percussion', 'Snare Drums', 'Pearl', 'Good', 'Available', 1, 'Shrine Hills, Matina'),
-  ('Pearl Snare Drum Color Dirt White #02', 'percussion', 'Snare Drums', 'Pearl', 'Fair', 'Available', 2, 'Shrine Hills, Matina'),
-  ('Lazer Bass Drum #01', 'percussion', 'Bass Drums', 'Lazer', 'Good', 'Available', 2, 'Shrine Hills, Matina'),
-  ('E-lance Bass Drum #02', 'percussion', 'Bass Drums', 'E-lance', 'Good', 'Available', 2, 'Shrine Hills, Matina'),
-  ('E-lance Bass Drum #03', 'percussion', 'Bass Drums', 'E-lance', 'Good', 'Available', 2, 'Shrine Hills, Matina'),
-  ('E-lance Bass Drum #04', 'percussion', 'Bass Drums', 'E-lance', 'Good', 'Available', 2, 'Shrine Hills, Matina'),
-  ('Fernando Bass Drum #002', 'percussion', 'Bass Drums', 'Fernando', 'Good', 'Available', 1, 'Shrine Hills, Matina'),
-  ('E-lance Percussion Black Tenor Drums', 'percussion', 'Tenor Drums', 'E-lance', 'Good', 'Available', 2, 'Shrine Hills, Matina'),
-  ('Century Percussion White Tenor Drums', 'percussion', 'Tenor Drums', 'Century', 'Good', 'Available', 2, 'Shrine Hills, Matina'),
-  ('Zildjian Marching Cymbals', 'percussion', 'Cymbals', 'Zildjian', 'Excellent', 'Available', 2, 'Shrine Hills, Matina'),
-  ('E-lance Percussion Marching Glockenspiel #01', 'percussion', 'Other Percussion', 'E-lance', 'Good', 'Available', 2, 'Shrine Hills, Matina'),
-  ('E-lance Percussion Marching Glockenspiel #02', 'percussion', 'Other Percussion', 'E-lance', 'Good', 'Available', 15, 'Storage A'),
-  ('Yamaha Clarinet', 'woodwind', 'Woodwinds', 'Yamaha', 'Good', 'Available', 2, 'Shrine Hills, Matina'),
-  ('Fernando Tuba', 'brass', 'Brass', 'Fernando', 'Good', 'Available', 2, 'Shrine Hills, Matina')
-ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 
 INSERT INTO invoices (user_id, amount, description, status, approved_by) VALUES
