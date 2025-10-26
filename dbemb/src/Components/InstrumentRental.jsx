@@ -5,7 +5,7 @@ import { FaCalendarAlt, FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaCheckCirc
 
 // Instrument data will be loaded from the backend; no local fallback mapping to force DB-driven options
 
-const InstrumentBooking = () => {
+const InstrumentRental = () => {
   const today = new Date();
   
   // --- Core State ---
@@ -16,8 +16,7 @@ const InstrumentBooking = () => {
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [lastSubmissionType, setLastSubmissionType] = useState('rent');
-  
+
   // For Instrument Rentals
   const [selectedInstrument, setSelectedInstrument] = useState('');
   const [fetchedInstruments, setFetchedInstruments] = useState([]);
@@ -31,6 +30,9 @@ const InstrumentBooking = () => {
 
   // current logged-in user (if any)
   const [user, setUser] = useState(null);
+
+  // Terms acceptance (required for rental requests)
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // --- Calendar State ---
   const [year, setYear] = useState(today.getFullYear());
@@ -96,18 +98,17 @@ const InstrumentBooking = () => {
         if (!cancelled) {
           if (data && Array.isArray(data.instruments)) {
             setFetchedInstruments(data.instruments);
-            // debug: log fetched instruments to help verify price fields
-            try { console.debug('InstrumentBooking: fetched instruments (instruments):', data.instruments); } catch(e) {}
+            try { console.debug('InstrumentRental: fetched instruments (instruments):', data.instruments); } catch(e) {}
           } else if (Array.isArray(data)) {
             setFetchedInstruments(data);
-            try { console.debug('InstrumentBooking: fetched instruments (array):', data); } catch(e) {}
+            try { console.debug('InstrumentRental: fetched instruments (array):', data); } catch(e) {}
           } else {
             setFetchedInstruments([]);
           }
         }
       } catch (err) {
         // fallback: try localStorage dbeInventory
-        console.warn('InstrumentBooking: fetch instruments failed, falling back to localStorage', err);
+        console.warn('InstrumentRental: fetch instruments failed, falling back to localStorage', err);
         try {
           const saved = localStorage.getItem('dbeInventory');
           if (saved) {
@@ -126,7 +127,7 @@ const InstrumentBooking = () => {
               condition_status: it.condition_status ?? it.conditionStatus ?? it.condition ?? null
             }));
             if (!cancelled) setFetchedInstruments(mapped.filter(i => i.availability_status === 'Available'));
-            try { console.debug('InstrumentBooking: loaded instruments from localStorage dbeInventory:', mapped); } catch(e) {}
+            try { console.debug('InstrumentRental: loaded instruments from localStorage dbeInventory:', mapped); } catch(e) {}
           } else {
             if (!cancelled) setFetchedInstruments([]);
           }
@@ -178,23 +179,20 @@ const InstrumentBooking = () => {
       }
     }
   };
-    const [borrowerIdFile, setBorrowerIdFile] = useState(null);
-    const [approvalNotification, setApprovalNotification] = useState(null);
-    const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // --- Form Submission ---
   useEffect(() => {
     const handler = (e) => {
       if (user && (e.detail.userEmail === user.email || e.detail.userId === user.id)) {
-        setApprovalNotification(e.detail.type === 'rent'
-          ? 'Your instrument rental request has been approved! Please proceed with full payment to secure your booking.'
-          : 'Your borrow request has been approved! Please bring your valid ID during meetup.');
+        setApprovalNotification('Your instrument rental request has been approved! Please proceed with full payment to secure your booking.');
         setTimeout(() => setApprovalNotification(null), 10000);
       }
     };
     window.addEventListener('instrumentRequestApproved', handler);
     return () => window.removeEventListener('instrumentRequestApproved', handler);
   }, [user]);
+
+  const [approvalNotification, setApprovalNotification] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -256,14 +254,12 @@ const InstrumentBooking = () => {
             purpose: payload.purpose,
             notes: payload.notes,
             status: 'pending',
-            createdAt: new Date().toISOString(),
-            ...(type === 'borrow' && borrowerIdFile ? { borrowerIdFileName: borrowerIdFile.name } : {})
+            createdAt: new Date().toISOString()
           };
           existing.unshift(request);
           localStorage.setItem(storageKey, JSON.stringify(existing));
           window.dispatchEvent(new Event(`${type}RequestsUpdated`));
 
-          setLastSubmissionType(type === 'borrow' ? 'borrow' : 'rent');
           setShowSuccess(true);
         } catch (err) {
           console.error('Server request failed, falling back to localStorage:', err);
@@ -283,13 +279,11 @@ const InstrumentBooking = () => {
             purpose: purpose ? purpose.trim() : null,
             notes: notes ? notes.trim() : null,
             status: 'pending',
-            createdAt: new Date().toISOString(),
-            ...(type === 'borrow' && borrowerIdFile ? { borrowerIdFileName: borrowerIdFile.name } : {})
+            createdAt: new Date().toISOString()
           };
           existing.unshift(request);
           localStorage.setItem(storageKey, JSON.stringify(existing));
           window.dispatchEvent(new Event(`${type}RequestsUpdated`));
-          setLastSubmissionType(type === 'borrow' ? 'borrow' : 'rent');
           setShowSuccess(true);
         }
       } else {
@@ -309,13 +303,11 @@ const InstrumentBooking = () => {
           purpose: purpose ? purpose.trim() : null,
           notes: notes ? notes.trim() : null,
           status: 'pending',
-          createdAt: new Date().toISOString(),
-          ...(type === 'borrow' && borrowerIdFile ? { borrowerIdFileName: borrowerIdFile.name } : {})
+          createdAt: new Date().toISOString()
         };
         existing.unshift(request);
         localStorage.setItem(storageKey, JSON.stringify(existing));
         window.dispatchEvent(new Event(`${type}RequestsUpdated`));
-        setLastSubmissionType(type === 'borrow' ? 'borrow' : 'rent');
         setShowSuccess(true);
       }
 
@@ -327,7 +319,6 @@ const InstrumentBooking = () => {
       setNotes('');
       setLocation('');
       setEstimatedValue(0);
-      setBorrowerIdFile(null);
       setAcceptedTerms(false);
       setTimeout(() => setShowSuccess(false), 5000);
     } catch (error) {
@@ -340,10 +331,9 @@ const InstrumentBooking = () => {
 
   const isFormValid = useMemo(() => {
     const base = !!selectedInstrument && !!rentalStartDate && !!rentalEndDate && !!purpose && !!name && !!email && !!location;
-    const isBorrow = user && user.role && user.role !== 'user';
-    // For rentals (non-members) require terms acceptance
-    return isBorrow ? base : (base && acceptedTerms);
-  }, [selectedInstrument, rentalStartDate, rentalEndDate, purpose, name, email, location, acceptedTerms, user]);
+    // For rentals require terms acceptance
+    return base && acceptedTerms;
+  }, [selectedInstrument, rentalStartDate, rentalEndDate, purpose, name, email, location, acceptedTerms]);
 
   const minDate = today.toISOString().split('T')[0];
 
@@ -617,23 +607,6 @@ const InstrumentBooking = () => {
       borderRadius: '12px',
       fontSize: '0.875rem',
       color: '#475569',
-    },
-    memberBorrowBox: {
-      marginTop: '1rem',
-      padding: '1rem',
-      border: '1px dashed #c7e6d8',
-      borderRadius: '12px',
-      background: '#f8fdf9'
-    },
-    memberBorrowTitle: {
-      fontWeight: '700',
-      color: '#065f46',
-      marginBottom: '0.5rem'
-    },
-    memberBorrowText: {
-      marginBottom: '0.75rem',
-      color: '#065f46',
-      fontSize: '0.875rem'
     }
   };
 
@@ -686,8 +659,7 @@ const InstrumentBooking = () => {
       {showSuccess && (
         <div style={styles.successMessage}>
           <FaCheckCircle />
-          {lastSubmissionType === 'rent' && 'Instrument rental request submitted for approval. We will contact you soon.'}
-          {lastSubmissionType === 'borrow' && 'Borrow request submitted for approval. We will contact you soon.'}
+          {'Instrument rental request submitted for approval. We will contact you soon.'}
         </div>
       )}
 
@@ -812,16 +784,6 @@ const InstrumentBooking = () => {
                 <div style={styles.priceInfo}>
                   <FaInfoCircle />
                   <span>Duration: <strong>{rentalDays} day{rentalDays > 1 && 's'}</strong></span>
-                </div>
-              )}
-
-              {/* Member-only borrow form fields */}
-              {user && user.role && user.role !== 'user' && (
-                <div style={styles.memberBorrowBox}>
-                  <div style={styles.memberBorrowTitle}>Member Borrow Request</div>
-                  <div style={styles.memberBorrowText}>
-                    As a member, you can borrow select instruments. Please confirm the borrow details above.
-                  </div>
                 </div>
               )}
 
@@ -1039,8 +1001,13 @@ const InstrumentBooking = () => {
           </div>
         </div>
       </div>
+      {approvalNotification && (
+        <div style={{ position: 'fixed', bottom: 20, right: 20, background: '#1e3a8a', color: '#fff', padding: 12, borderRadius: 8, zIndex: 2000 }}>
+          {approvalNotification}
+        </div>
+      )}
     </div>
   );
 };
 
-export default InstrumentBooking;
+export default InstrumentRental;

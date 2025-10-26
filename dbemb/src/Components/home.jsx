@@ -2852,7 +2852,7 @@ const servicesHeaderRightStyle = {
 
                           
 
-                          <a href="#instruments" onClick={(e) => { e.preventDefault(); setShowUserMenu(false); window.open('/#/instrument-booking', '_blank'); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}
+                          <a href="#instruments" onClick={(e) => { e.preventDefault(); setShowUserMenu(false); const url = (user && user.role === 'user') ? '/#/instrument-booking' : '/#/instrument-borrowing'; window.open(url, '_blank'); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}
                             onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
                             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                           >

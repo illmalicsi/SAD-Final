@@ -6,7 +6,7 @@ import reportWebVitals from './reportWebVitals';
 
 // Simple hash routing for /#/booking and /#/instrument-booking
 const BookStandalone = React.lazy(() => import('./Components/Booking'));
-const InstrumentBookStandalone = React.lazy(() => import('./Components/InstrumentBooking'));
+const InstrumentBookStandalone = React.lazy(() => import('./Components/InstrumentRental'));
 const InstrumentBorrowStandalone = React.lazy(() => import('./Components/InstrumentBorrowing'));
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
