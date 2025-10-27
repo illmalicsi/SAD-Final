@@ -10,16 +10,72 @@ const { pool } = require('../config/database');
 
 // Generate a new invoice
 async function generateInvoice(userId, amount, description) {
+  // Insert minimal row first, then set a human-friendly invoice_number using the insertId
   const [result] = await pool.execute(
-    `INSERT INTO invoices (user_id, amount, description) VALUES (?, ?, ?)`,
+    `INSERT INTO invoices (user_id, amount, description, status, payment_status) VALUES (?, ?, ?, 'pending', 'unpaid')`,
     [userId, amount, description]
   );
   const invoiceId = result.insertId;
+
+  // Generate invoice number (e.g., INV-20251027-000123)
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const invoiceNumber = `INV-${y}${m}${d}-${String(invoiceId).padStart(6, '0')}`;
+
+  await pool.execute(
+    `UPDATE invoices SET invoice_number = ?, issue_date = NOW() WHERE invoice_id = ?`,
+    [invoiceNumber, invoiceId]
+  );
+
   const [rows] = await pool.execute(
     `SELECT * FROM invoices WHERE invoice_id = ?`,
     [invoiceId]
   );
   return rows[0];
+}
+
+// Record an expense
+async function addExpense(amount, category, description, incurredBy = null) {
+  const [result] = await pool.execute(
+    `INSERT INTO expenses (amount, category, description, incurred_by) VALUES (?, ?, ?, ?)`,
+    [amount, category, description, incurredBy]
+  );
+  const expenseId = result.insertId;
+  const [rows] = await pool.execute(`SELECT * FROM expenses WHERE expense_id = ?`, [expenseId]);
+  return rows[0];
+}
+
+// Get expenses (admin view) with optional date range
+async function getExpenses(fromDate = null, toDate = null) {
+  if (fromDate && toDate) {
+    const [rows] = await pool.execute(`SELECT * FROM expenses WHERE DATE(incurred_at) BETWEEN ? AND ? ORDER BY incurred_at DESC`, [fromDate, toDate]);
+    return rows;
+  }
+  const [rows] = await pool.execute(`SELECT * FROM expenses ORDER BY incurred_at DESC`);
+  return rows;
+}
+
+// Generate a simple financial report (income, expenses, profit) for a date range
+async function getFinancialReport(fromDate = null, toDate = null) {
+  // Income: sum of invoice amounts (approved/paid) within date range
+  let incomeQuery = `SELECT COALESCE(SUM(amount),0) AS total_income FROM invoices WHERE status IN ('approved','paid')`;
+  let expenseQuery = `SELECT COALESCE(SUM(amount),0) AS total_expenses FROM expenses`;
+  const params = [];
+  const params2 = [];
+  if (fromDate && toDate) {
+    incomeQuery += ' AND DATE(issue_date) BETWEEN ? AND ?';
+    expenseQuery += ' WHERE DATE(incurred_at) BETWEEN ? AND ?';
+    params.push(fromDate, toDate);
+    params2.push(fromDate, toDate);
+  }
+  const [[inc]] = await pool.execute(incomeQuery, params);
+  const [[exp]] = await pool.execute(expenseQuery, params2);
+  const income = Number(inc?.total_income || 0);
+  const expenses = Number(exp?.total_expenses || 0);
+  const profit = income - expenses;
+  return { income, expenses, profit, fromDate, toDate };
 }
 
 // Approve an existing invoice

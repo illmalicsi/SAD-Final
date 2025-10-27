@@ -78,12 +78,26 @@ CREATE TABLE IF NOT EXISTS invoices (
   user_id INT NOT NULL,
   amount DECIMAL(10,2) NOT NULL,
   description VARCHAR(255),
+  invoice_number VARCHAR(64) UNIQUE NULL,
+  issue_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  payment_status ENUM('unpaid','partial','paid') DEFAULT 'unpaid',
   status ENUM('pending','approved','paid','rejected') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   approved_at TIMESTAMP NULL,
   approved_by INT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (approved_by) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS expenses (
+  expense_id INT PRIMARY KEY AUTO_INCREMENT,
+  amount DECIMAL(12,2) NOT NULL,
+  category VARCHAR(100) NOT NULL,
+  description TEXT,
+  incurred_by INT NULL,
+  incurred_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (incurred_by) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS payments (
@@ -111,10 +125,27 @@ CREATE TABLE IF NOT EXISTS transactions (
   FOREIGN KEY (invoice_id) REFERENCES invoices(invoice_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_invoices_user ON invoices(user_id);
-CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
-CREATE INDEX IF NOT EXISTS idx_payments_invoice ON payments(invoice_id);
-CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
+-- Create indexes using helper procedure for compatibility with older MySQL
+DROP PROCEDURE IF EXISTS add_index_if_missing;
+DELIMITER $$
+CREATE PROCEDURE add_index_if_missing(tbl VARCHAR(64), idx VARCHAR(64), stmt TEXT)
+BEGIN
+  IF (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE table_schema = DATABASE() AND table_name = tbl AND index_name = idx) = 0 THEN
+    SET @s = stmt;
+    PREPARE st FROM @s;
+    EXECUTE st;
+    DEALLOCATE PREPARE st;
+  END IF;
+END$$
+DELIMITER ;
+
+CALL add_index_if_missing('invoices','idx_invoices_user','ALTER TABLE invoices ADD INDEX idx_invoices_user (user_id)');
+CALL add_index_if_missing('invoices','idx_invoices_status','ALTER TABLE invoices ADD INDEX idx_invoices_status (status)');
+CALL add_index_if_missing('payments','idx_payments_invoice','ALTER TABLE payments ADD INDEX idx_payments_invoice (invoice_id)');
+CALL add_index_if_missing('transactions','idx_transactions_user','ALTER TABLE transactions ADD INDEX idx_transactions_user (user_id)');
+
+DROP PROCEDURE IF EXISTS add_index_if_missing;
 
 DROP TABLE IF EXISTS instruments;
 CREATE TABLE instruments (

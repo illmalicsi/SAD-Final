@@ -43,17 +43,10 @@ router.get('/my-invoices', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/billing/invoices - Generate a new invoice (admin/treasurer)
-router.post('/invoices', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const { userId, amount, description } = req.body;
-    const invoice = await billingService.generateInvoice(userId, amount, description);
-    res.json({ success: true, invoice });
-  } catch (err) {
-    console.error('Error generating invoice:', err);
-    res.status(500).json({ success: false, message: 'Failed to generate invoice' });
-  }
-});
+// NOTE: Manual invoice creation endpoint has been disabled to ensure invoices
+// are only created automatically via booking approval flows. If you need to
+// re-enable manual invoice creation for administrative workflows, add a
+// controlled route here and ensure audit logging/authorization is present.
 
 // PUT /api/billing/invoices/:invoiceId/approve - Approve an invoice (admin/treasurer)
 router.put('/invoices/:invoiceId/approve', authenticateToken, requireAdmin, async (req, res) => {
@@ -138,6 +131,43 @@ router.get('/invoices', authenticateToken, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('Error fetching invoices:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch invoices' });
+  }
+});
+
+// POST /api/billing/expenses - Create an expense (admin)
+router.post('/expenses', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { amount, category, description } = req.body;
+    if (!amount || !category) return res.status(400).json({ success: false, message: 'amount and category required' });
+    const expense = await billingService.addExpense(amount, category, description, req.user.id);
+    res.json({ success: true, expense });
+  } catch (err) {
+    console.error('Error creating expense:', err);
+    res.status(500).json({ success: false, message: 'Failed to create expense' });
+  }
+});
+
+// GET /api/billing/expenses - List expenses (admin)
+router.get('/expenses', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const expenses = await billingService.getExpenses(from || null, to || null);
+    res.json({ success: true, expenses });
+  } catch (err) {
+    console.error('Error fetching expenses:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch expenses' });
+  }
+});
+
+// GET /api/billing/reports/financial - Get financial report (admin)
+router.get('/reports/financial', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const report = await billingService.getFinancialReport(from || null, to || null);
+    res.json({ success: true, report });
+  } catch (err) {
+    console.error('Error generating financial report:', err);
+    res.status(500).json({ success: false, message: 'Failed to generate report' });
   }
 });
 

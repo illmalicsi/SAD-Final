@@ -128,7 +128,7 @@ const Invoice = () => {
                   <tr>
                     <th>User</th>
                     <th>Description</th>
-                    <th>Invoice #</th>
+                    <th>Invoice # / Date</th>
                     <th className="amount">Amount</th>
                     <th>Status</th>
                     <th className="actions">Actions</th>
@@ -152,10 +152,16 @@ const Invoice = () => {
                           })()}
                         </td>
                         <td style={{ color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 520 }}>{inv.description || '-'}</td>
-                        <td style={{ fontWeight: 700, color: '#0f172a' }}>#{inv.invoice_id}</td>
+                        <td style={{ fontWeight: 700, color: '#0f172a' }}>
+                          <div>#{inv.invoice_number || inv.invoice_id}</div>
+                          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{inv.issue_date ? new Date(inv.issue_date).toLocaleDateString() : (inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '-')}</div>
+                        </td>
                         <td className="amount">₱{parseFloat(inv.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                         <td>
-                          <span className="status-badge" style={badgeStyle}>{(inv.status || '').charAt(0).toUpperCase() + (inv.status || '').slice(1)}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            <span className="status-badge" style={badgeStyle}>{(inv.status || '').charAt(0).toUpperCase() + (inv.status || '').slice(1)}</span>
+                            <div style={{ fontSize: 12, color: '#6b7280' }}>Payment: {(inv.payment_status || 'unpaid').charAt(0).toUpperCase() + (inv.payment_status || 'unpaid').slice(1)}</div>
+                          </div>
                         </td>
                         <td className="actions">
                           <div className="actions-cell">
@@ -198,11 +204,12 @@ const Invoice = () => {
               <div style={{ fontSize: 20, fontWeight: 800 }}>Invoice</div>
               <div style={{ marginTop: 6, display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 14, fontWeight: 700 }}>#{activeInvoice.invoice_id}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>{new Date(activeInvoice.created_at).toLocaleDateString()}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>#{activeInvoice.invoice_number || activeInvoice.invoice_id}</div>
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>{activeInvoice.issue_date ? new Date(activeInvoice.issue_date).toLocaleDateString() : (activeInvoice.created_at ? new Date(activeInvoice.created_at).toLocaleDateString() : '-')}</div>
                 </div>
-                <div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                   <span style={getBadgeStyle(activeInvoice.status)}>{(activeInvoice.status || '').charAt(0).toUpperCase() + (activeInvoice.status || '').slice(1)}</span>
+                  <div style={{ fontSize: 12, color: '#6b7280' }}>Payment: {(activeInvoice.payment_status || 'unpaid').charAt(0).toUpperCase() + (activeInvoice.payment_status || 'unpaid').slice(1)}</div>
                 </div>
               </div>
             </div>
