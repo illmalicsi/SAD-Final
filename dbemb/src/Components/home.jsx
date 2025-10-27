@@ -274,18 +274,18 @@ const Home = () => {
     position: 'relative'
   };
 
-const aboutHeaderStyle = {
-  background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  fontFamily: 'Marcellus, serif',
-  fontWeight: 700,
-  fontSize: '64px',
-  lineHeight: 1.0,
-  margin: '0 0 16px 0',
-  letterSpacing: '-0.02em',
-  textAlign: 'left'
-};
+  const aboutHeaderStyle = {
+    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    fontFamily: 'Marcellus, serif',
+    fontWeight: 700,
+    fontSize: '64px',
+    lineHeight: 1.0,
+    margin: '0 0 16px 0',
+    letterSpacing: '-0.02em',
+    textAlign: 'left'
+  };
 
   const aboutSubtextStyle = {
     color: '#6b7280',
@@ -298,13 +298,13 @@ const aboutHeaderStyle = {
   };
 
   // About side-by-side layout
-const aboutWrapStyle = {
-  display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)',
-  gap: '24px',
-  alignItems: 'stretch',
-  marginBottom: '28px'
-};
+  const aboutWrapStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)',
+    gap: '24px',
+    alignItems: 'stretch',
+    marginBottom: '28px'
+  };
 
   const aboutTextCardStyle = {
     background: 'rgba(255, 255, 255, 0.7)',
@@ -325,24 +325,24 @@ const aboutWrapStyle = {
   };
 
   // Carousel styles
-const carouselWrapperStyle = {
-  position: 'relative',
-  width: '100%',
-  maxWidth: '980px',
-  margin: '0 auto 32px',
-  borderRadius: '24px',
-  overflow: 'hidden',
-  border: '1px solid rgba(255, 255, 255, 0.3)',
-  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
-  height: '100%'
-};
+  const carouselWrapperStyle = {
+    position: 'relative',
+    width: '100%',
+    maxWidth: '980px',
+    margin: '0 auto 32px',
+    borderRadius: '24px',
+    overflow: 'hidden',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
+    height: '100%'
+  };
 
-const carouselImageStyle = {
-  height: '100%',
-  minHeight: '400px',
-  backgroundSize: 'cover',
-  backgroundPosition: 'center'
-};
+  const carouselImageStyle = {
+    height: '100%',
+    minHeight: '400px',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center'
+  };
 
   const carouselControlsStyle = {
     position: 'absolute',
@@ -413,27 +413,27 @@ const carouselImageStyle = {
   // Contact section styles
 
   const contactHeaderStyle = {
-  background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  fontFamily: 'Marcellus, serif',
-  fontWeight: 700,
-  fontSize: '64px',
-  lineHeight: 1.0,
-  margin: '0 0 16px 0',
-  letterSpacing: '-0.02em',
-  textAlign: 'left'
-};
+    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    fontFamily: 'Marcellus, serif',
+    fontWeight: 700,
+    fontSize: '64px',
+    lineHeight: 1.0,
+    margin: '0 0 16px 0',
+    letterSpacing: '-0.02em',
+    textAlign: 'left'
+  };
 
-const contactSubTextStyle = {
-  color: '#6b7280',
-  fontSize: '16px',
-  fontWeight: '500',
-  maxWidth: '540px',
-  textAlign: 'center',
-  margin: '0 auto',
-  lineHeight: '1.6'
-};
+  const contactSubTextStyle = {
+    color: '#6b7280',
+    fontSize: '16px',
+    fontWeight: '500',
+    maxWidth: '540px',
+    textAlign: 'center',
+    margin: '0 auto',
+    lineHeight: '1.6'
+  };
 
   const contactGridStyle = {
     display: 'grid',
@@ -858,18 +858,18 @@ const contactSubTextStyle = {
     margin: '0 auto'
   };
 
-const sectionEyebrowStyle = {
-  background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  backgroundClip: 'text',
-  textTransform: 'uppercase',
-  letterSpacing: '0.25em',
-  fontSize: '15px',
-  marginBottom: '16px',
-  textAlign: 'left',
-  fontWeight: 700,
-};
+  const sectionEyebrowStyle = {
+    background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    textTransform: 'uppercase',
+    letterSpacing: '0.25em',
+    fontSize: '15px',
+    marginBottom: '16px',
+    textAlign: 'left',
+    fontWeight: 700,
+  };
 
   const servicesHeaderWrapStyle = {
     display: 'grid',
@@ -904,13 +904,13 @@ const sectionEyebrowStyle = {
     textAlign: 'left'
   };
 
-const servicesHeaderRightStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '10px',
-  justifySelf: 'end',
-  alignItems: 'flex-end'
-};
+  const servicesHeaderRightStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    justifySelf: 'end',
+    alignItems: 'flex-end'
+  };
 
   const servicesHeaderActionsStyle = {
     display: 'flex',
@@ -1364,7 +1364,7 @@ const servicesHeaderRightStyle = {
     // Check if user was previously on dashboard
     const savedView = localStorage.getItem('davaoBlueEaglesCurrentView');
     const savedUser = localStorage.getItem('davaoBlueEaglesUser');
-    
+
     // Only restore dashboard view if user is logged in and is admin
     if (savedView === 'dashboard' && savedUser) {
       try {
@@ -1376,7 +1376,7 @@ const servicesHeaderRightStyle = {
         // If there's an error parsing, fallback to home
       }
     }
-    
+
     return 'home';
   });
   const [loginError, setLoginError] = useState('');
@@ -1423,7 +1423,7 @@ const servicesHeaderRightStyle = {
   const [serviceCols, setServiceCols] = useState(5);
   const [serviceCardH, setServiceCardH] = useState(240);
   const aboutImages = [bandGigs, paradeEvents, musicWorkshop, musicArrangement, instrumentRentals];
-  
+
   // Date formatting utility
   const formatDate = (dateValue) => {
     if (!dateValue) return '';
@@ -1435,10 +1435,10 @@ const servicesHeaderRightStyle = {
       }
       const dateObj = new Date(dateStr + 'T00:00:00'); // Add time to avoid timezone issues
       if (!isNaN(dateObj.getTime())) {
-        return dateObj.toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
+        return dateObj.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
         });
       }
       return dateValue;
@@ -1447,7 +1447,7 @@ const servicesHeaderRightStyle = {
       return dateValue;
     }
   };
-  
+
   // Instrument Request States
   const [showInstrumentRequest, setShowInstrumentRequest] = useState(false);
   const [availableInstruments, setAvailableInstruments] = useState([]);
@@ -1549,9 +1549,9 @@ const servicesHeaderRightStyle = {
         setBookings([]);
       }
     };
-    
+
     loadBookingsFromAPI();
-    
+
     // If opened in a new tab with a requested service, auto-open booking
     const svc = localStorage.getItem('dbeOpenBookingForService');
     if (svc) {
@@ -1626,7 +1626,7 @@ const servicesHeaderRightStyle = {
     if (hash) {
       setActiveHash(hash);
       // navigate
-      try { window.location.hash = hash; } catch (err) {}
+      try { window.location.hash = hash; } catch (err) { }
     }
     if (isMobile) setMobileOpen(false);
   };
@@ -1744,7 +1744,7 @@ const servicesHeaderRightStyle = {
         'Custom musical arrangements for parades, field shows, and ceremonial pieces. We adapt to your theme and instrumentation to deliver a polished performance.'
     },
     {
-     
+
       title: 'Parade Events',
       img: paradeEvents,
       description:
@@ -1793,7 +1793,7 @@ const servicesHeaderRightStyle = {
   // Save current view to localStorage to persist dashboard state on refresh
   useEffect(() => {
     localStorage.setItem('davaoBlueEaglesCurrentView', currentView);
-    
+
     // Update URL hash when view changes to maintain consistency
     if (currentView === 'dashboard') {
       window.history.replaceState(null, null, '#dashboard');
@@ -1807,11 +1807,11 @@ const servicesHeaderRightStyle = {
     if (showPaymentModal && selectedPaymentNotification?.data) {
       console.log('🟡 PAYMENT MODAL OPENED - Initializing payment form');
       console.log('Selected notification data:', selectedPaymentNotification.data);
-      
+
       // Reset success state to show form, not success screen
       setPaymentSuccess(false);
       setPaymentProcessing(false);
-      
+
       const totalAmount = selectedPaymentNotification.data.amount || 0;
       setPaymentForm({
         cardholderName: '',
@@ -1849,7 +1849,7 @@ const servicesHeaderRightStyle = {
     };
 
     window.addEventListener('notificationsUpdated', handleNotificationsUpdate);
-    
+
     return () => {
       window.removeEventListener('notificationsUpdated', handleNotificationsUpdate);
     };
@@ -1863,7 +1863,7 @@ const servicesHeaderRightStyle = {
 
   const unreadCount = () => notifications.filter(n => !n.read).length;
 
-  
+
 
   const markAllRead = () => {
     if (user && user.email) {
@@ -2023,16 +2023,16 @@ const servicesHeaderRightStyle = {
   const renderNotificationMessage = (notification) => {
     const message = notification.message || '';
     const hasPaymentLink = message.includes('<payment-link>') && !(notification.data && notification.data.paid);
-    
+
     console.log('Rendering notification:', { message, hasPaymentLink, notification });
-    
+
     if (!hasPaymentLink) {
       return <div style={{ color: '#4b5563' }}>{message}</div>;
     }
-    
+
     // Split message by payment link tags
     const parts = message.split(/<payment-link>|<\/payment-link>/);
-    
+
     return (
       <div style={{ color: '#4b5563' }}>
         {parts.map((part, index) => {
@@ -2092,7 +2092,7 @@ const servicesHeaderRightStyle = {
 
   const handleLogin = (userData) => {
     console.log('Home - handleLogin called with:', userData);
-    
+
     // New authentication flow: userData is already an authenticated user object
     // (not raw email/password like the old flow)
     if (userData && userData.id) {
@@ -2105,7 +2105,7 @@ const servicesHeaderRightStyle = {
         isLoggedIn: true,
         isBlocked: false
       };
-      
+
       console.log('Home - Setting authenticated user:', authenticatedUser);
       setUser(authenticatedUser);
       localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(authenticatedUser));
@@ -2125,7 +2125,7 @@ const servicesHeaderRightStyle = {
       }
       return;
     }
-    
+
     // Fallback: if for some reason we get old-style credentials, handle them
     console.warn('Home - Received unexpected userData format:', userData);
     setLoginError('Authentication failed. Please try again.');
@@ -2249,7 +2249,7 @@ const servicesHeaderRightStyle = {
   const handleSubmitInstrumentRequest = (e) => {
     e.preventDefault();
     const { instrumentType, instrumentName, quantity, startDate, endDate, purpose } = instrumentRequestForm;
-    
+
     if (!instrumentType || !instrumentName || !quantity || !startDate || !endDate || !purpose) {
       setToast({ type: 'error', message: 'Please fill in all required fields' });
       return;
@@ -2261,7 +2261,7 @@ const servicesHeaderRightStyle = {
     }
 
     const requestType = user.role === 'user' ? 'rent' : 'borrow';
-    
+
     const newRequest = {
       id: Date.now(),
       userId: user.id,
@@ -2288,9 +2288,9 @@ const servicesHeaderRightStyle = {
     // Dispatch event for dashboard to update
     window.dispatchEvent(new Event(`${requestType}RequestsUpdated`));
 
-    setToast({ 
-      type: 'success', 
-      message: `Instrument ${requestType} request submitted successfully!` 
+    setToast({
+      type: 'success',
+      message: `Instrument ${requestType} request submitted successfully!`
     });
     setShowInstrumentRequest(false);
   };
@@ -2387,7 +2387,7 @@ const servicesHeaderRightStyle = {
                         delete updated.avatar;
                         localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(updated));
                         const users = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
-                        const updatedUsers = users.map(u => u.id === updated.id ? (function(){ const o = { ...u }; delete o.avatar; return o; })() : u);
+                        const updatedUsers = users.map(u => u.id === updated.id ? (function () { const o = { ...u }; delete o.avatar; return o; })() : u);
                         if (users.length) localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
                         setUser(updated);
                         window.dispatchEvent(new CustomEvent('davaoUserUpdated', { detail: updated }));
@@ -2437,7 +2437,7 @@ const servicesHeaderRightStyle = {
             ) : notifications.slice().reverse().map((n, idx) => {
               const origIndex = notifications.length - 1 - idx;
               const menuOpen = openNotificationMenu === n.id;
-              
+
               return (
                 <div key={n.id || idx} style={{ padding: 16, borderRadius: 12, border: '1px solid rgba(11,59,120,0.06)', background: n.read ? '#ffffff' : '#eef6ff', position: 'relative' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
@@ -2447,14 +2447,14 @@ const servicesHeaderRightStyle = {
                       <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 8 }}>{new Date(n.createdAt).toLocaleString()}</div>
                     </div>
                     <div style={{ position: 'relative' }}>
-                      <button 
+                      <button
                         onClick={() => setOpenNotificationMenu(menuOpen ? null : n.id)}
-                        style={{ 
-                          padding: '8px', 
-                          borderRadius: 8, 
-                          background: 'transparent', 
-                          border: 'none', 
-                          color: '#64748b', 
+                        style={{
+                          padding: '8px',
+                          borderRadius: 8,
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#64748b',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -2463,48 +2463,48 @@ const servicesHeaderRightStyle = {
                       >
                         <BsThreeDotsVertical size={18} />
                       </button>
-                      
+
                       {/* Dropdown Menu */}
                       {menuOpen && (
                         <>
                           {/* Backdrop to close menu when clicking outside */}
-                          <div 
+                          <div
                             onClick={() => setOpenNotificationMenu(null)}
-                            style={{ 
-                              position: 'fixed', 
-                              top: 0, 
-                              left: 0, 
-                              right: 0, 
-                              bottom: 0, 
-                              zIndex: 999 
+                            style={{
+                              position: 'fixed',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              zIndex: 999
                             }}
                           />
-                          
+
                           {/* Menu */}
-                          <div style={{ 
-                            position: 'absolute', 
-                            top: '100%', 
-                            right: 0, 
+                          <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            right: 0,
                             marginTop: 4,
-                            background: 'white', 
-                            borderRadius: '8px', 
+                            background: 'white',
+                            borderRadius: '8px',
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                             zIndex: 1000,
                             minWidth: 140,
                             overflow: 'hidden'
                           }}>
-                            <button 
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleNotificationRead(origIndex);
                                 setOpenNotificationMenu(null);
                               }}
-                              style={{ 
+                              style={{
                                 width: '100%',
-                                padding: '10px 16px', 
-                                background: 'transparent', 
-                                border: 'none', 
-                                color: '#0b62d6', 
+                                padding: '10px 16px',
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#0b62d6',
                                 fontWeight: 600,
                                 fontSize: 14,
                                 cursor: 'pointer',
@@ -2520,18 +2520,18 @@ const servicesHeaderRightStyle = {
                               {n.read ? 'Mark as Unread' : 'Mark as Read'}
                             </button>
                             <div style={{ height: 1, background: '#e2e8f0' }} />
-                            <button 
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteNotification(origIndex);
                                 setOpenNotificationMenu(null);
                               }}
-                              style={{ 
+                              style={{
                                 width: '100%',
-                                padding: '10px 16px', 
-                                background: 'transparent', 
-                                border: 'none', 
-                                color: '#dc2626', 
+                                padding: '10px 16px',
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#dc2626',
                                 fontWeight: 600,
                                 fontSize: 14,
                                 cursor: 'pointer',
@@ -2586,8 +2586,8 @@ const servicesHeaderRightStyle = {
             {/* Center: links (hidden on mobile) */}
             <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
               <ul style={{ ...ulStyle, display: isMobile ? 'none' : 'flex' }} role="menubar">
-                {['#home','#services','#about','#contact'].map((hash, i) => {
-                  const labels = ['Home','Services','About Us','Contact'];
+                {['#home', '#services', '#about', '#contact'].map((hash, i) => {
+                  const labels = ['Home', 'Services', 'About Us', 'Contact'];
                   return (
                     <li key={hash} style={{ listStyle: 'none' }}>
                       <a
@@ -2619,7 +2619,7 @@ const servicesHeaderRightStyle = {
                 {mobileOpen ? (
                   <span style={{ fontSize: 22 }} aria-hidden>×</span>
                 ) : (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 12h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 12h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 18h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 )}
               </button>
 
@@ -2627,7 +2627,7 @@ const servicesHeaderRightStyle = {
                 {/* Notifications */}
                 <div style={{ position: 'relative' }}>
                   <button aria-label="Notifications" data-notif-toggle="true" onClick={(e) => { e.stopPropagation(); setShowNotifications(!showNotifications); setShowUserMenu(false); }} style={{ background: 'transparent', border: 'none', color: 'rgba(240,248,255,0.95)', cursor: 'pointer', padding: '8px', position: 'relative' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 1 0-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h11z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 1 0-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h11z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     {unreadCount() > 0 && (
                       <span style={{ position: 'absolute', top: 2, right: 2, background: '#ef4444', color: 'white', fontSize: 11, fontWeight: 800, padding: '2px 6px', borderRadius: 999 }}>{unreadCount()}</span>
                     )}
@@ -2639,8 +2639,8 @@ const servicesHeaderRightStyle = {
                         <div style={{ fontWeight: 800, color: '#06264a' }}>Notifications</div>
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button onClick={markAllRead} style={{ background: 'transparent', border: 'none', color: '#0b62d6', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}>Mark all</button>
-                          <button 
-                            onClick={() => setShowOnlyUnread(!showOnlyUnread)} 
+                          <button
+                            onClick={() => setShowOnlyUnread(!showOnlyUnread)}
                             style={{ background: 'transparent', border: 'none', color: showOnlyUnread ? '#10b981' : '#6b7280', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}
                           >
                             {showOnlyUnread ? 'Show All' : 'Unread'}
@@ -2650,20 +2650,20 @@ const servicesHeaderRightStyle = {
 
                       <div style={{ maxHeight: '260px', overflowY: 'auto', display: 'grid', gap: 8 }}>
                         {(() => {
-                          const filteredNotifications = showOnlyUnread 
-                            ? notifications.filter(n => !n.read) 
+                          const filteredNotifications = showOnlyUnread
+                            ? notifications.filter(n => !n.read)
                             : notifications;
-                          
+
                           if (filteredNotifications.length === 0) {
                             return <div style={{ color: '#6b7280' }}>
                               {showOnlyUnread ? 'No unread notifications' : 'No notifications'}
                             </div>;
                           }
-                          
+
                           return filteredNotifications.slice().reverse().map((n, idx) => {
                             const origIndex = notifications.indexOf(n);
                             const menuOpen = openNotificationMenu === n.id;
-                            
+
                             return (
                               <div key={n.id || idx} style={{ padding: '8px', borderRadius: 8, background: n.read ? '#f8fafc' : '#eef6ff', border: '1px solid rgba(11,59,120,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, position: 'relative' }}>
                                 <div onClick={() => handleOpenNotification(origIndex)} style={{ flex: 1, cursor: 'pointer' }}>
@@ -2672,16 +2672,16 @@ const servicesHeaderRightStyle = {
                                   <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>{new Date(n.createdAt).toLocaleString()}</div>
                                 </div>
                                 <div style={{ position: 'relative' }}>
-                                  <button 
-                                    onClick={(e) => { 
-                                      e.stopPropagation(); 
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       setOpenNotificationMenu(menuOpen ? null : n.id);
-                                    }} 
-                                    style={{ 
-                                      padding: '4px', 
-                                      background: 'transparent', 
-                                      border: 'none', 
-                                      color: '#64748b', 
+                                    }}
+                                    style={{
+                                      padding: '4px',
+                                      background: 'transparent',
+                                      border: 'none',
+                                      color: '#64748b',
                                       cursor: 'pointer',
                                       display: 'flex',
                                       alignItems: 'center',
@@ -2690,48 +2690,48 @@ const servicesHeaderRightStyle = {
                                   >
                                     <BsThreeDotsVertical size={16} />
                                   </button>
-                                  
+
                                   {/* Dropdown Menu */}
                                   {menuOpen && (
                                     <>
                                       {/* Backdrop */}
-                                      <div 
+                                      <div
                                         onClick={() => setOpenNotificationMenu(null)}
-                                        style={{ 
-                                          position: 'fixed', 
-                                          top: 0, 
-                                          left: 0, 
-                                          right: 0, 
-                                          bottom: 0, 
-                                          zIndex: 1199 
+                                        style={{
+                                          position: 'fixed',
+                                          top: 0,
+                                          left: 0,
+                                          right: 0,
+                                          bottom: 0,
+                                          zIndex: 1199
                                         }}
                                       />
-                                      
+
                                       {/* Menu */}
-                                      <div style={{ 
-                                        position: 'absolute', 
-                                        top: '100%', 
-                                        right: 0, 
+                                      <div style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        right: 0,
                                         marginTop: 4,
-                                        background: 'white', 
-                                        borderRadius: '8px', 
+                                        background: 'white',
+                                        borderRadius: '8px',
                                         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                                         zIndex: 1201,
                                         minWidth: 140,
                                         overflow: 'hidden'
                                       }}>
-                                        <button 
+                                        <button
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             toggleNotificationRead(origIndex);
                                             setOpenNotificationMenu(null);
                                           }}
-                                          style={{ 
+                                          style={{
                                             width: '100%',
-                                            padding: '10px 16px', 
-                                            background: 'transparent', 
-                                            border: 'none', 
-                                            color: '#0b62d6', 
+                                            padding: '10px 16px',
+                                            background: 'transparent',
+                                            border: 'none',
+                                            color: '#0b62d6',
                                             fontWeight: 600,
                                             fontSize: 13,
                                             cursor: 'pointer',
@@ -2744,18 +2744,18 @@ const servicesHeaderRightStyle = {
                                           {n.read ? 'Mark as Unread' : 'Mark as Read'}
                                         </button>
                                         <div style={{ height: 1, background: '#e2e8f0' }} />
-                                        <button 
+                                        <button
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             deleteNotification(origIndex);
                                             setOpenNotificationMenu(null);
                                           }}
-                                          style={{ 
+                                          style={{
                                             width: '100%',
-                                            padding: '10px 16px', 
-                                            background: 'transparent', 
-                                            border: 'none', 
-                                            color: '#dc2626', 
+                                            padding: '10px 16px',
+                                            background: 'transparent',
+                                            border: 'none',
+                                            color: '#dc2626',
                                             fontWeight: 600,
                                             fontSize: 13,
                                             cursor: 'pointer',
@@ -2802,12 +2802,12 @@ const servicesHeaderRightStyle = {
                       aria-expanded={showUserMenu}
                     >
                       <div style={{ width: '34px', height: '34px', borderRadius: '999px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: user?.avatar ? 'transparent' : 'linear-gradient(135deg,#06b6d4,#3b82f6)' }}>
-                          {user?.avatar ? (
-                            <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          ) : (
-                            <FaUser style={{ color: 'white' }} />
-                          )}
-                        </div>
+                        {user?.avatar ? (
+                          <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <FaUser style={{ color: 'white' }} />
+                        )}
+                      </div>
                       <div style={{ textAlign: 'left', lineHeight: 1 }}>
                         <div style={{ fontSize: '13px', fontWeight: 800 }}>{user.firstName || (user.email || '').split('@')[0]}</div>
                         <div style={{ fontSize: '11px', color: 'rgba(229, 231, 235, 0.9)', marginTop: '2px' }}>{user.role || 'Member'}</div>
@@ -2846,11 +2846,11 @@ const servicesHeaderRightStyle = {
                             onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
                             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                           >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                             <span>Bookings</span>
                           </a>
 
-                          
+
 
                           <a href="#instruments" onClick={(e) => { e.preventDefault(); setShowUserMenu(false); const url = (user && user.role === 'user') ? '/#/instrument-booking' : '/#/instrument-borrowing'; window.open(url, '_blank'); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}
                             onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
@@ -2865,7 +2865,7 @@ const servicesHeaderRightStyle = {
                               onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
                               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                             >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                               <span>Admin Dashboard</span>
                             </a>
                           )}
@@ -2932,7 +2932,7 @@ const servicesHeaderRightStyle = {
               filter: 'blur(100px)',
               animation: 'ambientGlow 8s ease-in-out infinite'
             }}></div>
-            
+
             <div style={{
               position: 'absolute',
               bottom: '20%',
@@ -3275,7 +3275,7 @@ const servicesHeaderRightStyle = {
                   </h4>
                   <button style={closeButtonStyle} onClick={() => setShowInstrumentRequest(false)}>×</button>
                 </div>
-                
+
                 <form onSubmit={handleSubmitInstrumentRequest} style={modalBodyStyle}>
                   <div style={{ marginBottom: '16px' }}>
                     <label style={darkLabelStyle}>Instrument Type *</label>
@@ -3386,24 +3386,24 @@ const servicesHeaderRightStyle = {
                     />
                   </div>
 
-                  <div style={{ 
-                    padding: '16px', 
-                    background: user && user.role === 'user' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)', 
-                    borderRadius: '12px', 
+                  <div style={{
+                    padding: '16px',
+                    background: user && user.role === 'user' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                    borderRadius: '12px',
                     marginBottom: '20px',
                     border: user && user.role === 'user' ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid rgba(34, 197, 94, 0.2)'
                   }}>
                     <p style={{ margin: 0, fontSize: '14px', color: '#374151', lineHeight: 1.5 }}>
-                      {user && user.role === 'user' 
+                      {user && user.role === 'user'
                         ? '💵 As a customer, you can rent this instrument. Rental fees will be discussed upon approval.'
                         : '🎵 As a member, you can borrow this instrument for free. Please ensure to return it in good condition.'}
                     </p>
                   </div>
 
                   <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                    <button 
-                      type="button" 
-                      style={closeButtonStyle} 
+                    <button
+                      type="button"
+                      style={closeButtonStyle}
                       onClick={() => setShowInstrumentRequest(false)}
                     >
                       Cancel
@@ -3529,35 +3529,33 @@ const servicesHeaderRightStyle = {
           </footer>
         </div>
       )}
-
-      {/* Booking History Modal code removed. Now handled by dedicated page. */}
-
+      
       {/* Payment Modal */}
       {showPaymentModal && selectedPaymentNotification && (
-        <div 
+        <div
           onClick={() => !paymentProcessing && setShowPaymentModal(false)}
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            background: 'rgba(0, 0, 0, 0.7)', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             zIndex: 9999,
             padding: '20px'
           }}
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
-            style={{ 
-              background: 'white', 
-              borderRadius: '16px', 
-              maxWidth: '600px', 
-              width: '100%', 
-              maxHeight: '90vh', 
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              maxWidth: '600px',
+              width: '100%',
+              maxHeight: '90vh',
               overflow: 'auto',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
             }}
@@ -3571,8 +3569,8 @@ const servicesHeaderRightStyle = {
             ) : (
               <>
                 {/* Header */}
-                <div style={{ 
-                  padding: '24px', 
+                <div style={{
+                  padding: '24px',
                   borderBottom: '1px solid #e2e8f0',
                   background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
                   borderRadius: '16px 16px 0 0'
@@ -3587,17 +3585,17 @@ const servicesHeaderRightStyle = {
                         {selectedPaymentNotification.data?.service || 'Booking Service'}
                       </p>
                     </div>
-                    <button 
+                    <button
                       onClick={() => setShowPaymentModal(false)}
                       disabled={paymentProcessing}
-                      style={{ 
-                        background: 'rgba(255, 255, 255, 0.2)', 
-                        border: 'none', 
-                        color: 'white', 
-                        fontSize: 24, 
-                        width: 36, 
-                        height: 36, 
-                        borderRadius: '50%', 
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.2)',
+                        border: 'none',
+                        color: 'white',
+                        fontSize: 24,
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
                         cursor: paymentProcessing ? 'not-allowed' : 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -3618,19 +3616,19 @@ const servicesHeaderRightStyle = {
                       ₱{(selectedPaymentNotification.data?.amount || selectedPaymentNotification.data?.paymentDetails?.totalAmount || 0).toLocaleString()}
                     </div>
                   </div>
-                  
+
                   {/* Payment Option Selection */}
                   <div style={{ display: 'flex', gap: 12, maxWidth: 500, margin: '0 auto' }}>
-                    <div 
+                    <div
                       onClick={() => {
                         const totalAmount = selectedPaymentNotification.data?.amount || 0;
-                        setPaymentForm({...paymentForm, paymentOption: 'downpayment', selectedAmount: totalAmount * 0.5});
+                        setPaymentForm({ ...paymentForm, paymentOption: 'downpayment', selectedAmount: totalAmount * 0.5 });
                       }}
-                      style={{ 
+                      style={{
                         flex: 1,
-                        padding: '16px', 
-                        border: `3px solid ${paymentForm.paymentOption === 'downpayment' ? '#10b981' : '#e2e8f0'}`, 
-                        borderRadius: 12, 
+                        padding: '16px',
+                        border: `3px solid ${paymentForm.paymentOption === 'downpayment' ? '#10b981' : '#e2e8f0'}`,
+                        borderRadius: 12,
                         cursor: 'pointer',
                         background: paymentForm.paymentOption === 'downpayment' ? '#ecfdf5' : 'white',
                         transition: 'all 0.2s',
@@ -3642,17 +3640,17 @@ const servicesHeaderRightStyle = {
                         ₱{((selectedPaymentNotification.data?.amount || 0) * 0.5).toLocaleString()}
                       </div>
                     </div>
-                    
-                    <div 
+
+                    <div
                       onClick={() => {
                         const totalAmount = selectedPaymentNotification.data?.amount || 0;
-                        setPaymentForm({...paymentForm, paymentOption: 'fullpayment', selectedAmount: totalAmount});
+                        setPaymentForm({ ...paymentForm, paymentOption: 'fullpayment', selectedAmount: totalAmount });
                       }}
-                      style={{ 
+                      style={{
                         flex: 1,
-                        padding: '16px', 
-                        border: `3px solid ${paymentForm.paymentOption === 'fullpayment' ? '#0ea5e9' : '#e2e8f0'}`, 
-                        borderRadius: 12, 
+                        padding: '16px',
+                        border: `3px solid ${paymentForm.paymentOption === 'fullpayment' ? '#0ea5e9' : '#e2e8f0'}`,
+                        borderRadius: 12,
                         cursor: 'pointer',
                         background: paymentForm.paymentOption === 'fullpayment' ? '#f0f9ff' : 'white',
                         transition: 'all 0.2s',
@@ -3670,18 +3668,18 @@ const servicesHeaderRightStyle = {
                 {/* Payment Form */}
                 <form onSubmit={handlePaymentSubmit} style={{ padding: '24px' }}>
                   <h3 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>Choose Payment Method</h3>
-                  
+
                   {/* Payment Method Selection */}
                   <div style={{ marginBottom: 20 }}>
                     {['gcash', 'card', 'bank'].map(method => (
-                      <div 
+                      <div
                         key={method}
                         onClick={() => setPaymentMethod(method)}
-                        style={{ 
-                          padding: 16, 
-                          border: `2px solid ${paymentMethod === method ? '#0ea5e9' : '#e2e8f0'}`, 
-                          borderRadius: 12, 
-                          cursor: 'pointer', 
+                        style={{
+                          padding: 16,
+                          border: `2px solid ${paymentMethod === method ? '#0ea5e9' : '#e2e8f0'}`,
+                          borderRadius: 12,
+                          cursor: 'pointer',
                           marginBottom: 12,
                           background: paymentMethod === method ? '#f0f9ff' : 'white',
                           transition: 'all 0.2s'
@@ -3716,7 +3714,7 @@ const servicesHeaderRightStyle = {
                           type="text"
                           placeholder="Cardholder Name"
                           value={paymentForm.cardholderName}
-                          onChange={(e) => setPaymentForm({...paymentForm, cardholderName: e.target.value})}
+                          onChange={(e) => setPaymentForm({ ...paymentForm, cardholderName: e.target.value })}
                           required
                           style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
                         />
@@ -3724,7 +3722,7 @@ const servicesHeaderRightStyle = {
                           type="text"
                           placeholder="Card Number"
                           value={paymentForm.cardNumber}
-                          onChange={(e) => setPaymentForm({...paymentForm, cardNumber: e.target.value.replace(/\D/g, '').slice(0, 16)})}
+                          onChange={(e) => setPaymentForm({ ...paymentForm, cardNumber: e.target.value.replace(/\D/g, '').slice(0, 16) })}
                           required
                           maxLength={16}
                           style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
@@ -3734,7 +3732,7 @@ const servicesHeaderRightStyle = {
                             type="text"
                             placeholder="MM/YY"
                             value={paymentForm.expiryDate}
-                            onChange={(e) => setPaymentForm({...paymentForm, expiryDate: e.target.value})}
+                            onChange={(e) => setPaymentForm({ ...paymentForm, expiryDate: e.target.value })}
                             required
                             maxLength={5}
                             style={{ padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
@@ -3743,7 +3741,7 @@ const servicesHeaderRightStyle = {
                             type="text"
                             placeholder="CVV"
                             value={paymentForm.cvv}
-                            onChange={(e) => setPaymentForm({...paymentForm, cvv: e.target.value.replace(/\D/g, '').slice(0, 4)})}
+                            onChange={(e) => setPaymentForm({ ...paymentForm, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) })}
                             required
                             maxLength={4}
                             style={{ padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
@@ -3758,7 +3756,7 @@ const servicesHeaderRightStyle = {
                           type="text"
                           placeholder="GCash Number (09XXXXXXXXX)"
                           value={paymentForm.gcashNumber}
-                          onChange={(e) => setPaymentForm({...paymentForm, gcashNumber: e.target.value})}
+                          onChange={(e) => setPaymentForm({ ...paymentForm, gcashNumber: e.target.value })}
                           required
                           maxLength={11}
                           style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
@@ -3767,7 +3765,7 @@ const servicesHeaderRightStyle = {
                           type="text"
                           placeholder="Reference Number"
                           value={paymentForm.referenceNumber}
-                          onChange={(e) => setPaymentForm({...paymentForm, referenceNumber: e.target.value})}
+                          onChange={(e) => setPaymentForm({ ...paymentForm, referenceNumber: e.target.value })}
                           required
                           style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
                         />
@@ -3786,7 +3784,7 @@ const servicesHeaderRightStyle = {
                           type="text"
                           placeholder="Reference Number"
                           value={paymentForm.referenceNumber}
-                          onChange={(e) => setPaymentForm({...paymentForm, referenceNumber: e.target.value})}
+                          onChange={(e) => setPaymentForm({ ...paymentForm, referenceNumber: e.target.value })}
                           required
                           style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
                         />
@@ -3795,16 +3793,16 @@ const servicesHeaderRightStyle = {
                   </div>
 
                   {/* Submit Button */}
-                  <button 
+                  <button
                     type="submit"
                     disabled={paymentProcessing}
-                    style={{ 
+                    style={{
                       width: '100%',
-                      padding: 14, 
-                      borderRadius: 8, 
-                      background: paymentProcessing ? '#94a3b8' : '#0ea5e9', 
-                      border: 'none', 
-                      color: 'white', 
+                      padding: 14,
+                      borderRadius: 8,
+                      background: paymentProcessing ? '#94a3b8' : '#0ea5e9',
+                      border: 'none',
+                      color: 'white',
                       fontWeight: 700,
                       fontSize: 16,
                       cursor: paymentProcessing ? 'not-allowed' : 'pointer',

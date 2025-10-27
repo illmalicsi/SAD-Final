@@ -15,6 +15,7 @@
     FaEye,
     FaEyeSlash
   } from "react-icons/fa";
+  import AuthService from '../services/authService';
 
   const UserManagement = ({ user }) => {
     const [users, setUsers] = useState([]);
@@ -27,6 +28,7 @@
     const [editingUser, setEditingUser] = useState(null);
     const [userToDelete, setUserToDelete] = useState(null);
     const [roles, setRoles] = useState([]);
+  const [authMissing, setAuthMissing] = useState(false);
     const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
     const [newUser, setNewUser] = useState({
       firstName: '',
@@ -40,50 +42,44 @@
     // No sample users: user list will come from the backend API
 
     // Move fetchUsersFromApi outside useEffect so it can be reused
+  // Use centralized AuthService to ensure auth headers and error handling are consistent
+
     const fetchUsersFromApi = async () => {
-      const token = localStorage.getItem('authToken');
-      console.log('UserManagement: Checking auth token...');
-      
-      if (!token) {
-        // Not authenticated: set empty users list
-        console.error('UserManagement: No auth token found! Please login.');
-        setUsers([]);
-        return;
-      }
-
-      console.log('UserManagement: Token found, fetching users...');
-
       try {
-        const res = await fetch('http://localhost:5000/api/users', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        console.log('UserManagement: Fetching users via AuthService...');
+        const data = await AuthService.get('/users');
+        console.log('UserManagement: Fetched users data:', data);
 
-        console.log('UserManagement: API response status:', res.status);
-
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('UserManagement: API response not OK:', res.status, res.statusText, errorText);
-          throw new Error('Failed to fetch users from API');
+        // Handle common response shapes and errors
+        if (!data) {
+          console.warn('UserManagement: Empty response from /users');
+          setUsers([]);
+          return;
         }
 
-        const data = await res.json();
-        console.log('UserManagement: Fetched users data:', data);
-        
-        if (data && data.users && Array.isArray(data.users)) {
+        if (data.success === false) {
+          console.error('UserManagement: API returned error for /users:', data.message || data);
+          setUsers([]);
+          return;
+        }
+
+        if (data.users && Array.isArray(data.users)) {
           console.log('UserManagement: Loaded', data.users.length, 'users');
           setUsers(data.users);
           return;
         }
 
-        // No data returned: set empty
-        console.warn('UserManagement: No users in response, setting empty array');
+        // Unexpected shape — print full object for debugging
+        console.warn('UserManagement: No users property in response, setting empty array. Raw response:');
+        console.dir(data);
         setUsers([]);
       } catch (error) {
         console.error('UserManagement: Error fetching users from API:', error);
-        // API error: set empty
+        // If there's no auth token or session expired, surface banner and stop further attempts
+        const msg = (error && error.message) ? error.message : '';
+        if (msg.includes('No authentication token') || msg.includes('Session expired') || msg.includes('Invalid or expired token')) {
+          setAuthMissing(true);
+        }
         setUsers([]);
       }
     };
@@ -164,18 +160,7 @@
     const handleCreateUser = async () => {
       try {
         console.log('🔵 Creating user:', newUser.email);
-        const token = localStorage.getItem('authToken');
-        
-        const response = await fetch('http://localhost:5000/api/users', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(newUser)
-        });
-
-        const data = await response.json();
+        const data = await AuthService.post('/users', newUser);
         console.log('📥 Create user response:', data);
 
         if (data.success) {
@@ -208,18 +193,7 @@
     const handleUpdateUser = async () => {
       try {
         console.log('🔵 Updating user:', editingUser.id);
-        const token = localStorage.getItem('authToken');
-        
-        const response = await fetch(`http://localhost:5000/api/users/${editingUser.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(editingUser)
-        });
-
-        const data = await response.json();
+        const data = await AuthService.put(`/users/${editingUser.id}`, editingUser);
         console.log('📥 Update user response:', data);
 
         if (data.success) {
@@ -247,16 +221,7 @@
       if (userToDelete) {
         try {
           console.log('🔵 Deleting user:', userToDelete.id);
-          const token = localStorage.getItem('authToken');
-          
-          const response = await fetch(`http://localhost:5000/api/users/${userToDelete.id}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          const data = await response.json();
+          const data = await AuthService.delete(`/users/${userToDelete.id}`);
           console.log('📥 Delete user response:', data);
 
           if (data.success) {
@@ -801,6 +766,19 @@
 
     return (
       <div style={styles.container}>
+        {authMissing && (
+          <div style={{ backgroundColor: '#fff3f2', border: '1px solid #fecaca', padding: '1rem', borderRadius: 8, marginBottom: '1rem', color: '#7f1d1d' }}>
+            <strong>Session required:</strong> You must be logged in to view users. Please log in again.
+            <div style={{ marginTop: '0.5rem' }}>
+              <button
+                onClick={() => { AuthService.logout(); window.location.href = '/login'; }}
+                style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '0.5rem 0.75rem', borderRadius: 6, cursor: 'pointer' }}
+              >
+                Go to Login
+              </button>
+            </div>
+          </div>
+        )}
         <div style={styles.header}>
           <div>
           </div>

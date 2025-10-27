@@ -188,8 +188,8 @@ class AuthService {
       headers,
     });
 
-    if (response.status === 401) {
-      // Token expired or invalid
+    if (response.status === 401 || response.status === 403) {
+      // Token expired or invalid (treat 403 as expired/invalid for client-side handling)
       this.logout();
       throw new Error('Session expired. Please login again.');
     }

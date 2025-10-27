@@ -241,7 +241,8 @@ const InstrumentRental = () => {
           // Mirror to localStorage for UI continuity
           const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
           const request = {
-            id: resp.requestId || Date.now(),
+              id: resp.requestId || resp.request_id || Date.now(),
+              request_id: resp.requestId || resp.request_id || null,
             userId: user?.id || null,
             userName: name.trim(),
             userEmail: email.trim().toLowerCase(),
@@ -266,7 +267,9 @@ const InstrumentRental = () => {
           // fallback to localStorage behavior
           const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
           const request = {
-            id: Date.now(),
+            id: `local-${Date.now()}`,
+            request_id: null,
+            localOnly: true,
             userId: user?.id || null,
             userName: name.trim(),
             userEmail: email.trim().toLowerCase(),
@@ -290,7 +293,9 @@ const InstrumentRental = () => {
         // Not authenticated: keep storing locally
         const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
         const request = {
-          id: Date.now(),
+          id: `local-${Date.now()}`,
+          request_id: null,
+          localOnly: true,
           userId: user?.id || null,
           userName: name.trim(),
           userEmail: email.trim().toLowerCase(),
@@ -328,6 +333,48 @@ const InstrumentRental = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Sync any locally created rent requests (localOnly) with the server when authenticated
+  useEffect(() => {
+    let cancelled = false;
+    const trySync = async () => {
+      if (!AuthService.isAuthenticated()) return;
+      const storageKey = 'rentRequests';
+      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      // find local-only entries
+      const locals = existing.filter(r => r.localOnly === true);
+      if (!locals.length) return;
+
+      for (const l of locals) {
+        if (cancelled) break;
+        try {
+          const payload = {
+            instrumentId: null,
+            instrumentName: l.instrument || l.instrumentName || '',
+            instrumentType: '',
+            quantity: Number(l.quantity) || 1,
+            startDate: l.startDate,
+            endDate: l.endDate,
+            purpose: l.purpose || l.notes || null,
+            notes: l.notes || null,
+            rentalFee: l.instrumentPricePerDay || l.rentalFee || null
+          };
+          const resp = await AuthService.post('/instruments/rent-request', payload);
+          if (resp && resp.success === true && resp.requestId) {
+            // replace local id with server id and remove localOnly flag
+            const updated = JSON.parse(localStorage.getItem(storageKey) || '[]').map(r => r.id === l.id ? { ...r, id: resp.requestId, request_id: resp.requestId, localOnly: false } : r);
+            localStorage.setItem(storageKey, JSON.stringify(updated));
+            window.dispatchEvent(new Event('rentRequestsUpdated'));
+          }
+        } catch (err) {
+          console.warn('Failed to sync local rent request to server:', err);
+          // don't throw — try next item later
+        }
+      }
+    };
+    trySync();
+    return () => { cancelled = true; };
+  }, []);
 
   const isFormValid = useMemo(() => {
     const base = !!selectedInstrument && !!rentalStartDate && !!rentalEndDate && !!purpose && !!name && !!email && !!location;
