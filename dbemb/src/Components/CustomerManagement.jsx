@@ -684,180 +684,212 @@ const CustomerManagement = ({ bookingsData = [] }) => {
   };
 
   const styles = {
+    // Make CustomerManagement use the same clean, centered card/table design as Inventory
     container: {
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #f0f9ff, #e0f2fe)",
-      padding: "20px",
-      color: "#1e293b",
-      fontFamily: "system-ui, sans-serif",
+      minHeight: 'auto',
+      background: 'transparent',
+      padding: 0,
+      color: '#0f172a',
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     header: {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: "30px",
+      marginBottom: "20px",
       flexWrap: "wrap",
-      gap: "16px"
+      gap: "12px",
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     title: {
-      fontSize: "28px",
-      fontWeight: "700",
-      color: "#0369a1",
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      fontSize: '28px',
+      fontWeight: '600',
       margin: 0,
-      display: "flex",
-      alignItems: "center",
-      gap: "12px"
+      color: '#0f172a'
     },
     button: {
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      backgroundColor: "transparent",
-      border: "1px solid rgba(3, 105, 161, 0.3)",
-      color: "#1e293b",
-      padding: "8px 16px",
-      borderRadius: "8px",
-      cursor: "pointer",
-      fontSize: "14px",
-      transition: "all 0.3s ease",
+      backgroundColor: 'transparent',
+      border: '1px solid #cbd5e1',
+      color: '#0f172a',
+      padding: '8px 14px',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      fontSize: '14px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
-    // force all six stat cards to sit in a single straight line across the page
-    // cards will shrink evenly to fit the container (no scrollbar)
+
+    // UPDATED: Stats row - same as inventory (bigger, closer together, centered)
     statsContainer: {
       display: 'flex',
-      gap: '12px',
-      margin: '0 auto 18px',
+      flexWrap: 'wrap',
+      gap: '8px', // Reduced gap to move cards closer together
+      margin: '0 auto 26px',
       alignItems: 'stretch',
       padding: '0 20px',
       boxSizing: 'border-box',
       justifyContent: 'space-between',
-      flexWrap: 'nowrap', // single row
-      width: '100%',
-      overflow: 'hidden'  // clip any overflow instead of showing scrollbar
+      maxWidth: '100%'
     },
-
-    // evenly distributed cards that shrink as needed so all six remain one straight row
+    // UPDATED: Stat cards - bigger and centered content like inventory
     statCard: {
-      flex: '1 1 0',     // equal distribution and shrink
-      minWidth: 0,       // allow heavy shrinking when space is tight
-      margin: '0 6px',
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      border: '1px solid rgba(3, 105, 161, 0.2)',
-      borderRadius: '12px',
-      padding: '12px 14px',
-      textAlign: 'left',
-      transition: 'transform 0.18s ease, border-color 0.18s ease',
-      cursor: 'pointer',
+      flex: '1 1 160px', // Increased minimum width
+      minWidth: 140, // Increased minimum width
+      maxWidth: 200, // Increased maximum width
+      backgroundColor: '#ffffff',
+      border: '1px solid #e2e8f0',
+      borderRadius: 12,
+      padding: '16px 14px', // Increased padding for bigger appearance
+      textAlign: 'center', // Center all content
+      transition: 'all 0.18s ease',
+      minHeight: 90, // Increased height
       display: 'flex',
       flexDirection: 'column',
-      gap: 8,
-      minHeight: 72,
-      justifyContent: 'center',
-      overflow: 'hidden'
+      alignItems: 'center', // Center horizontally
+      justifyContent: 'center', // Center vertically
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
     },
-    // minimal table styles used when viewMode === 'table'
+    statIcon: { 
+      marginBottom: 8, // Consistent margin
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
+    statNumber: {
+      fontSize: '22px', // Increased font size
+      fontWeight: 700,
+      color: '#0f172a',
+      marginTop: 6,
+      textAlign: 'center'
+    },
+    statLabel: {
+      fontSize: '14px', // Slightly increased font size
+      color: '#64748b',
+      marginTop: 4,
+      textAlign: 'center'
+    },
+
+    // Filter bar / controls (adapted)
+    filterBar: {
+      display: "flex",
+      gap: "12px",
+      marginBottom: "20px",
+      alignItems: "center",
+      flexWrap: "wrap",
+      background: "#ffffff",
+      padding: "12px 16px",
+      borderRadius: "10px",
+      border: "1px solid #e2e8f0",
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    },
+    input: {
+      flex: 1,
+      minWidth: "200px",
+      padding: "10px 12px",
+      borderRadius: "8px",
+      border: "1px solid #cbd5e1",
+      backgroundColor: "#ffffff",
+      color: "#0f172a",
+      fontSize: "14px",
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    },
+    select: {
+      padding: "10px",
+      borderRadius: "8px",
+      border: "1px solid #cbd5e1",
+      backgroundColor: "#ffffff",
+      color: "#0f172a",
+      minWidth: "140px",
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    },
+
+    // Card list
+    cardGrid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+      gap: "18px",
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    },
+    customerCard: {
+      backgroundColor: '#ffffff',
+      border: '1px solid #e2e8f0',
+      borderRadius: '12px',
+      padding: '18px',
+      transition: 'all 0.2s ease',
+      cursor: 'pointer',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    },
+
+    // Table view (adapted)
     tableWrap: {
       width: '100%',
       overflowX: 'auto',
       background: 'transparent',
-      borderRadius: 8
+      borderRadius: 8,
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     table: {
       width: '100%',
       borderCollapse: 'collapse',
       minWidth: 800,
-      color: '#1e293b'
+      color: '#0f172a',
+      background: '#ffffff',
+      border: '1px solid #e2e8f0',
+      borderRadius: 8,
+      overflow: 'hidden',
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     th: {
-      textAlign: 'left',
-      padding: '10px',
-      color: '#0369a1',
-      borderBottom: '1px solid rgba(3, 105, 161, 0.15)'
+      textAlign: 'center', // changed: center table headers
+      padding: '12px',
+      color: '#3b82f6',
+      borderBottom: '1px solid #e2e8f0',
+      fontWeight: 600,
+      fontSize: 14,
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     td: {
-      padding: '10px',
-      borderBottom: '1px solid rgba(0, 0, 0, 0.05)'
+      padding: '12px',
+      borderBottom: '1px solid #f1f5f9',
+      color: '#0f172a',
+      textAlign: 'center', // changed: center table data
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
-    filterBar: {
-      display: "flex",
-      gap: "12px",
-      marginBottom: "25px",
-      alignItems: "center",
-      flexWrap: "wrap",
-      background: "rgba(255, 255, 255, 0.7)",
-      padding: "20px",
-      borderRadius: "12px",
-      border: "1px solid rgba(3, 105, 161, 0.15)"
-    },
-    input: {
-      flex: 1,
-      minWidth: "200px",
-      padding: "12px 16px",
-      borderRadius: "8px",
-      border: "1px solid rgba(3, 105, 161, 0.3)",
-      backgroundColor: "rgba(255, 255, 255, 0.9)",
-      color: "#1e293b",
-      fontSize: "14px"
-    },
-    select: {
-      padding: "12px",
-      borderRadius: "8px",
-      border: "1px solid rgba(3, 105, 161, 0.3)",
-      backgroundColor: "rgba(255, 255, 255, 0.9)",
-      color: "#1e293b",
-      minWidth: "120px"
-    },
-    cardGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
-      gap: "20px",
-    },
-    customerCard: {
-      background: "rgba(255, 255, 255, 0.9)",
-      border: "1px solid rgba(3, 105, 161, 0.2)",
-      borderRadius: "14px",
-      padding: "20px",
-      transition: "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
-      cursor: "pointer"
-    },
-    notification: {
-      position: "fixed",
-      top: "20px",
-      right: "20px",
-      padding: "16px 24px",
-      borderRadius: "8px",
-      color: "#fff",
-      fontWeight: "500",
-      zIndex: 10000,
-      minWidth: "280px",
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-      boxShadow: "0 8px 20px rgba(0,0,0,0.3)",
-    },
+
+    // Modal / overlays (adapted from inventory)
     modalOverlay: {
       position: "fixed",
-      inset: 0,
-      background: "rgba(0,0,0,0.5)",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0,0,0,0.5)",
       display: "flex",
-      justifyContent: "center",
       alignItems: "center",
-      zIndex: 9999,
-      backdropFilter: "blur(4px)"
+      justifyContent: "center",
+      zIndex: 1000,
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     modal: {
-      background: "rgba(255, 255, 255, 0.98)",
-      padding: "32px",
-      borderRadius: "16px",
-      width: "600px",
-      maxWidth: "90vw",
-      color: "#1e293b",
+      background: "#ffffff",
+      padding: "24px",
+      borderRadius: "12px",
+      width: "680px",
+      maxWidth: "95vw",
+      color: "#0f172a",
       maxHeight: "85vh",
       overflowY: "auto",
-      border: "1px solid rgba(3, 105, 161, 0.2)"
+      border: "1px solid #e2e8f0",
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
+
+    // Buttons used in modal/actions
     actionBtn: {
-      padding: "8px 16px",
+      padding: "8px 14px",
       borderRadius: "8px",
       border: "1px solid",
       cursor: "pointer",
@@ -865,63 +897,86 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       fontSize: "13px",
       display: "flex",
       alignItems: "center",
-      gap: "6px",
-      marginRight: "8px",
+      gap: "8px",
       background: "#fff",
-      transition: "all 0.2s",
-    },
-    rejectBtn: {
-      background: "#fff",
-      color: "#ef4444",
-      borderColor: "#ef4444",
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     approveBtn: {
-      background: "#fff",
-      color: "#3b82f6",
-      borderColor: "#3b82f6",
+      background: '#3b82f6',
+      color: '#fff',
+      borderColor: '#3b82f6'
+    },
+    rejectBtn: {
+      background: '#ef4444',
+      color: '#fff',
+      borderColor: '#ef4444'
     },
     archiveBtn: {
-      background: "#6b7280",
-      color: "#fff",
+      background: 'transparent',
+      color: '#f59e0b',
+      borderColor: '#fbbf24'
     },
     unarchiveBtn: {
-      background: "#8b5cf6",
-      color: "#fff",
+      background: 'transparent',
+      color: '#22c55e',
+      borderColor: '#22c55e'
     },
+
+    // Booking item in modal
     bookingItem: {
-      background: "rgba(241, 245, 249, 0.8)",
-      padding: "16px",
-      borderRadius: "10px",
-      marginBottom: "12px",
-      border: "1px solid rgba(3, 105, 161, 0.15)",
+      background: '#f8fafc',
+      padding: '12px',
+      borderRadius: '8px',
+      marginBottom: '12px',
+      border: '1px solid #e2e8f0'
     },
+
+    // View toggles
     viewToggle: {
       display: "flex",
-      gap: "4px",
-      background: "rgba(255, 255, 255, 0.9)",
+      gap: "6px",
+      background: "#ffffff",
       padding: "4px",
       borderRadius: "8px",
-      border: "1px solid rgba(3, 105, 161, 0.2)"
+      border: "1px solid #e2e8f0"
     },
     toggleBtn: {
-      padding: "8px 16px",
+      padding: "8px 12px",
       background: "transparent",
       border: "none",
       color: "#64748b",
       cursor: "pointer",
       borderRadius: "6px",
-      transition: "all 0.2s ease",
-      fontSize: "14px"
+      fontSize: "14px",
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     activeToggle: {
-      background: "#0369a1",
-      color: "#ffffff",
-      fontWeight: "600"
+      background: '#3b82f6',
+      color: '#ffffff',
+      fontWeight: 700
+    },
+
+    // Notification (kept visible and matching Inventory look)
+    notification: {
+      position: "fixed",
+      top: "20px",
+      right: "20px",
+      padding: "14px 18px",
+      borderRadius: "8px",
+      color: "#fff",
+      fontWeight: "600",
+      zIndex: 10000,
+      minWidth: "260px",
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+      boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }
   };
 
   return (
-    <div style={styles.container}>
+    <div className="cm-root" style={styles.container}>
       {/* Notification */}
       {notification && (
         <div
@@ -942,228 +997,167 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         </div>
       )}
 
-      {/* Header */}
-      <div style={styles.header}>
-        <h1 style={styles.title}>
-          <FaUsers /> Customer Management
-        </h1>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
-          {/* Board tabs removed */}
-          <div style={styles.viewToggle}>
-            <button
-              style={{
-                ...styles.toggleBtn,
-                ...(viewMode === "cards" ? styles.activeToggle : {})
-              }}
-              onClick={() => setViewMode("cards")}
-            >
-              Cards
-            </button>
-            <button
-              style={{
-                ...styles.toggleBtn,
-                ...(viewMode === "table" ? styles.activeToggle : {})
-              }}
-              onClick={() => setViewMode("table")}
-            >
-              Table
-            </button>
+      {/* --- REPLACED: compact top area with stats + controls (removed large "Customer Management" title) --- */}
+      <div style={{ width: '100%', marginBottom: 20 }}>
+        {/* UPDATED: Stats row - same as inventory (bigger, closer together, centered) */}
+        <div style={styles.statsContainer}>
+          <div style={styles.statCard}>
+            <FaUsers size={32} color="#60a5fa" style={styles.statIcon} />
+            <div style={{ ...styles.statNumber, color: '#60a5fa' }}>{stats.total}</div>
+            <div style={styles.statLabel}>Total Customers</div>
           </div>
-          <button
-            style={styles.button}
-            onClick={handleExportData}
-          >
-            <FaDownload size={14} /> Export Data
-          </button>
-        </div>
-      </div>
-
-      {/* Enhanced Stats */}
-      <div style={styles.statsContainer}>
-        <div style={styles.statCard}>
-          <FaUsers size={28} color="#60a5fa" />
-          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
-            {stats.total}
-          </div>
-          <div style={{ color: "#64748b", fontSize: "14px" }}>Total Customers</div>
-        </div>
-        
-        <div style={styles.statCard}>
-          <FaUserCheck size={28} color="#22c55e" />
-          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
-            {stats.active}
-          </div>
-          <div style={{ color: "#64748b", fontSize: "14px" }}>Active Customers</div>
-        </div>
-        
-        <div style={styles.statCard}>
-          <FaClock size={28} color="#f59e0b" />
-          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
-            {stats.pending}
-          </div>
-          <div style={{ color: "#64748b", fontSize: "14px" }}>Pending Approval</div>
-        </div>
-        
-        <div style={styles.statCard}>
-          <FaArchive size={28} color="#6b7280" />
-          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
-            {stats.archived}
-          </div>
-          <div style={{ color: "#64748b", fontSize: "14px" }}>Archived</div>
-        </div>
-        
-        <div style={styles.statCard}>
-          <FaBookOpen size={28} color="#0369a1" />
-          <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
-            {stats.totalBookings}
-          </div>
-          <div style={{ color: "#64748b", fontSize: "14px" }}>Total Bookings</div>
-        </div>
-
-        {stats.pendingBookings > 0 && (
-          <div style={{
-            ...styles.statCard,
-            border: "2px solid #f59e0b",
-            position: "relative"
-          }}>
-            <FaBell size={28} color="#f59e0b" />
-            <div style={{ fontSize: "24px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
-              {stats.pendingBookings}
-            </div>
-            <div style={{ color: "#f59e0b", fontSize: "14px", fontWeight: "600" }}>
-              Pending Bookings
-            </div>
-            <div style={{
-              position: "absolute",
-              top: "8px",
-              right: "8px",
-              width: "12px",
-              height: "12px",
-              borderRadius: "50%",
-              backgroundColor: "#f59e0b"
-            }}></div>
-          </div>
-        )}
-        
-        <div style={styles.statCard}>
-          <FaChartBar size={28} color="#8b5cf6" />
-          <div style={{ fontSize: "20px", fontWeight: "700", marginTop: "8px", color: "#1e293b" }}>
-            {formatCurrency(stats.totalRevenue)}
-          </div>
-          <div style={{ color: "#64748b", fontSize: "14px" }}>Total Revenue</div>
-        </div>
-      </div>
-
-      {/* Enhanced Filter Bar */}
-      <div style={styles.filterBar}>
-        {/* Search Section */}
-        <div style={{ display: "flex", alignItems: "center", flex: "1 1 300px", minWidth: "250px", gap: "12px" }}>
-          <FaSearch size={18} style={{ color: "#0369a1" }} />
-          <input
-            type="text"
-            placeholder="Search customers by name, email, phone, or address..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={styles.input}
-          />
-        </div>
-        
-        {/* Filters Section */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          <FaFilter size={18} style={{ color: "#0369a1" }} />
           
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={styles.select}
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="pending">Pending</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="rejected">Rejected</option>
-            <option value="archived">Archived</option>
-          </select>
+          <div style={styles.statCard}>
+            <FaUserCheck size={32} color="#22c55e" style={styles.statIcon} />
+            <div style={{ ...styles.statNumber, color: '#22c55e' }}>{stats.active}</div>
+            <div style={styles.statLabel}>Active Customers</div>
+          </div>
           
-          <select
-            value={serviceFilter}
-            onChange={(e) => setServiceFilter(e.target.value)}
-            style={styles.select}
-          >
-            <option value="all">All Services</option>
-            {services.map(service => (
-              <option key={service} value={service}>{service}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Sort and Actions Bar */}
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center", 
-        padding: "16px 20px", 
-        background: "white", 
-        borderRadius: "12px", 
-        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-        marginBottom: "24px",
-        gap: "16px",
-        flexWrap: "wrap"
-      }}>
-        {/* Sort Section */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          <FaSortAmountDown size={18} style={{ color: "#0369a1" }} />
-          <span style={{ color: "#64748b", fontWeight: "600", fontSize: "14px" }}>Sort by:</span>
+          <div style={styles.statCard}>
+            <FaClock size={32} color="#f59e0b" style={styles.statIcon} />
+            <div style={{ ...styles.statNumber, color: '#f59e0b' }}>{stats.pending}</div>
+            <div style={styles.statLabel}>Pending Approval</div>
+          </div>
           
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            style={styles.select}
-          >
-            <option value="lastBooking">Last Booking</option>
-            <option value="name">Name</option>
-            <option value="totalBookings">Total Bookings</option>
-            <option value="totalRevenue">Revenue</option>
-            <option value="joinDate">Join Date</option>
-            <option value="status">Status</option>
-          </select>
+          <div style={styles.statCard}>
+            <FaArchive size={32} color="#6b7280" style={styles.statIcon} />
+            <div style={{ ...styles.statNumber, color: '#6b7280' }}>{stats.archived}</div>
+            <div style={styles.statLabel}>Archived</div>
+          </div>
+          
+          <div style={styles.statCard}>
+            <FaBookOpen size={32} color="#0369a1" style={styles.statIcon} />
+            <div style={{ ...styles.statNumber, color: '#0369a1' }}>{stats.totalBookings}</div>
+            <div style={styles.statLabel}>Total Bookings</div>
+          </div>
 
-          <button
-            style={styles.button}
-            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-          >
-            {sortOrder === 'asc' ? <FaSortUp /> : <FaSortDown />}
-            {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-          </button>
-        </div>
-
-        {/* Actions Section */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {stats.pendingBookings > 0 && (
-            <button
-              style={{
-                ...styles.button,
-                background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                color: "white",
-                fontWeight: "700",
-                padding: "10px 20px",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px"
-              }}
-              onClick={handleApprove}
-            >
-              <FaCheckCircle size={16} />
-              Approve All Pending ({stats.pendingBookings})
-            </button>
+            <div style={{
+              ...styles.statCard,
+              border: "2px solid #f59e0b",
+              position: "relative"
+            }}>
+              <FaBell size={32} color="#f59e0b" style={styles.statIcon} />
+              <div style={{ ...styles.statNumber, color: '#f59e0b' }}>{stats.pendingBookings}</div>
+              <div style={styles.statLabel}>Pending Bookings</div>
+              <div style={{
+                position: "absolute",
+                top: "8px",
+                right: "8px",
+                width: "12px",
+                height: "12px",
+                borderRadius: "50%",
+                backgroundColor: "#f59e0b"
+              }}></div>
+            </div>
           )}
           
-          <span style={{ color: "#64748b", fontSize: "14px", fontWeight: "600" }}>
-            Showing {filteredCustomers.length} of {customers.length} customers
-          </span>
+          <div style={styles.statCard}>
+            <FaChartBar size={32} color="#8b5cf6" style={styles.statIcon} />
+            <div style={{ ...styles.statNumber, color: '#8b5cf6' }}>{formatCurrency(stats.totalRevenue)}</div>
+            <div style={styles.statLabel}>Total Revenue</div>
+          </div>
+        </div>
+
+        {/* Controls row: search, filters, sort, view toggle, export */}
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          marginTop: 14,
+          flexWrap: "wrap"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flex: "1 1 480px", minWidth: 280 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "#fff", borderRadius: 8, border: "1px solid #e2e8f0", flex: 1 }}>
+              <FaSearch size={16} style={{ color: "#0369a1" }} />
+              <input
+                type="text"
+                placeholder="Search customers — name, email, phone, or address"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ border: "none", outline: "none", width: "100%", fontSize: 14, color: "#0f172a", background: "transparent" }}
+              />
+            </div>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{ ...styles.select, minWidth: 160 }}
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="rejected">Rejected</option>
+              <option value="archived">Archived</option>
+            </select>
+
+            <select
+              value={serviceFilter}
+              onChange={(e) => setServiceFilter(e.target.value)}
+              style={{ ...styles.select, minWidth: 160 }}
+            >
+              <option value="all">All Services</option>
+              {services.map(service => (
+                <option key={service} value={service}>{service}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <div style={styles.viewToggle}>
+              <button
+                style={{
+                  ...styles.toggleBtn,
+                  ...(viewMode === "cards" ? styles.activeToggle : {})
+                }}
+                onClick={() => setViewMode("cards")}
+              >
+                Cards
+              </button>
+              <button
+                style={{
+                  ...styles.toggleBtn,
+                  ...(viewMode === "table" ? styles.activeToggle : {})
+                }}
+                onClick={() => setViewMode("table")}
+              >
+                Table
+              </button>
+            </div>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{ ...styles.select, minWidth: 160 }}
+            >
+              <option value="lastBooking">Last Booking</option>
+              <option value="name">Name</option>
+              <option value="totalBookings">Total Bookings</option>
+              <option value="totalRevenue">Revenue</option>
+              <option value="joinDate">Join Date</option>
+              <option value="status">Status</option>
+            </select>
+
+            <button
+              style={styles.button}
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              title="Toggle sort order"
+            >
+              {sortOrder === 'asc' ? <FaSortUp /> : <FaSortDown />}
+            </button>
+
+            <button
+              style={{ ...styles.button, display: "flex", alignItems: "center", gap: 8 }}
+              onClick={handleExportData}
+            >
+              <FaDownload size={14} /> Export
+            </button>
+          </div>
         </div>
       </div>
+      {/* --- END REPLACED AREA --- */}
 
       {/* Customer Display: cards OR table depending on viewMode */}
       {viewMode === "cards" ? (
@@ -1550,6 +1544,11 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       )}
 
       <style jsx>{`
+        :global(.cm-root),
+        :global(.cm-root *) {
+          font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
