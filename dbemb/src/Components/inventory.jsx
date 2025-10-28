@@ -138,16 +138,17 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
   // Styles
   const styles = {
     container: {
-      minHeight: '100vh',
-      background: `linear-gradient(135deg, ${theme.palette.bg}, #e0e7ff)`,
-      padding: '28px',
+      // removed visible container so inventory blends with parent layout
+      minHeight: 'auto',
+      background: 'transparent',
+      padding: 0,
       color: '#0f172a',
-      fontFamily: theme.fonts.base
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
 
 
     title: {
-      fontFamily: 'system-ui, -apple-system, sans-serif',
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       fontSize: '28px',
       fontWeight: '600',
       margin: 0,
@@ -167,13 +168,14 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
     },
     buttonContainer: {
       display: 'flex',
-      alignItems: 'center'
+      alignItems: 'center',
+      marginLeft: 8
     },
-    // Stats row: align with page, no scrollbar (wrap on small screens)
+    // Updated Stats row: closer together, bigger, centered content
     statsContainer: {
       display: 'flex',
       flexWrap: 'wrap',
-      gap: 12,
+      gap: '8px', // Reduced gap to move cards closer together
       margin: '0 auto 26px',
       alignItems: 'stretch',
       padding: '0 20px',
@@ -181,42 +183,49 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       justifyContent: 'space-between',
       maxWidth: '100%'
     },
-    // compact, flexible stat cards so six can sit on one line on wide screens
+    // Updated stat cards: bigger and centered content
     statCard: {
-      flex: '1 1 140px',
-      minWidth: 120,
-      maxWidth: 180,
+      flex: '1 1 160px', // Increased minimum width
+      minWidth: 140, // Increased minimum width
+      maxWidth: 200, // Increased maximum width
       backgroundColor: '#ffffff',
       border: '1px solid #e2e8f0',
       borderRadius: 12,
-      padding: '10px 12px',
-      textAlign: 'left',
+      padding: '16px 14px', // Increased padding for bigger appearance
+      textAlign: 'center', // Center all content
       transition: 'all 0.18s ease',
-      minHeight: 72,
+      minHeight: 90, // Increased height
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'flex-start',
-      justifyContent: 'center',
+      alignItems: 'center', // Center horizontally
+      justifyContent: 'center', // Center vertically
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
     },
-    statIcon: { marginBottom: 0 },
+    statIcon: { 
+      marginBottom: 8, // Consistent margin
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
     statNumber: {
-      fontSize: 18,
+      fontSize: '22px', // Increased font size
       fontWeight: 700,
       color: '#0f172a',
-      marginTop: 6
+      marginTop: 6,
+      textAlign: 'center'
     },
     statLabel: {
-      fontSize: 13,
+      fontSize: '14px', // Slightly increased font size
       color: '#64748b',
-      marginTop: 4
+      marginTop: 4,
+      textAlign: 'center'
     },
     controls: {
       display: 'flex',
-      justifyContent: 'space-between',
+      justifyContent: 'flex-end', // move controls to the right so filter sits beside the button
       alignItems: 'center',
       marginBottom: '20px',
-      gap: '20px',
+      gap: '12px',
       flexWrap: 'wrap'
     },
     filterSection: {
@@ -248,9 +257,9 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       minWidth: '150px'
     },
     createButton: {
-      backgroundColor: theme.palette.primary,
-      border: `2px solid ${theme.palette.primary}`,
-      color: '#ffffff',
+      background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+      border: 'none',
+      color: 'white',
       padding: '10px 20px',
       borderRadius: theme.borderRadius,
       fontWeight: '600',
@@ -272,7 +281,7 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
     },
     cardTitle: {
-      fontFamily: 'system-ui, -apple-system, sans-serif',
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       fontSize: '16px',
       fontWeight: '600',
       margin: '0 0 10px 0',
@@ -435,7 +444,7 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       paddingTop: 8
     },
     modalTitle: {
-      fontFamily: 'system-ui, -apple-system, sans-serif',
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       fontSize: '22px',
       fontWeight: '600',
       margin: 0,
@@ -541,7 +550,6 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       border: '1px solid #e2e8f0',
     },
     th: {
-      background: '#f8fafc',
       color: '#3b82f6',
       fontWeight: 600,
       fontSize: '15px',
@@ -561,12 +569,16 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       background: '#f8fafc'
     },
     categoryHeader: {
-      background: '#eff6ff',
-      color: theme.palette.primary,
-      fontWeight: 700,
-      fontSize: '18px',
-      padding: '12px 8px',
-      borderBottom: `2px solid ${theme.palette.primary}`,
+      // removed background so header blends with page,
+      // increased size and weight and left-aligned for emphasis
+      background: 'transparent',
+      color: '#60a5fa',
+      fontWeight: 800,
+      fontSize: '24px',
+      padding: '6px 8px',
+      borderBottom: 'none',
+      marginBottom: '8px',
+      textAlign: 'left'    // move label to left side
     },
     archiveButton: {
       backgroundColor: 'transparent',
@@ -835,33 +847,33 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
         <div style={styles.statsContainer}>
           {/* First row */}
           <div style={styles.statCard}>
-            <FaBoxOpen size={28} color="#60a5fa" style={{ marginBottom: 8 }} />
+            <FaBoxOpen size={32} color="#60a5fa" style={styles.statIcon} />
             <div style={{ ...styles.statNumber, color: '#60a5fa' }}>{stats.total}</div>
             <div style={styles.statLabel}>Total Items</div>
           </div>
           <div style={styles.statCard}>
-            <FaCheckCircle size={28} color="#22c55e" style={{ marginBottom: 8 }} />
+            <FaCheckCircle size={32} color="#22c55e" style={styles.statIcon} />
             <div style={{ ...styles.statNumber, color: '#22c55e' }}>{stats.available}</div>
             <div style={styles.statLabel}>Available</div>
           </div>
           <div style={styles.statCard}>
-            <FaDrum size={28} color="#fbbf24" style={{ marginBottom: 8 }} />
+            <FaDrum size={32} color="#fbbf24" style={styles.statIcon} />
             <div style={{ ...styles.statNumber, color: '#fbbf24' }}>{stats.percussion}</div>
             <div style={styles.statLabel}>Percussion</div>
           </div>
           {/* Second row */}
           <div style={styles.statCard}>
-            <FaWind size={28} color="#3b82f6" style={{ marginBottom: 8 }} />
+            <FaWind size={32} color="#3b82f6" style={styles.statIcon} />
             <div style={{ ...styles.statNumber, color: '#3b82f6' }}>{stats.wind}</div>
             <div style={styles.statLabel}>Wind</div>
           </div>
           <div style={styles.statCard}>
-            <FaTools size={28} color="#ef4444" style={{ marginBottom: 8 }} />
+            <FaTools size={32} color="#ef4444" style={styles.statIcon} />
             <div style={{ ...styles.statNumber, color: '#ef4444' }}>{stats.maintenance}</div>
             <div style={styles.statLabel}>Maintenance</div>
           </div>
           <div style={styles.statCard}>
-            <FaBoxOpen size={28} color="#64ffda" style={{ marginBottom: 8 }} />
+            <FaBoxOpen size={32} color="#64ffda" style={styles.statIcon} />
             <div style={{ ...styles.statNumber, color: '#64ffda' }}>{stats.totalQuantity}</div>
             <div style={styles.statLabel}>Total Units</div>
           </div>
@@ -871,56 +883,44 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
 
       {/* Controls Section */}
       <div style={styles.controls}>
-        <div style={styles.filterSection}>
-          <input
-            type="text"
-            placeholder="Search instruments, brands, or subcategories..."
-            style={styles.searchInput}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
-          />
-          <select
-            style={styles.filterSelect}
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
-          >
-            <option value="all">All Categories</option>
-            <option value="percussion">Percussion</option>
-            <option value="wind">Wind Instruments</option>
-          </select>
-        </div>
-        <div style={styles.buttonContainer}>
-          {!viewOnly && (
-            <button
-              style={styles.createButton}
-              onClick={handleAddNew}
-              onMouseEnter={handleCreateButtonHover}
-              onMouseLeave={handleCreateButtonLeave}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={styles.filterSection}>
+            <input
+              type="text"
+              placeholder="Search instruments, brands, or subcategories..."
+              style={styles.searchInput}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
+            />
+            <select
+              style={styles.filterSelect}
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
             >
-              + Add Instrument
-            </button>
-          )}
+              <option value="all">All Categories</option>
+              <option value="percussion">Percussion</option>
+              <option value="wind">Wind Instruments</option>
+            </select>
+          </div>
+
+          <div style={styles.buttonContainer}>
+            {!viewOnly && (
+              <button
+                style={styles.createButton}
+                onClick={handleAddNew}
+                onMouseEnter={handleCreateButtonHover}
+                onMouseLeave={handleCreateButtonLeave}
+              >
+                Add Instrument
+              </button>
+            )}
+          </div>
         </div>
       </div>
-
-
-      {!viewOnly && (
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 15, color: '#94a3b8', marginRight: 8 }}>
-            <input
-              type="checkbox"
-              checked={showArchived}
-              onChange={() => setShowArchived(!showArchived)}
-              style={{ marginRight: 6 }}
-            />
-            Show Archived Instruments
-          </label>
-        </div>
-      )}
 
 
       {Object.keys(groupedByCategory).length === 0 && (
@@ -937,14 +937,35 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
       {Object.entries(groupedByCategory).map(([cat, items]) => (
         <div key={cat} style={{ marginBottom: 32 }}>
           <div style={{
-            ...styles.categoryHeader,
-            textAlign: 'center', // Center the category name
-            fontSize: '22px',
-            fontWeight: 700,
-            color: '#60a5fa',
-            borderBottom: '2px solid #60a5fa'
+            // category header with right-aligned "Show Archived" for Percussion
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 12
           }}>
-            {categoryNames[cat] || cat}
+            <div style={{
+              ...styles.categoryHeader,
+              textAlign: 'left',
+              fontSize: '35px',
+              fontWeight: 800,
+              color: '#60a5fa',
+              margin: 0
+            }}>
+              {categoryNames[cat] || cat}
+            </div>
+
+            {/* Show the archived toggle to the right of the Percussion header */}
+            {!viewOnly && cat === 'percussion' && (
+              <label style={{ fontSize: 15, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={showArchived}
+                  onChange={() => setShowArchived(!showArchived)}
+                  style={{ marginRight: 6 }}
+                />
+                Show Archived Instruments
+              </label>
+            )}
           </div>
           <table style={{ ...styles.table, marginTop: 0 }}>
             <thead>
@@ -973,7 +994,7 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
                     <span style={getConditionStyle(item.condition)}>{item.condition}</span>
                   </td>
                   <td style={{ ...styles.td, textAlign: 'center' }}>
-                    <span style={{ fontWeight: '600', color: '#64ffda' }}>{getTotalQuantity(item)}</span>
+                    <span style={{ fontWeight: '500', color: '#0f172a' }}>{getTotalQuantity(item)}</span>
                   </td>
                   <td style={{ ...styles.td, textAlign: 'center' }}>
                     {(() => {
@@ -1384,6 +1405,3 @@ const Inventory = ({ user, onBackToHome, viewOnly = false, onRequestBorrow, onRe
 
 
 export default Inventory;
-
-
-
