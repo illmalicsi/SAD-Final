@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FaCalendarAlt, FaClock, FaUser, FaUsers, FaEnvelope, FaPhone, FaMapMarkerAlt, FaMusic, FaCheckCircle, FaSpinner, FaChevronLeft, FaChevronRight, FaInfoCircle, FaGuitar, FaDrum, FaKeyboard, FaPlus, FaCreditCard } from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaUser, FaUsers, FaEnvelope, FaPhone, FaMapMarkerAlt, FaMusic, FaCheckCircle, FaSpinner, FaChevronLeft, FaChevronRight, FaInfoCircle, FaGuitar, FaDrum, FaKeyboard, FaPlus, FaCreditCard, FaTimes } from 'react-icons/fa';
 import NotificationService from '../services/notificationService';
 
 // --- Data for Dynamic Form ---
 
-const services = ['Band Gigs', 'Parade Events', 'Music Arrangement', 'Music Workshops'];
+const services = ['Band Gigs', 'Parade Events', 'Instrument Rentals', 'Music Arrangement', 'Music Workshops'];
 
 const bandPackages = {
   '20-players-with': { label: '20 Players (with Food & Transport)', price: 15000 },
@@ -14,7 +14,19 @@ const bandPackages = {
   'full-band': { label: 'Full Band', price: 35000 },
 };
 
-// Instruments are loaded from the backend so we show actual instrument names, condition and price
+const instruments = {
+  'trumpet': { label: 'Trumpet', pricePerDay: 500 },
+  'trombone': { label: 'Trombone', pricePerDay: 500 },
+  'french-horn': { label: 'French Horn', pricePerDay: 500 },
+  'tuba': { label: 'Tuba', pricePerDay: 500 },
+  'flute': { label: 'Flute', pricePerDay: 500 },
+  'clarinet': { label: 'Clarinet', pricePerDay: 500 },
+  'saxophone': { label: 'Saxophone', pricePerDay: 500 },
+  'yamaha-snare': { label: 'Yamaha Snare Drum', pricePerDay: 1000 },
+  'pearl-snare': { label: 'Pearl Snare Drum', pricePerDay: 1000 },
+  'bass-drum': { label: 'Bass Drum', pricePerDay: 500 },
+  'cymbals': { label: 'Cymbals', pricePerDay: 500 },
+};
 
 const musicArrangementBasePrice = 3000;
 
@@ -52,6 +64,12 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
   const [bandPackage, setBandPackage] = useState('');
   const [eventDate, setEventDate] = useState('');
   
+  // For Instrument Rentals
+  const [selectedInstrument, setSelectedInstrument] = useState('');
+  const [rentalStartDate, setRentalStartDate] = useState('');
+  const [rentalEndDate, setRentalEndDate] = useState('');
+  const [purpose, setPurpose] = useState('');
+
   // current logged-in user (if any)
   const [user, setUser] = useState(null);
 
@@ -63,20 +81,33 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
   const [month, setMonth] = useState(today.getMonth());
 
   // --- Derived State ---
-  // rentalDays removed - rentals are handled in InstrumentBooking.jsx
+  const rentalDays = useMemo(() => {
+    if (service === 'Instrument Rentals' && rentalStartDate && rentalEndDate) {
+      const start = new Date(rentalStartDate);
+      const end = new Date(rentalEndDate);
+      if (end < start) return 0;
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Inclusive of start and end date
+      return diffDays;
+    }
+    return 0;
+  }, [service, rentalStartDate, rentalEndDate]);
 
   // --- Effect for Price Calculation ---
   useEffect(() => {
     let value = 0;
     if (service === 'Band Gigs' || service === 'Parade Events') {
       value = bandPackages[bandPackage]?.price || 0;
+    } else if (service === 'Instrument Rentals') {
+      const instrumentPrice = instruments[selectedInstrument]?.pricePerDay || 0;
+      value = instrumentPrice * rentalDays;
     } else if (service === 'Music Arrangement') {
       value = musicArrangementBasePrice * numPieces;
     } else if (service === 'Music Workshops') {
-      value = 5000; // Default value for workshops
+        value = 5000; // Default value for workshops
     }
     setEstimatedValue(value);
-  }, [service, bandPackage, numPieces]);
+  }, [service, bandPackage, selectedInstrument, rentalDays, numPieces]);
 
   // Effect to set service from URL parameter
   useEffect(() => {
@@ -92,7 +123,54 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
 
   const getStoredBookings = async () => {
     try {
-      // Standard booking load (no instrument rentals handled here)
+      // If this is an instrument rental/borrow request, route it to the Approval queue
+      if (service === 'Instrument Rentals') {
+        try {
+          const type = (user && user.role && user.role !== 'user') ? 'borrow' : 'rent';
+          const storageKey = type === 'borrow' ? 'borrowRequests' : 'rentRequests';
+          const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+          const request = {
+            id: Date.now(),
+            userId: user?.id || null,
+            userName: name.trim(),
+            userEmail: email.trim().toLowerCase(),
+            phone: phone.trim(),
+            instrument: instruments[selectedInstrument]?.label || selectedInstrument,
+            startDate: rentalStartDate,
+            endDate: rentalEndDate,
+            purpose: purpose ? purpose.trim() : null,
+            notes: notes ? notes.trim() : null,
+            status: 'pending',
+            createdAt: new Date().toISOString()
+          };
+          existing.unshift(request);
+          localStorage.setItem(storageKey, JSON.stringify(existing));
+          // Notify approval UI
+          window.dispatchEvent(new Event(`${type}RequestsUpdated`));
+          setLastSubmissionType(type === 'borrow' ? 'borrow' : 'rent');
+        } catch (e) {
+          console.error('Failed to save instrument request to localStorage', e);
+        }
+
+        // Show success and reset form locally (do not create a booking record)
+  setShowSuccess(true);
+        setService('');
+        setName('');
+        setEmail('');
+        setPhone('');
+        setLocation('');
+        setNotes('');
+        setPurpose('');
+        setBandPackage('');
+        setSelectedInstrument('');
+        setRentalStartDate('');
+        setRentalEndDate('');
+        setEventDate('');
+        setNumPieces(1);
+        setEstimatedValue(0);
+        setTimeout(() => setShowSuccess(false), 5000);
+        return;
+      }
       const response = await fetch('http://localhost:5000/api/bookings');
       if (response.ok) {
         const data = await response.json();
@@ -139,8 +217,6 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       setLocalBookings(stored);
     };
     loadBookings();
-    // Note: instrument rentals are handled in InstrumentBooking.jsx
-
     const handleBookingsUpdate = async () => {
       const updated = await getStoredBookings();
       setLocalBookings(updated);
@@ -202,7 +278,16 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
 
   const handleDateClick = (dateStr) => {
     if (dateStr >= todayStr && getDateStatus(dateStr) !== 'approved') {
-      if (service === 'Band Gigs' || service === 'Parade Events') {
+      if (service === 'Instrument Rentals') {
+        if (!rentalStartDate || rentalEndDate) {
+          setRentalStartDate(dateStr);
+          setRentalEndDate('');
+        } else if (dateStr >= rentalStartDate) {
+          setRentalEndDate(dateStr);
+        } else {
+          setRentalStartDate(dateStr);
+        }
+      } else if (service === 'Band Gigs' || service === 'Parade Events') {
         setEventDate(dateStr);
       }
     }
@@ -218,12 +303,15 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
     let startTime = '09:00';
     let endTime = '17:00';
 
-  if (service === 'Band Gigs' || service === 'Parade Events') {
-    bookingNotes = `Package: ${bandPackages[bandPackage]?.label}\n\n${notes}`;
-    bookingDate = eventDate; // Use the selected event date
-  } else if (service === 'Music Arrangement') {
-    bookingNotes = `Number of Pieces: ${numPieces}\n\n${notes}`;
-  }
+    if (service === 'Band Gigs' || service === 'Parade Events') {
+        bookingNotes = `Package: ${bandPackages[bandPackage]?.label}\n\n${notes}`;
+        bookingDate = eventDate; // Use the selected event date
+  } else if (service === 'Instrument Rentals') {
+    bookingNotes = `Instrument: ${instruments[selectedInstrument]?.label}\nRental Period: ${rentalStartDate} to ${rentalEndDate} (${rentalDays} days)\nPurpose: ${purpose || ''}\n\n${notes}`;
+    bookingDate = rentalStartDate;
+    } else if (service === 'Music Arrangement') {
+        bookingNotes = `Number of Pieces: ${numPieces}\n\n${notes}`;
+    }
 
     try {
       const newBooking = {
@@ -237,7 +325,8 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         endTime,
         location: location.trim(),
         estimatedValue: estimatedValue,
-        notes: bookingNotes.trim() || null
+        notes: bookingNotes.trim() || null,
+        purpose: purpose ? purpose.trim() : null
       };
 
       const response = await fetch('http://localhost:5000/api/bookings', {
@@ -264,17 +353,21 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
           console.error('Notification error (new booking):', e);
         }
         
-    // Reset form
-    setService('');
-    setName('');
-    setEmail('');
-    setPhone('');
-    setLocation('');
-    setNotes('');
-    setBandPackage('');
-    setEventDate(''); // Reset event date
-    setNumPieces(1);
-    setEstimatedValue(0);
+        // Reset form
+        setService('');
+        setName('');
+        setEmail('');
+        setPhone('');
+        setLocation('');
+  setNotes('');
+  setPurpose('');
+        setBandPackage('');
+        setSelectedInstrument('');
+        setRentalStartDate('');
+        setRentalEndDate('');
+        setEventDate(''); // Reset event date
+        setNumPieces(1);
+        setEstimatedValue(0);
 
         setTimeout(() => setShowSuccess(false), 5000);
       } else {
@@ -293,7 +386,9 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
     if (service === 'Band Gigs' || service === 'Parade Events') {
       return !!bandPackage && !!eventDate;
     }
-    // Instrument Rentals handled in InstrumentBooking.jsx
+    if (service === 'Instrument Rentals') {
+      return !!selectedInstrument && !!rentalStartDate && !!rentalEndDate && !!purpose;
+    }
     if (service === 'Music Arrangement') {
       return numPieces > 0;
     }
@@ -301,7 +396,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         return true; // Or add specific validation
     }
     return false;
-  }, [service, name, email, location, bandPackage, eventDate, numPieces]);
+  }, [service, name, email, location, bandPackage, eventDate, selectedInstrument, rentalStartDate, rentalEndDate, numPieces]);
 
   const minDate = today.toISOString().split('T')[0];
 
@@ -328,7 +423,51 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
             </div>
           </>
         );
-        
+      case 'Instrument Rentals':
+        return (
+          <>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}><FaGuitar /> Instrument <span style={styles.required}>*</span></label>
+              <select value={selectedInstrument} onChange={e => setSelectedInstrument(e.target.value)} style={styles.input} required>
+                <option value="">Select an instrument...</option>
+                {Object.entries(instruments).map(([key, { label, pricePerDay }]) => (
+                  <option key={key} value={key}>{label} - ₱{pricePerDay.toLocaleString()}/day</option>
+                ))}
+              </select>
+            </div>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}><FaInfoCircle /> Purpose <span style={styles.required}>*</span></label>
+              <input type="text" value={purpose} onChange={e => setPurpose(e.target.value)} style={styles.input} placeholder="e.g., Wedding performance, rehearsal, practice sessions" required />
+            </div>
+            <div style={styles.gridTwo}>
+                <div style={styles.inputGroup}>
+                    <label style={styles.label}><FaCalendarAlt /> Rental Start Date <span style={styles.required}>*</span></label>
+                    <input type="date" value={rentalStartDate} onChange={e => setRentalStartDate(e.target.value)} style={styles.input} min={minDate} required />
+                </div>
+                <div style={styles.inputGroup}>
+                    <label style={styles.label}><FaCalendarAlt /> Rental End Date <span style={styles.required}>*</span></label>
+                    <input type="date" value={rentalEndDate} onChange={e => setRentalEndDate(e.target.value)} style={styles.input} min={rentalStartDate || minDate} required />
+                </div>
+            </div>
+            {rentalDays > 0 && (
+                <div style={styles.priceInfo}>
+                    <FaInfoCircle />
+                    <span>Duration: <strong>{rentalDays} day{rentalDays > 1 && 's'}</strong></span>
+                </div>
+            )}
+            {/* Member-only borrow form fields */}
+            {user && user.role && user.role !== 'user' && (
+              <div style={{ marginTop: 12, padding: 12, border: '1px dashed #c7e6d8', borderRadius: 8, background: '#f8fdf9' }}>
+                <div style={{ fontWeight: 700, color: '#065f46', marginBottom: 8 }}>Member Borrow Request</div>
+                <div style={{ marginBottom: 8, color: '#065f46' }}>As a member, you can borrow select instruments. Please confirm the borrow details below.</div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Borrowing Duration Notes (optional)</label>
+                  <input type="text" value={notes} onChange={e => setNotes(e.target.value)} style={styles.input} placeholder="Additional instructions for borrowing (e.g., pickup person, ID to present)" />
+                </div>
+              </div>
+            )}
+          </>
+        );
       case 'Music Arrangement':
         return (
             <>
@@ -348,63 +487,103 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
   };
 
   const styles = {
+    // global font baseline
+    fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
+    baseFontSize: 16,
     container: {
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%)',
       padding: '2rem 1rem',
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+      fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
+      fontSize: '16px',
+      lineHeight: 1.45,
+      color: '#0f172a'
     },
     wrapper: {
       maxWidth: '1400px',
       margin: '0 auto'
+    },
+    // close button for top-right of the card
+    closeButton: {
+      position: 'absolute',
+      top: 12,
+      right: 12,
+      background: 'transparent',
+      border: 'none',
+      color: '#475569',
+      cursor: 'pointer',
+      padding: 8,
+      borderRadius: 8,
+      fontSize: 18,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 20
     },
     header: {
       textAlign: 'center',
       marginBottom: '2rem',
       padding: '0'
     },
+    // heading / title
     title: {
-      fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-      fontWeight: '800',
-      color: '#0369a1',
-      marginBottom: '1rem',
-      letterSpacing: '-0.02em',
-      padding: '0'
+      fontSize: '40px',
+      fontWeight: 700,
+      color: "#0f172a",
+      /* extend underline to the full inner card width by compensating for card padding:
+         formContainer has padding: '1.75rem' so we use negative horizontal margins of the same amount */
+      margin: '0 -1.75rem 0 -1.75rem',
+      padding: '0 1.75rem 12px 1.75rem',   // preserve visual spacing for the text
+      borderBottom: "3px solid #bae6fd",
+      display: "block",
+      width: "auto",
+      textAlign: "center",
+      boxSizing: "border-box",
+      fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial"
     },
+    // subtitle centered under title
     subtitle: {
-      color: '#64748b',
-      fontSize: '1.125rem',
-      maxWidth: '600px',
-      margin: '0 auto',
-      lineHeight: '1.6',
-      padding: '0'
+      color: "#475569",
+      fontSize: '14px',
+      fontWeight: 400,
+      lineHeight: 1.4,
+      margin: '8px auto 0',
+      textAlign: 'center',
+      maxWidth: '820px',
+      fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial"
     },
     mainContent: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 350px',
-      gap: '2rem',
-      alignItems: 'start'
+      display: 'block',
+      gap: '2rem'
     },
     formContainer: {
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdropFilter: 'blur(20px)',
-      borderRadius: '24px',
-      padding: '2.5rem',
-      border: '1px solid rgba(3, 105, 161, 0.1)',
-      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)'
+      background: 'rgba(255, 255, 255, 0.98)',
+      backdropFilter: 'blur(6px)',
+      borderRadius: '20px',
+      padding: '1.75rem',
+      border: '1px solid rgba(3, 105, 161, 0.08)',
+      boxShadow: '0 8px 24px rgba(2, 6, 23, 0.06)',
+      display: 'grid',
+      gridTemplateColumns: 'minmax(420px, 1fr) 480px',
+      gridTemplateRows: 'auto 1fr',
+      gap: '1.25rem',
+      alignItems: 'start',
+      width: '100%',
+      boxSizing: 'border-box'
     },
     formTitle: {
       display: 'flex',
       alignItems: 'center',
       gap: '0.75rem',
-      marginBottom: '2rem',
+      marginBottom: '1.25rem',
       color: '#0f172a',
-      fontSize: '1.5rem',
-      fontWeight: '700'
+      fontSize: '18px',
+      fontWeight: 700,
+      fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial"
     },
     formGrid: {
       display: 'grid',
-      gap: '1.5rem'
+      gap: '1.25rem'
     },
     inputGroup: {
       display: 'flex',
@@ -413,56 +592,61 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
     },
     label: {
       color: '#334155',
-      fontSize: '0.875rem',
-      fontWeight: '600',
+      fontSize: '14px',
+      fontWeight: 600,
       display: 'flex',
       alignItems: 'center',
-      gap: '0.5rem'
+      gap: '0.5rem',
+      fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial"
     },
     required: {
-      color: '#ef4444'
+      color: '#ef4444',
+      fontSize: '13px'
     },
     input: {
       width: '100%',
-      padding: '1rem 1.25rem',
-      background: 'rgba(248, 250, 252, 0.8)',
-      border: '2px solid rgba(203, 213, 225, 0.5)',
-      borderRadius: '12px',
+      padding: '12px 14px',
+      background: 'rgba(248, 250, 252, 0.9)',
+      border: '1.5px solid rgba(203, 213, 225, 0.8)',
+      borderRadius: '10px',
       color: '#0f172a',
-      fontSize: '1rem',
-      fontFamily: 'inherit',
-      transition: 'all 0.3s ease',
+      fontSize: '15px',
+      fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
+      transition: 'all 0.18s ease',
       outline: 'none',
       boxSizing: 'border-box'
     },
     inputFocus: {
       borderColor: '#0369a1',
-      boxShadow: '0 0 0 3px rgba(3, 105, 161, 0.1)'
+      boxShadow: '0 0 0 3px rgba(3, 105, 161, 0.08)'
     },
     textarea: {
       minHeight: '120px',
-      resize: 'vertical'
+      resize: 'vertical',
+      fontSize: '15px',
+      padding: '12px 14px',
+      borderRadius: '10px',
+      border: '1.5px solid rgba(203, 213, 225, 0.8)',
+      background: 'rgba(248,250,252,0.9)',
+      fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial"
     },
     button: {
       width: '100%',
-      padding: '1.25rem 2rem',
-      background: isFormValid
-        ? 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)'
-        : 'rgba(203, 213, 225, 0.5)',
-      color: isFormValid ? '#ffffff' : '#94a3b8',
+      padding: '12px 16px',
+      background: 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)',
+      color: '#ffffff',
       border: 'none',
-      borderRadius: '16px',
-      fontSize: '1.125rem',
-      fontWeight: '700',
-      cursor: isFormValid ? 'pointer' : 'not-allowed',
-      transition: 'all 0.3s ease',
+      borderRadius: '12px',
+      fontSize: '16px',
+      fontWeight: 700,
+      cursor: 'pointer',
+      transition: 'all 0.18s ease',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: '0.5rem',
-      boxShadow: isFormValid
-        ? '0 10px 30px rgba(3, 105, 161, 0.2)'
-        : 'none'
+      boxShadow: '0 8px 22px rgba(3,105,161,0.14)',
+      fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial"
     },
     successMessage: {
       position: 'fixed',
@@ -477,46 +661,55 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       alignItems: 'center',
       gap: '0.75rem',
       zIndex: 1000,
-      animation: 'slideIn 0.3s ease-out'
+      animation: 'slideIn 0.3s ease-out',
+      fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
+      fontSize: '15px'
     },
     gridTwo: {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-      gap: '1.5rem'
+      gap: '1rem'
     },
     gridThree: {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-      gap: '1.5rem'
+      gap: '1rem'
     },
     calendarContainer: {
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdropFilter: 'blur(20px)',
-      borderRadius: '24px',
-      padding: '1.5rem',
-      border: '1px solid rgba(3, 105, 161, 0.1)',
-      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
-      position: 'sticky',
-      top: '2rem'
+      background: 'transparent',
+      borderRadius: '12px',
+      padding: '0.75rem',
+      border: 'none',
+      boxShadow: 'none',
+      width: '100%',
+      maxWidth: '100%',
+      boxSizing: 'border-box',
+      position: 'relative'
     },
     calendarHeader: {
-      marginBottom: '1rem'
+      marginBottom: '0.75rem',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
     },
     calendarTitle: {
       color: '#0f172a',
-      fontSize: '1.125rem',
-      fontWeight: '700',
+      fontSize: '18px',
+      fontWeight: 700,
       display: 'flex',
       alignItems: 'center',
+      justifyContent: 'center',
       gap: '0.5rem',
-      marginBottom: '0.75rem'
+      marginBottom: '0.5rem',
+      width: '100%',
+      fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial"
     },
     calendarNav: {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       gap: '0.5rem',
-      marginBottom: '1rem'
+      marginBottom: '0.75rem'
     },
     navButton: {
       background: 'rgba(3, 105, 161, 0.1)',
@@ -525,14 +718,14 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       padding: '0.5rem',
       color: '#0369a1',
       cursor: 'pointer',
-      transition: 'all 0.3s ease',
+      transition: 'all 0.18s ease',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'
     },
     monthYear: {
       color: '#334155',
-      fontSize: '0.875rem',
+      fontSize: '14px',
       fontWeight: '600',
       minWidth: '100px',
       textAlign: 'center'
@@ -540,41 +733,43 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
     calendarGrid: {
       display: 'grid',
       gridTemplateColumns: 'repeat(7, 1fr)',
-      gap: '0.25rem'
+      gap: '0.35rem'
     },
     dayHeader: {
       color: '#64748b',
-      fontSize: '0.75rem',
+      fontSize: '12px',
       fontWeight: '600',
       textAlign: 'center',
-      padding: '0.5rem 0.25rem'
+      padding: '0.35rem 0.25rem'
     },
     dayCell: {
-      aspectRatio: '1',
+      height: '56px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: '6px',
+      borderRadius: '8px',
       cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      fontSize: '0.75rem',
-      fontWeight: '500',
-      position: 'relative'
+      transition: 'all 0.18s ease',
+      fontSize: '14px',
+      fontWeight: 700,
+      position: 'relative',
+      boxSizing: 'border-box',
+      padding: '6px'
     },
     dayAvailable: {
-      background: 'rgba(16, 185, 129, 0.1)',
+      background: 'rgba(16, 185, 129, 0.08)',
       color: '#10b981',
-      border: '1px solid rgba(16, 185, 129, 0.3)'
+      border: '1px solid rgba(16, 185, 129, 0.18)'
     },
     dayPending: {
-      background: 'rgba(245, 158, 11, 0.1)',
+      background: 'rgba(245, 158, 11, 0.08)',
       color: '#f59e0b',
-      border: '1px solid rgba(245, 158, 11, 0.3)'
+      border: '1px solid rgba(245, 158, 11, 0.18)'
     },
     dayApproved: {
-      background: 'rgba(239, 68, 68, 0.1)',
+      background: 'rgba(239, 68, 68, 0.08)',
       color: '#ef4444',
-      border: '1px solid rgba(239, 68, 68, 0.3)',
+      border: '1px solid rgba(239, 68, 68, 0.18)',
       cursor: 'not-allowed'
     },
     dayPast: {
@@ -594,13 +789,15 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       marginTop: '1.25rem',
       padding: '0.75rem',
       background: 'rgba(248, 250, 252, 0.8)',
-      borderRadius: '12px'
+      borderRadius: '12px',
+      fontSize: '13px',
+      color: '#475569'
     },
     legendItem: {
       display: 'flex',
       alignItems: 'center',
       gap: '0.375rem',
-      fontSize: '0.75rem',
+      fontSize: '13px',
       color: '#475569'
     },
     legendDot: {
@@ -612,20 +809,21 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         background: 'rgba(3, 105, 161, 0.05)',
         border: '1px solid rgba(3, 105, 161, 0.1)',
         borderRadius: '16px',
-        padding: '1.5rem',
+        padding: '1.25rem',
         textAlign: 'center',
         transition: 'all 0.3s ease',
         marginTop: '1rem',
+        fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial"
     },
     priceLabel: {
         color: '#475569',
-        fontSize: '1rem',
+        fontSize: '14px',
         fontWeight: '600',
         marginBottom: '0.5rem',
     },
     priceValue: {
         color: '#0369a1',
-        fontSize: '2.5rem',
+        fontSize: '24px',
         fontWeight: '800',
     },
     priceInfo: {
@@ -635,11 +833,11 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         background: 'rgba(248, 250, 252, 0.8)',
         padding: '0.75rem 1rem',
         borderRadius: '12px',
-        fontSize: '0.875rem',
+        fontSize: '14px',
         color: '#475569',
     },
   };
-
+  
   return (
     <div style={styles.container}>
       <style>
@@ -691,203 +889,217 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
       )}
 
       <div style={styles.wrapper}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>
-            Book Your Session
-          </h1>
-          <p style={styles.subtitle}>
-            Schedule your music service with our professional team.
-            Fill out the form below and we'll get back to you within 24 hours.
-          </p>
-        </div>
-
         <div className="main-content" style={styles.mainContent}>
-          {/* Form Section */}
+          {/* One card contains title/subtitle, form (left) and calendar (right) */}
           <div style={styles.formContainer}>
-            <div style={styles.formTitle}>
-              <FaCalendarAlt />
-              Booking Details
+           <button
+             type="button"
+             aria-label="Close and return home"
+             title="Return home"
+             style={styles.closeButton}
+             onClick={() => { window.location.href = '/'; }}
+           >
+             <FaTimes />
+           </button>
+            {/* title/subtitle span both columns */}
+            <div style={{ gridColumn: '1 / 3', marginBottom: 12 }}>
+              <h1 style={styles.title}>Book Your Session</h1>
+              <p style={styles.subtitle}>Schedule your music service with our professional team. Fill out the form below and we'll get back to you within 24 hours.</p>
             </div>
 
-          <form onSubmit={handleSubmit} style={styles.formGrid}>
-            {/* Service Selection */}
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>
-                <FaMusic />
-                Service Type
-                <span style={styles.required}>*</span>
-              </label>
-              <select
-                value={service}
-                onChange={e => setService(e.target.value)}
-                style={styles.input}
-                required
-              >
-                <option value="">Choose your service</option>
-                {services.map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Dynamically Rendered Fields */}
-            {service && renderServiceSpecificFields()}
-
-            {/* Common Fields */}
-            {service && (
-                <>
-                    <div style={styles.gridTwo}>
-                        <div style={styles.inputGroup}>
-                            <label style={styles.label}><FaUser /> Full Name <span style={styles.required}>*</span></label>
-                            <input type="text" value={name} onChange={e => setName(e.target.value)} style={styles.input} placeholder="e.g., Juan Dela Cruz" required readOnly={isUserLoggedIn} />
-                        </div>
-                        
-                        <div style={styles.inputGroup}>
-                          <label style={styles.label}><FaEnvelope /> Email Address <span style={styles.required}>*</span></label>
-                          <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={styles.input} placeholder="e.g., juan.delacruz@email.com" required readOnly={isUserLoggedIn} />
-                        </div>
-                    </div>
-
-                    <div style={styles.gridTwo}>
-                      <div style={styles.inputGroup}>
-                        <label style={styles.label}><FaPhone /> Phone Number <span style={styles.required}>*</span></label>
-                        <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} style={styles.input} placeholder="e.g., 09171234567" required readOnly={isUserLoggedIn} />
-                      </div>
-                      <div style={styles.inputGroup}>
-                        <label style={styles.label}><FaMapMarkerAlt /> Address <span style={styles.required}>*</span></label>
-                        <input type="text" value={location} onChange={e => setLocation(e.target.value)} style={styles.input} placeholder="e.g., 123 Rizal St, Metro Manila" required />
-                      </div>
-                    </div>
-
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}><FaInfoCircle /> Notes / Special Requests</label>
-                        <textarea value={notes} onChange={e => setNotes(e.target.value)} style={styles.textarea} placeholder="e.g., specific song requests, setup details, etc." rows={4}></textarea>
-                    </div>
-
-                    {/* Price Display */}
-                    {estimatedValue > 0 && (
-                        <div style={styles.priceDisplay}>
-                            <div style={styles.priceLabel}>Estimated Price</div>
-                            <div style={styles.priceValue}>₱{estimatedValue.toLocaleString()}</div>
-                        </div>
-                    )}
-
-                    <button type="submit" disabled={!isFormValid || isSubmitting} style={styles.button}>
-                        {isSubmitting ? <><FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> Submitting...</> : <><FaCheckCircle /> Submit Booking Request</>}
-                    </button>
-                </>
-            )}
-          </form>
-        </div>
-
-        {/* Calendar Section - Now primarily for rentals */}
-        <div className="calendar-container" style={styles.calendarContainer}>
-          <div style={styles.calendarHeader}>
-            <div style={styles.calendarTitle}>
-              <FaCalendarAlt size={16} />
-              Availability Calendar
-            </div>
-          </div>
-          <div style={styles.calendarNav}>
-            <button className="nav-button" style={styles.navButton} onClick={prevMonth}>
-              <FaChevronLeft size={12} />
-            </button>
-            <div style={styles.monthYear}>
-              {new Date(year, month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-            </div>
-            <button className="nav-button" style={styles.navButton} onClick={nextMonth}>
-              <FaChevronRight size={12} />
-            </button>
-          </div>
-
-          <div style={styles.calendarGrid}>
-            {/* Day headers */}
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} style={styles.dayHeader}>
-                {day}
+            {/* left column: booking details + form (row 2, col 1) */}
+            <div style={{ gridColumn: '1 / 2', gridRow: '2 / 3' }}>
+              <div style={styles.formTitle}>
+                <FaCalendarAlt />
+                Booking Details
               </div>
-            ))}
 
-            {/* Empty cells for days before the first day of the month */}
-            {Array.from({ length: firstWeekday(year, month) }, (_, i) => (
-              <div key={`empty-${i}`} style={styles.dayCell}></div>
-            ))}
-
-            {/* Days of the month */}
-            {Array.from({ length: daysInMonth(year, month) }, (_, i) => {
-              const day = i + 1;
-              const dateStr = ymd(year, month, day);
-              const status = getDateStatus(dateStr);
-              const isPast = dateStr < todayStr;
-              
-                        const isSelected = (service === 'Band Gigs' || service === 'Parade Events') && dateStr === eventDate;
-
-              let dayStyle = { ...styles.dayCell };
-
-              if (isSelected) {
-                dayStyle = { ...dayStyle, ...styles.daySelected };
-              } else if (isPast) {
-                dayStyle = { ...dayStyle, ...styles.dayPast };
-              } else {
-                switch (status) {
-                  case 'available':
-                    dayStyle = { ...dayStyle, ...styles.dayAvailable };
-                    break;
-                  case 'pending':
-                    dayStyle = { ...dayStyle, ...styles.dayPending };
-                    break;
-                  case 'approved':
-                    dayStyle = { ...dayStyle, ...styles.dayApproved };
-                    break;
-                  default:
-                    dayStyle = { ...dayStyle, ...styles.dayAvailable };
-                }
-              }
-
-              return (
-                <div
-                  key={day}
-                  className={`calendar-day ${isPast ? 'day-past' : ''} ${status === 'approved' ? 'day-approved' : ''}`}
-                  style={dayStyle}
-                  onClick={() => handleDateClick(dateStr)}
-                  title={
-                    isPast
-                      ? 'Past date'
-                      : status === 'approved'
-                        ? 'Booked'
-                        : status === 'pending'
-                          ? 'Pending booking'
-                          : 'Available'
-                  }
-                >
-                  {day}
+              <form onSubmit={handleSubmit} style={styles.formGrid}>
+                {/* Service Selection */}
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>
+                    <FaMusic />
+                    Service Type
+                    <span style={styles.required}>*</span>
+                  </label>
+                  <select
+                    value={service}
+                    onChange={e => setService(e.target.value)}
+                    style={styles.input}
+                    required
+                  >
+                    <option value="">Choose your service</option>
+                    {services.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
                 </div>
-              );
-            })}
-          </div>
 
-          {/* Legend */}
-          <div style={styles.legend}>
-            <div style={styles.legendItem}>
-              <div style={{ ...styles.legendDot, background: '#10b981' }}></div>
-              Available
+                {/* Dynamically Rendered Fields */}
+                {service && renderServiceSpecificFields()}
+
+                {/* Common Fields */}
+                {service && (
+                    <>
+                        <div style={styles.gridTwo}>
+                            <div style={styles.inputGroup}>
+                                <label style={styles.label}><FaUser /> Full Name <span style={styles.required}>*</span></label>
+                                <input type="text" value={name} onChange={e => setName(e.target.value)} style={styles.input} placeholder="e.g., Juan Dela Cruz" required readOnly={isUserLoggedIn} />
+                            </div>
+                            
+                            <div style={styles.inputGroup}>
+                              <label style={styles.label}><FaEnvelope /> Email Address <span style={styles.required}>*</span></label>
+                              <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={styles.input} placeholder="e.g., juan.delacruz@email.com" required readOnly={isUserLoggedIn} />
+                            </div>
+                        </div>
+
+                        <div style={styles.gridTwo}>
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaPhone /> Phone Number <span style={styles.required}>*</span></label>
+                            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} style={styles.input} placeholder="e.g., 09171234567" required readOnly={isUserLoggedIn} />
+                          </div>
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaMapMarkerAlt /> Address <span style={styles.required}>*</span></label>
+                            <input type="text" value={location} onChange={e => setLocation(e.target.value)} style={styles.input} placeholder="e.g., 123 Rizal St, Metro Manila" required />
+                          </div>
+                        </div>
+
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaInfoCircle /> Notes / Special Requests</label>
+                            <textarea value={notes} onChange={e => setNotes(e.target.value)} style={styles.textarea} placeholder="e.g., specific song requests, setup details, etc." rows={4}></textarea>
+                        </div>
+
+                        {/* Price Display */}
+                        {estimatedValue > 0 && (
+                            <div style={styles.priceDisplay}>
+                                <div style={styles.priceLabel}>Estimated Price</div>
+                                <div style={styles.priceValue}>₱{estimatedValue.toLocaleString()}</div>
+                            </div>
+                        )}
+
+                        <button type="submit" disabled={!isFormValid || isSubmitting} style={styles.button}>
+                            {isSubmitting ? <><FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> Submitting...</> : <>Submit Booking Request</>}
+                        </button>
+                    </>
+                )}
+              </form>
             </div>
-            <div style={styles.legendItem}>
-              <div style={{ ...styles.legendDot, background: '#f59e0b' }}></div>
-              Pending
-            </div>
-            <div style={styles.legendItem}>
-              <div style={{ ...styles.legendDot, background: '#ef4444' }}></div>
-              Booked
-            </div>
-            <div style={styles.legendItem}>
-              <div style={{ ...styles.legendDot, background: '#64748b' }}></div>
-              Past Date
+
+            {/* right column: calendar placed in same card and aligned with Booking Details */}
+            <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3', alignSelf: 'start' }}>
+              <div className="calendar-container" style={styles.calendarContainer}>
+                 <div style={styles.calendarHeader}>
+                   <div style={styles.calendarTitle}>
+                     <FaCalendarAlt size={16} />
+                     Availability Calendar
+                   </div>
+                 </div>
+                 <div style={styles.calendarNav}>
+                   <button className="nav-button" style={styles.navButton} onClick={prevMonth}>
+                     <FaChevronLeft size={12} />
+                   </button>
+                   <div style={styles.monthYear}>
+                     {new Date(year, month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                   </div>
+                   <button className="nav-button" style={styles.navButton} onClick={nextMonth}>
+                     <FaChevronRight size={12} />
+                   </button>
+                 </div>
+ 
+                 <div style={styles.calendarGrid}>
+                   {/* Day headers */}
+                   {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                     <div key={day} style={styles.dayHeader}>
+                       {day}
+                     </div>
+                   ))}
+ 
+                   {/* Empty cells for days before the first day of the month */}
+                   {Array.from({ length: firstWeekday(year, month) }, (_, i) => (
+                     <div key={`empty-${i}`} style={styles.dayCell}></div>
+                   ))}
+ 
+                   {/* Days of the month */}
+                   {Array.from({ length: daysInMonth(year, month) }, (_, i) => {
+                     const day = i + 1;
+                     const dateStr = ymd(year, month, day);
+                     const status = getDateStatus(dateStr);
+                     const isPast = dateStr < todayStr;
+                     
+                     let isSelected = false;
+                     if (service === 'Instrument Rentals') {
+                       isSelected = dateStr >= rentalStartDate && dateStr <= rentalEndDate && rentalStartDate && rentalEndDate;
+                     } else if (service === 'Band Gigs' || service === 'Parade Events') {
+                       isSelected = dateStr === eventDate;
+                     }
+ 
+                     let dayStyle = { ...styles.dayCell };
+ 
+                     if (isSelected) {
+                       dayStyle = { ...dayStyle, ...styles.daySelected };
+                     } else if (isPast) {
+                       dayStyle = { ...dayStyle, ...styles.dayPast };
+                     } else {
+                       switch (status) {
+                         case 'available':
+                           dayStyle = { ...dayStyle, ...styles.dayAvailable };
+                           break;
+                         case 'pending':
+                           dayStyle = { ...dayStyle, ...styles.dayPending };
+                           break;
+                         case 'approved':
+                           dayStyle = { ...dayStyle, ...styles.dayApproved };
+                           break;
+                         default:
+                           dayStyle = { ...dayStyle, ...styles.dayAvailable };
+                       }
+                     }
+ 
+                     return (
+                       <div
+                         key={day}
+                         className={`calendar-day ${isPast ? 'day-past' : ''} ${status === 'approved' ? 'day-approved' : ''}`}
+                         style={dayStyle}
+                         onClick={() => handleDateClick(dateStr)}
+                         title={
+                           isPast
+                             ? 'Past date'
+                             : status === 'approved'
+                               ? 'Booked'
+                               : status === 'pending'
+                                 ? 'Pending booking'
+                                 : 'Available'
+                         }
+                       >
+                         {day}
+                       </div>
+                     );
+                   })}
+                 </div>
+ 
+                 {/* Legend */}
+                 <div style={styles.legend}>
+                   <div style={styles.legendItem}>
+                     <div style={{ ...styles.legendDot, background: '#10b981' }}></div>
+                     Available
+                   </div>
+                   <div style={styles.legendItem}>
+                     <div style={{ ...styles.legendDot, background: '#f59e0b' }}></div>
+                     Pending
+                   </div>
+                   <div style={styles.legendItem}>
+                     <div style={{ ...styles.legendDot, background: '#ef4444' }}></div>
+                     Booked
+                   </div>
+                   <div style={styles.legendItem}>
+                     <div style={{ ...styles.legendDot, background: '#64748b' }}></div>
+                     Past Date
+                   </div>
+                 </div>
+               </div>
             </div>
           </div>
         </div>
-        {/* End of mainContent grid */}
-      </div>
       </div>
 
       <style>
