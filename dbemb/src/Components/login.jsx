@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaEnvelope, FaLock, FaTimes, FaEye, FaEyeSlash, FaGoogle } from 'react-icons/fa';
 import authService from '../services/authService'; // Use real backend auth service
+import loginImg from "./Assets/dbemb_login_signup.jpg"; // <- adjust relative path to match locate result
 
 const sharedStyles = {
   page: {
@@ -9,18 +10,49 @@ const sharedStyles = {
     alignItems: 'center',
     justifyContent: 'center',
     background: 'linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%)',
-    padding: 24,
+    padding: 32,                // slightly more breathing room
     fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
   },
+  // base font used across form (title & subtitle keep their sizes)
+  baseFontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+  baseFontSize: 15,
+  // card now split into left image panel and right form panel
   card: {
     width: '100%',
-    maxWidth: 460,
+    maxWidth: 980,             // a bit bigger than before
     background: '#ffffff',
     borderRadius: 16,
-    padding: '48px 40px',
-    boxShadow: '0 8px 32px rgba(11, 59, 120, 0.08)',
+    padding: 0,
+    boxShadow: '0 10px 36px rgba(11, 59, 120, 0.09)',
     color: '#1e293b',
-    position: 'relative'
+    position: 'relative',
+    display: 'flex',
+    overflow: 'hidden',
+    minHeight: 580             // increased height modestly
+  },
+  imagePanel: {
+    width: '49%',
+    minWidth: 360,             // ensure image panel scales slightly larger
+    backgroundImage: `url(${loginImg})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    color: '#ffffff'
+  },
+  imageOverlayText: {
+    background: 'rgba(0,0,0,0.32)',
+    padding: '18px',
+    borderRadius: 12,
+    textAlign: 'center',
+    maxWidth: 320
+  },
+  formPanel: {
+    width: '51%',
+    padding: '52px 44px',      // slightly larger inner padding
+    boxSizing: 'border-box'
   },
   close: {
     position: 'absolute',
@@ -42,7 +74,7 @@ const sharedStyles = {
     marginBottom: 32
   },
   title: { 
-    fontSize: 28, 
+    fontSize: 40, 
     fontWeight: 700, 
     color: '#0f172a',
     marginBottom: 8,
@@ -53,13 +85,15 @@ const sharedStyles = {
     fontSize: 15,
     fontWeight: 400
   },
-  form: { display: 'flex', flexDirection: 'column', gap: 20 },
+  // consistent form typography (except title/subtitle)
+  form: { display: 'flex', flexDirection: 'column', gap: 20, fontFamily: 'Inter, system-ui, -apple-system, sans-serif', fontSize: 15 },
   field: { display: 'flex', flexDirection: 'column', gap: 8 },
   label: { 
-    fontSize: 14, 
+    fontSize: 15, 
     color: '#334155', 
     fontWeight: 600,
-    marginBottom: 4
+    marginBottom: 4,
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
   },
   inputWrapper: {
     position: 'relative',
@@ -97,30 +131,34 @@ const sharedStyles = {
     display: 'flex', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    marginTop: -8
+    marginTop: -8,
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+    fontSize: 15
   },
   rememberMe: {
     display: 'flex',
     alignItems: 'center',
     gap: 8,
-    fontSize: 14,
+    fontSize: 15,
     color: '#334155',
     cursor: 'pointer',
-    userSelect: 'none'
+    userSelect: 'none',
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
   },
   forgotLink: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#dc2626',
     cursor: 'pointer',
     fontWeight: 500,
-    textDecoration: 'none'
+    textDecoration: 'none',
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
   },
   btnPrimary: {
     width: '100%',
     marginTop: 8,
-    background: 'linear-gradient(135deg, #0b4f8a 0%, #0b3b78 100%)',
+    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
     border: 'none',
-    color: '#ffffff',
+    color: 'white',
     padding: '14px 20px',
     borderRadius: 10,
     fontWeight: 600,
@@ -132,25 +170,29 @@ const sharedStyles = {
   linkText: {
     textAlign: 'center',
     marginTop: 24,
-    fontSize: 14,
-    color: '#64748b'
+    fontSize: 15,
+    color: '#64748b',
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
   },
   linkAction: { 
     color: '#dc2626', 
     cursor: 'pointer', 
     fontWeight: 600,
-    textDecoration: 'none'
+    textDecoration: 'none',
+    fontSize: 14,
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
   },
   error: { 
     color: '#dc2626', 
     textAlign: 'center', 
     marginBottom: 16,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 500,
     background: '#fef2f2',
     padding: '12px 16px',
     borderRadius: 8,
-    border: '1px solid #fecaca'
+    border: '1px solid #fecaca',
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
   },
 };
 
@@ -268,146 +310,137 @@ const Login = ({ onBack, onLogin, onSwitchToSignup, error, onClearError }) => {
   return (
     <div style={sharedStyles.page}>
       <div style={sharedStyles.card}>
-        <button
-          style={sharedStyles.close}
-          onClick={onBack}
-          title="Close"
-          onMouseEnter={(e) => e.currentTarget.style.color = '#0b4f8a'}
-          onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-        >
-          <FaTimes size={18} />
-        </button>
+        <div style={sharedStyles.imagePanel}>
+          {/* overlay text removed */}
+         </div>
 
-        <div style={sharedStyles.header}>
-          <div style={sharedStyles.title}>Login</div>
-          <div style={sharedStyles.subtitle}>Welcome back! Please enter your details</div>
-        </div>
-
-        {(error || loginError) && (
-          <div style={sharedStyles.error}>{error || loginError}</div>
-        )}
-
-        <form style={sharedStyles.form} onSubmit={handleSubmit} noValidate>
-          <div style={sharedStyles.field}>
-            <label style={sharedStyles.label}>Email or Username</label>
-            <div style={sharedStyles.inputWrapper}>
-              <FaEnvelope style={sharedStyles.icon} />
-              <input
-                name="email"
-                type="email"
-                placeholder="Enter your email or username"
-                value={formData.email}
-                onChange={handleInputChange}
-                style={sharedStyles.input}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#0b4f8a';
-                  e.target.style.background = '#ffffff';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e2e8f0';
-                  e.target.style.background = '#f8fafc';
-                }}
-                required
-              />
-            </div>
-          </div>
-
-          <div style={sharedStyles.field}>
-            <label style={sharedStyles.label}>Password</label>
-            <div style={sharedStyles.inputWrapper}>
-              <FaLock style={sharedStyles.icon} />
-              <input
-                name="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleInputChange}
-                style={sharedStyles.input}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#0b4f8a';
-                  e.target.style.background = '#ffffff';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e2e8f0';
-                  e.target.style.background = '#f8fafc';
-                }}
-                required
-              />
-              <div 
-                style={sharedStyles.eyeIcon}
-                onClick={() => setShowPassword(!showPassword)}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#0b4f8a'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </div>
-            </div>
-          </div>
-
-          <div style={sharedStyles.linkRow}>
-            <label style={sharedStyles.rememberMe}>
-              <input type="checkbox" /> Remember me
-            </label>
-            <span style={sharedStyles.forgotLink}>Forgot password?</span>
-          </div>
-
+        <div style={sharedStyles.formPanel}>
           <button
-            type="submit"
-            disabled={isLoading}
-            style={{
-              ...sharedStyles.btnPrimary,
-              opacity: isLoading ? 0.6 : 1,
-              cursor: isLoading ? 'not-allowed' : 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 6px 16px rgba(11, 59, 120, 0.3)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(11, 59, 120, 0.2)';
-              }
-            }}
+            style={sharedStyles.close}
+            onClick={onBack}
+            title="Close"
+            onMouseEnter={(e) => e.currentTarget.style.color = '#0b4f8a'}
+            onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
           >
-            {isLoading ? 'Logging in...' : 'Login'}
+            <FaTimes size={18} />
           </button>
 
-          <div style={sharedStyles.linkText}>
-            Don't have an account?{' '}
-            <span
-              style={sharedStyles.linkAction}
-              onClick={() => { if (onSwitchToSignup) onSwitchToSignup(); else window.location.href = '/signup'; }}
-              onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
-              onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
-            >
-              Sign up now
-            </span>
+          <div style={sharedStyles.header}>
+            <div style={sharedStyles.title}>Login</div>
+            <div style={sharedStyles.subtitle}>Welcome back! Please enter your details</div>
           </div>
-        </form>
 
-        {/* Google Sign-In area */}
-        <div style={{ marginTop: 18 }}>
-          {/* Container where Google's button will render if GIS loaded */}
-          <div ref={googleButtonRef} />
+          {(error || loginError) && (
+            <div style={sharedStyles.error}>{error || loginError}</div>
+          )}
 
-            {/* Fallback stylized button shown only when GIS is not available */}
+          <form style={sharedStyles.form} onSubmit={handleSubmit} noValidate>
+            <div style={sharedStyles.field}>
+              <div style={sharedStyles.inputWrapper}>
+                <FaEnvelope style={sharedStyles.icon} />
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="Email or Username"
+                  aria-label="Email or Username"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  style={sharedStyles.input}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0b4f8a';
+                    e.target.style.background = '#ffffff';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0';
+                    e.target.style.background = '#f8fafc';
+                  }}
+                  required
+                />
+              </div>
+            </div>
+
+            <div style={sharedStyles.field}>
+              <div style={sharedStyles.inputWrapper}>
+                <FaLock style={sharedStyles.icon} />
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  aria-label="Password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  style={sharedStyles.input}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0b4f8a';
+                    e.target.style.background = '#ffffff';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0';
+                    e.target.style.background = '#f8fafc';
+                  }}
+                  required
+                />
+                <div
+                  style={sharedStyles.eyeIcon}
+                  onClick={() => setShowPassword(!showPassword)}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#0b4f8a'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </div>
+              </div>
+            </div>
+
+            {/* remember checkbox above button */}
+            <div style={{ display: 'flex', alignItems: 'center', marginTop: -8 }}>
+              <label style={sharedStyles.rememberMe}>
+                <input type="checkbox" /> Remember me
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              style={{
+                ...sharedStyles.btnPrimary,
+                opacity: isLoading ? 0.6 : 1,
+                cursor: isLoading ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </button>
+
+            {/* actions below sign-in button */}
+            <div style={{ textAlign: 'center', marginTop: 2, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => { /* TODO: implement password reset flow */ }}
+                style={{ background: 'transparent', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
+              >
+                Forgot password?
+              </button>
+
+              <div style={{ color: '#64748b', fontSize: 14 }}>
+                Don't have an account?{' '}
+                <span
+                  style={sharedStyles.linkAction}
+                  onClick={() => { if (onSwitchToSignup) onSwitchToSignup(); else window.location.href = '/signup'; }}
+                >
+                  Sign up now
+                </span>
+              </div>
+            </div>
+          </form>
+
+          <div style={{ marginTop: 18 }}>
+            <div ref={googleButtonRef} />
             {!gsiAvailable && (
               <button
                 onClick={() => {
                   setLoginError('');
                   if (window.google && window.google.accounts && window.google.accounts.id) {
-                    try {
-                      window.google.accounts.id.prompt();
-                    } catch (e) {
-                      console.error('prompt error', e);
-                      setLoginError('Unable to open Google sign-in.');
-                    }
-                  } else {
-                    setLoginError('Google sign-in is not available.');
-                  }
+                    try { window.google.accounts.id.prompt(); } catch (e) { setLoginError('Unable to open Google sign-in.'); }
+                  } else { setLoginError('Google sign-in is not available.'); }
                 }}
                 disabled={isLoading}
                 style={{
@@ -422,9 +455,10 @@ const Login = ({ onBack, onLogin, onSwitchToSignup, error, onClearError }) => {
                 }}
               >
                 <FaGoogle style={{ color: '#de5246' }} />
-                {isLoading ? 'Please wait...' : 'Login with Google'}
+                {isLoading ? 'Please wait...' : 'Sign in with Google'}
               </button>
             )}
+          </div>
         </div>
       </div>
     </div>
