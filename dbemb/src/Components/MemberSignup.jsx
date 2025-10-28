@@ -60,6 +60,10 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
   }, []);
 
   const styles = {
+    // global font baseline (consistent across component)
+    fontFamily: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
+    baseFontSize: 15,
+
     page: {
       position: "fixed",
       top: 0,
@@ -71,7 +75,9 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
       justifyContent: "center",
       background: "linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%)",
       padding: 24,
-      fontFamily: "Inter, system-ui, -apple-system, sans-serif",
+      fontFamily: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
+      fontSize: "15px",
+      lineHeight: 1.45,
       zIndex: 1000,
       overflow: "auto"
     },
@@ -86,7 +92,9 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
       color: "#1e293b",
       position: "relative",
       overflow: "auto",
-      margin: "auto"
+      margin: "auto",
+      fontFamily: "inherit",
+      fontSize: "15px"
     },
     closeButton: {
       position: "absolute",
@@ -102,15 +110,16 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
       alignItems: "center",
       justifyContent: "center",
       transition: "color 0.2s",
-      zIndex: 10
+      zIndex: 10,
+      fontSize: "16px"
     },
-    header: { 
-      textAlign: "center", 
+    header: {
+      textAlign: "center",
       marginBottom: 28,
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      gap: 12
+      gap: 6
     },
     logoBox: {
       background: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)",
@@ -119,51 +128,50 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
       boxShadow: "0 6px 20px rgba(11, 59, 120, 0.25)",
       marginBottom: 4
     },
-    logoText: {
-      margin: 0,
-      lineHeight: 1.3
-    },
-    logoTextTop: {
-      fontSize: 22,
-      fontWeight: 800,
-      color: "#60a5fa",
-      letterSpacing: "0.18em",
-      display: "block",
-      textShadow: "0 2px 4px rgba(0,0,0,0.1)"
-    },
-    logoTextBottom: {
-      fontSize: 12,
+    logoText: { margin: 0, lineHeight: 1.3 },
+    logoTextTop: { fontSize: "20px", fontWeight: 800, color: "#60a5fa", letterSpacing: "0.18em" },
+    logoTextBottom: { fontSize: "12px", fontWeight: 700, color: "#ffffff" },
+
+    // title / subtitle (consistent sizes)
+    title: {
+      fontSize: "30px",
       fontWeight: 700,
-      color: "#ffffff",
-      letterSpacing: "0.25em",
-      display: "block",
-      marginTop: 1
-    },
-    title: { 
-      fontSize: 26, 
-      fontWeight: 700, 
       color: "#0f172a",
-      marginBottom: 2,
+      marginBottom: 0,               // reduce gap under title
       letterSpacing: "-0.02em",
-      marginTop: 6
+      paddingBottom: 8,              // slightly smaller padding so underline sits closer
+      borderBottom: "3px solid #bae6fd",
+      display: "block",
+      width: "100%",
+      textAlign: "center",
+      boxSizing: "border-box",
+      fontFamily: "inherit"
     },
-    subtitle: { 
-      color: "#64748b", 
-      fontSize: 14,
+    subtitle: {
+      color: "#475569",
+      fontSize: "14px",
       fontWeight: 400,
-      lineHeight: 1.4
+      lineHeight: 1.25,
+      margin: "6px auto 0",         // small top margin so subtitle sits close to the underline
+      textAlign: "center",
+      fontFamily: "inherit"
     },
-    field: { 
-      display: "flex", 
-      flexDirection: "column", 
+
+    // form fields
+    field: {
+      display: "flex",
+      flexDirection: "column",
       gap: 6,
-      marginBottom: 14
+      marginBottom: 14,
+      fontFamily: "inherit",
+      fontSize: "15px"
     },
-    label: { 
-      fontSize: 13, 
-      color: "#334155", 
+    label: {
+      fontSize: "14px",
+      color: "#334155",
       fontWeight: 600,
-      marginBottom: 2
+      marginBottom: 4,
+      fontFamily: "inherit"
     },
     inputWrapper: {
       position: "relative",
@@ -173,6 +181,13 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
     icon: {
       position: "absolute",
       left: 14,
+      color: "#94a3b8",
+      fontSize: 16
+    },
+    iconTop: {
+      position: "absolute",
+      left: 14,
+      top: 12,
       color: "#94a3b8",
       fontSize: 16
     },
@@ -192,73 +207,10 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
       color: "#1e293b",
       padding: "11px 14px 11px 44px",
       borderRadius: 10,
-      fontSize: 14,
+      fontSize: "15px",
       outline: "none",
       transition: "all 0.2s",
       fontFamily: "inherit"
-    },
-    err: { 
-      color: "#dc2626", 
-      fontSize: 12,
-      marginTop: 4,
-      fontWeight: 500
-    },
-    btnPrimary: {
-      width: "100%",
-      background: "linear-gradient(135deg, #0b4f8a 0%, #0b3b78 100%)",
-      border: "none",
-      color: "#ffffff",
-      padding: "12px 20px",
-      borderRadius: 10,
-      fontWeight: 600,
-      fontSize: 15,
-      cursor: "pointer",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-      marginTop: 6,
-      transition: "all 0.2s",
-      boxShadow: "0 4px 12px rgba(11, 59, 120, 0.2)"
-    },
-    linkText: {
-      textAlign: "center",
-      marginTop: 16,
-      fontSize: 13,
-      color: "#64748b"
-    },
-    linkButton: {
-      background: "transparent",
-      border: "none",
-      color: "#dc2626",
-      cursor: "pointer",
-      fontSize: 14,
-      fontWeight: 600,
-      textDecoration: "none",
-      padding: 0,
-      marginLeft: 4
-    },
-    successBox: {
-      marginTop: 16,
-      padding: 14,
-      borderRadius: 10,
-      background: "#f0fdf4",
-      border: "1.5px solid #86efac",
-      color: "#166534",
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      fontSize: 14
-    },
-    grid2: {
-      display: "grid",
-      gridTemplateColumns: "repeat(2, 1fr)",
-      gap: 16,
-    },
-    grid3: {
-      display: "grid",
-      gridTemplateColumns: "repeat(3, 1fr)",
-      gap: 16,
     },
     textarea: {
       width: "100%",
@@ -267,7 +219,7 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
       color: "#1e293b",
       padding: "11px 14px 11px 44px",
       borderRadius: 10,
-      fontSize: 14,
+      fontSize: "15px",
       outline: "none",
       transition: "all 0.2s",
       fontFamily: "inherit",
@@ -281,21 +233,95 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
       color: "#1e293b",
       padding: "11px 14px",
       borderRadius: 10,
-      fontSize: 14,
+      fontSize: "15px",
       outline: "none",
       transition: "all 0.2s",
       fontFamily: "inherit",
       cursor: "pointer"
     },
+    err: {
+      color: "#dc2626",
+      fontSize: "13px",
+      marginTop: 6,
+      fontWeight: 500,
+      fontFamily: "inherit"
+    },
+
+    // layout helpers
+    grid2: {
+      display: "grid",
+      gridTemplateColumns: "repeat(2, 1fr)",
+      gap: 16
+    },
+    grid3: {
+      display: "grid",
+      gridTemplateColumns: "repeat(3, 1fr)",
+      gap: 16
+    },
+
+    // buttons / notices
+    btnPrimary: {
+      width: "100%",
+      background: 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)',
+      color: '#ffffff',
+      border: "none",
+      padding: "12px 20px",
+      borderRadius: 10,
+      fontWeight: 600,
+      fontSize: "15px",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      marginTop: 22,
+      transition: "all 0.2s",
+      boxShadow: "0 4px 12px rgba(11, 59, 120, 0.2)",
+      fontFamily: "inherit"
+    },
+    linkText: {
+      textAlign: "center",
+      marginTop: 16,
+      fontSize: "14px",
+      color: "#64748b",
+      fontFamily: "inherit"
+    },
+    linkButton: {
+      background: "transparent",
+      border: "none",
+      color: "#dc2626",
+      cursor: "pointer",
+      fontSize: "14px",
+      fontWeight: 600,
+      textDecoration: "none",
+      padding: 0,
+      marginLeft: 4,
+      fontFamily: "inherit"
+    },
+    successBox: {
+      marginTop: 16,
+      padding: 14,
+      borderRadius: 10,
+      background: "#f0fdf4",
+      border: "1.5px solid #86efac",
+      color: "#166534",
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      fontSize: "14px",
+      fontFamily: "inherit"
+    },
+
     sectionTitle: {
-      fontSize: 16,
+      fontSize: "16px",
       fontWeight: 600,
       color: "#0f172a",
       marginBottom: 12,
       marginTop: 20,
       display: "flex",
       alignItems: "center",
-      gap: 8
+      gap: 8,
+      fontFamily: "inherit"
     },
     sectionDivider: {
       height: "1px",
@@ -317,7 +343,7 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
     if (!values.birthday) e.birthday = "Date of birth required";
     if (!values.phone.trim()) e.phone = "Contact number required";
     if (!values.instrument.trim()) e.instrument = "Primary instrument/section required";
-    if (!values.address.trim()) e.address = "Complete address required";
+    if (!values.address.trim()) e.address = "  address required";
     if (!values.identityProof) e.identityProof = "Government ID required for membership verification";
     return e;
   };
@@ -673,8 +699,8 @@ const Signup = ({ onSignup, onClose, onSwitchToLogin }) => {
 
         <div style={styles.field}>
           <label style={styles.label}>Complete Address</label>
-          <div style={styles.inputWrapper}>
-            <FaMapMarkerAlt style={styles.icon} />
+          <div style={{ ...styles.inputWrapper, alignItems: "flex-start" }}>
+            <FaMapMarkerAlt style={styles.iconTop} />
             <textarea
               style={styles.textarea}
               value={form.address}
