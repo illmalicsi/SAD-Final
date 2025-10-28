@@ -373,17 +373,18 @@ const Approval = ({ onBackToHome }) => {
   };
 
   const styles = {
+    // global container + font to match Inventory
     container: {
       padding: '24px',
       backgroundColor: '#f8fafc',
       minHeight: '100vh',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     header: {
       display: 'flex',
       alignItems: 'center',
       gap: '16px',
-      marginBottom: '32px'
+      marginBottom: '24px'
     },
     backButton: {
       display: 'flex',
@@ -407,14 +408,6 @@ const Approval = ({ onBackToHome }) => {
       lineHeight: '1',
       cursor: 'pointer',
       color: '#374151'
-    },
-    title: {
-      fontSize: '28px',
-      fontWeight: '700',
-      color: '#0f172a',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px'
     },
     card: {
       backgroundColor: '#ffffff',
@@ -450,30 +443,70 @@ const Approval = ({ onBackToHome }) => {
       fontSize: '14px',
       fontWeight: '500'
     },
+    // stats (match inventory sizing / alignment)
+    statsContainer: {
+      display: 'flex',
+      flexWrap: 'nowrap',       // keep cards on one line
+      gap: '12px',
+      margin: '0 0 18px 0',
+      alignItems: 'stretch',
+      padding: '0 4px',
+      boxSizing: 'border-box',
+      justifyContent: 'flex-start',
+      overflowX: 'auto'
+    },
+    statCard: {
+      flex: '0 0 220px',
+      minWidth: 200,
+      maxWidth: 260,
+      backgroundColor: '#ffffff',
+      border: '1px solid #e2e8f0',
+      borderRadius: 12,
+      padding: '14px 16px',
+      textAlign: 'center',
+      transition: 'all 0.18s ease',
+      minHeight: 110,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
+    },
+    statIcon: { marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    statNumber: { fontSize: '22px', fontWeight: 700, color: '#0f172a', marginTop: 6, textAlign: 'center' },
+    statLabel: { fontSize: '13px', color: '#64748b', marginTop: 4, textAlign: 'center' },
+
+    tableHeader: {
+      borderBottom: '1px solid #e2e8f0',
+    },
     table: {
       width: '100%',
-      borderCollapse: 'collapse'
-    },
-    tableHeader: {
-      backgroundColor: '#f8fafc',
-      borderBottom: '1px solid #e2e8f0'
+      borderCollapse: 'collapse',
+      minWidth: 800,
+      color: '#0f172a',
+      background: '#ffffff',
+      border: '1px solid #e2e8f0',
+      borderRadius: 8,
+      overflow: 'hidden',
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     th: {
-      padding: '16px 24px',
-      textAlign: 'left',
-      fontSize: '12px',
-      fontWeight: '600',
-      color: '#6b7280',
+      padding: '12px 16px',
+      textAlign: 'center',
+      fontSize: '13px',
+      fontWeight: 600,
+      color: '#3b82f6',
       textTransform: 'uppercase',
       letterSpacing: '0.5px',
       verticalAlign: 'middle'
     },
     td: {
-      padding: '20px 24px',
+      padding: '12px 16px',
       borderBottom: '1px solid #f1f5f9',
       fontSize: '14px',
       color: '#374151',
-      verticalAlign: 'middle'
+      verticalAlign: 'middle',
+      textAlign: 'center'
     },
     invoiceRow: {
       transition: 'background-color 0.2s ease'
@@ -850,16 +883,9 @@ const Approval = ({ onBackToHome }) => {
           }
         `}
       </style>
-      
-      <div style={styles.header}>
-        <h1 style={styles.title}>
-          <FaMusic style={styles.titleIcon} />
-          Instrument Request Approvals
-        </h1>
-      </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '1px solid #e2e8f0' }}>
+      <div style={{ display: 'flex', gap: '4px', marginBottom: 0, borderBottom: 'none', paddingBottom: 6 }}>
         <button 
           onClick={() => setActiveTab('borrow')} 
           style={tabStyle(activeTab === 'borrow')}
@@ -883,117 +909,145 @@ const Approval = ({ onBackToHome }) => {
       {/* Borrow Requests Tab */}
       {activeTab === 'borrow' && (
         <div style={styles.card}>
-          <div style={styles.cardHeader}>
-            <h2 style={styles.cardTitle}>
-              Borrow Requests ({borrowRequests.length})
-              {pendingBorrowCount > 0 && <span style={{ marginLeft: '8px', fontSize: '14px', color: '#f59e0b' }}>• {pendingBorrowCount} pending</span>}
-            </h2>
-          </div>
-
           <div style={styles.cardBody}>
-            {borrowRequests.length === 0 ? (
-              <div style={styles.emptyState}>
-                <FaUserFriends style={styles.emptyIcon} />
-                <div style={styles.emptyTitle}>No Borrow Requests</div>
-                <div style={styles.emptyDescription}>No borrow requests have been submitted yet.</div>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gap: 12 }}>
-                {sortedBorrowRequests.map(req => (
-                  <div key={req.id} style={styles.requestCard} className="invoice-row">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 220 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 10, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#3730a3' }}>{(req.userName || req.userFullName || req.user || 'U').charAt(0)}</div>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ fontWeight: 700, fontSize: 14 }}>{req.userName || req.userFullName || req.user || '—'}</div>
-                        <div style={{ color: '#6b7280', fontSize: 13 }}>{req.userEmail || req.email || ''}</div>
-                      </div>
-                    </div>
-
-                    <div style={styles.requestBody}>
-                      <div style={styles.requestMeta}>
-                        <div style={{ fontWeight: 700, fontSize: 15 }}>{req.instrumentName || req.instrument}</div>
-                        <div style={{ color: '#6b7280', fontSize: 13 }}>{req.quantity || 1} unit(s)</div>
-                        {/* Borrow requests: only show name and quantity (price not shown for borrow) */}
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-                        <div>{getStatusBadge(req.status)}</div>
-                        <div style={styles.requestActions}>
-                          <button
-                            onClick={() => setViewDetailsRequest({ ...req, type: 'borrow' })}
-                            style={styles.viewBtn}
-                            title="View borrower details"
-                          >
-                            <FaInfoCircle /> Details
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+             {borrowRequests.length === 0 ? (
+               <div style={styles.emptyState}>
+                 <FaUserFriends style={styles.emptyIcon} />
+                 <div style={styles.emptyTitle}>No Borrow Requests</div>
+                 <div style={styles.emptyDescription}>No borrow requests have been submitted yet.</div>
+               </div>
+             ) : (
+               <div style={{ padding: '4px 12px 12px 12px', marginTop: 0 }}>
+                 <table style={styles.table}>
+                   <thead style={styles.tableHeader}>
+                     <tr>
+                       <th style={styles.th}>ID</th>
+                       <th style={styles.th}>Name</th>
+                       <th style={styles.th}>Email</th>
+                       <th style={styles.th}>Instrument</th>
+                       <th style={styles.th}>Qty</th>
+                       <th style={styles.th}>Requested</th>
+                       <th style={styles.th}>Status</th>
+                       <th style={styles.th}>Actions</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {sortedBorrowRequests.map(req => (
+                       <tr key={req.id} className="invoice-row" style={req.archived ? styles.archivedRow : {}}>
+                         <td style={styles.td}>{req.id}</td>
+                         <td style={styles.td}>{req.userName || req.userFullName || req.user || '—'}</td>
+                         <td style={styles.td}>{req.userEmail || req.email || '—'}</td>
+                         <td style={styles.td}>{req.instrumentName || req.instrument || '—'}</td>
+                         <td style={styles.td}>{req.quantity || 1}</td>
+                         <td style={styles.td}>{formatDate(req.createdAt || req.startDate || req.date || '')}</td>
+                         <td style={styles.td}>{getStatusBadge(req.status)}</td>
+                         <td style={styles.td}>
+                           <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+                             <button onClick={() => setViewDetailsRequest({ ...req, type: 'borrow' })} style={styles.viewBtn}><FaInfoCircle /> Details</button>
+                             {req.status === 'pending' && (
+                               <>
+                                 <button
+                                   onClick={async () => {
+                                     await handleInstrumentRequestAction(req.id, 'approved', 'borrow');
+                                   }}
+                                   disabled={processingId === req.id}
+                                   style={{ ...styles.primaryBtn, ...(processingId === req.id ? styles.disabledBtn : {}) }}
+                                 >
+                                   <FaCheck /> Approve
+                                 </button>
+                                 <button
+                                   onClick={async () => {
+                                     await handleInstrumentRequestAction(req.id, 'rejected', 'borrow');
+                                   }}
+                                   disabled={processingId === req.id}
+                                   style={{ ...styles.dangerBtn, ...(processingId === req.id ? styles.disabledBtn : {}) }}
+                                 >
+                                   <FaTimes /> Reject
+                                 </button>
+                               </>
+                             )}
+                           </div>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+             )}
           </div>
         </div>
       )}
-
+ 
       {/* Rent Requests Tab */}
       {activeTab === 'rent' && (
         <div style={styles.card}>
-          <div style={styles.cardHeader}>
-            <h2 style={styles.cardTitle}>
-              Rent Requests ({rentRequests.length})
-              {pendingRentCount > 0 && <span style={{ marginLeft: '8px', fontSize: '14px', color: '#f59e0b' }}>• {pendingRentCount} pending</span>}
-            </h2>
-          </div>
-
           <div style={styles.cardBody}>
-            {rentRequests.length === 0 ? (
-              <div style={styles.emptyState}>
-                <FaMusic style={styles.emptyIcon} />
-                <div style={styles.emptyTitle}>No Rent Requests</div>
-                <div style={styles.emptyDescription}>No rent requests have been submitted yet.</div>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gap: 12 }}>
-                {sortedRentRequests.map(req => (
-                  <div key={req.id} style={styles.requestCard} className="invoice-row">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 220 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 10, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#3730a3' }}>{(req.userName || req.userFullName || req.user || 'U').charAt(0)}</div>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ fontWeight: 700, fontSize: 14 }}>{req.userName || req.userFullName || req.user || '—'}</div>
-                        <div style={{ color: '#6b7280', fontSize: 13 }}>{req.userEmail || req.email || ''}</div>
-                      </div>
-                    </div>
-
-                    <div style={styles.requestBody}>
-                      <div style={styles.requestMeta}>
-                        <div style={{ fontWeight: 700, fontSize: 15 }}>{req.instrumentName || req.instrument}</div>
-                        <div style={{ color: '#6b7280', fontSize: 13 }}>{req.quantity || 1} unit(s)</div>
-                        { (req.rental_fee || req.rentalFee) && (
-                          <div style={{ color: '#059669', fontSize: 13, marginTop: 6 }}>
-                            ₱{Number(req.rental_fee || req.rentalFee).toFixed(2)} / day
-                          </div>
-                        )}
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-                        <div>{getStatusBadge(req.status)}</div>
-                        <div style={styles.requestActions}>
-                          <button
-                            onClick={() => setViewDetailsRequest({ ...req, type: 'rent' })}
-                            style={styles.viewBtn}
-                            title="View renter details"
-                          >
-                            <FaInfoCircle /> Details
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+           {rentRequests.length === 0 ? (
+             <div style={styles.emptyState}>
+               <FaMusic style={styles.emptyIcon} />
+               <div style={styles.emptyTitle}>No Rent Requests</div>
+               <div style={styles.emptyDescription}>No rent requests have been submitted yet.</div>
+             </div>
+           ) : (
+             <div style={{ padding: '4px 12px 12px 12px', marginTop: 0 }}>
+               <table style={styles.table}>
+                 <thead style={styles.tableHeader}>
+                   <tr>
+                     <th style={styles.th}>ID</th>
+                     <th style={styles.th}>Name</th>
+                     <th style={styles.th}>Email</th>
+                     <th style={styles.th}>Instrument</th>
+                     <th style={styles.th}>Qty</th>
+                     <th style={styles.th}>Fee/Day</th>
+                     <th style={styles.th}>Requested</th>
+                     <th style={styles.th}>Status</th>
+                     <th style={styles.th}>Actions</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {sortedRentRequests.map(req => (
+                     <tr key={req.id} className="invoice-row" style={req.archived ? styles.archivedRow : {}}>
+                       <td style={styles.td}>{req.id}</td>
+                       <td style={styles.td}>{req.userName || req.userFullName || req.user || '—'}</td>
+                       <td style={styles.td}>{req.userEmail || req.email || '—'}</td>
+                       <td style={styles.td}>{req.instrumentName || req.instrument || '—'}</td>
+                       <td style={styles.td}>{req.quantity || 1}</td>
+                       <td style={styles.td}>{(req.rental_fee || req.rentalFee) ? `₱${Number(req.rental_fee || req.rentalFee).toFixed(2)}` : '—'}</td>
+                       <td style={styles.td}>{formatDate(req.createdAt || req.startDate || req.date || '')}</td>
+                       <td style={styles.td}>{getStatusBadge(req.status)}</td>
+                       <td style={styles.td}>
+                         <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+                           <button onClick={() => setViewDetailsRequest({ ...req, type: 'rent' })} style={styles.viewBtn}><FaInfoCircle /> Details</button>
+                           {req.status === 'pending' && (
+                             <>
+                               <button
+                                 onClick={async () => {
+                                   await handleInstrumentRequestAction(req.id, 'approved', 'rent');
+                                 }}
+                                 disabled={processingId === req.id}
+                                 style={{ ...styles.primaryBtn, ...(processingId === req.id ? styles.disabledBtn : {}) }}
+                               >
+                                 <FaCheck /> Approve
+                               </button>
+                               <button
+                                 onClick={async () => {
+                                   await handleInstrumentRequestAction(req.id, 'rejected', 'rent');
+                                 }}
+                                 disabled={processingId === req.id}
+                                 style={{ ...styles.dangerBtn, ...(processingId === req.id ? styles.disabledBtn : {}) }}
+                               >
+                                 <FaTimes /> Reject
+                               </button>
+                             </>
+                           )}
+                         </div>
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
+           )}
           </div>
         </div>
       )}
