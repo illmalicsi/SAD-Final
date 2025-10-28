@@ -7,7 +7,6 @@ const UserManagement = React.lazy(() => import('./usermanagement'));
 const Inventory = React.lazy(() => import('./inventory'));
 const CustomerManagement = React.lazy(() => import('./CustomerManagement'));
 const Invoice = React.lazy(() => import('./Invoice'));
-// ...existing code...
 const TransactionHistory = React.lazy(() => import('./TransactionHistory'));
 const Approval = React.lazy(() => import('./Approval'));
 const MembershipApproval = React.lazy(() => import('./MembershipApproval'));
@@ -27,9 +26,14 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
   React.useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
+      /* spinner animation */
       @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
+      }
+      /* global font */
+      body, html, #root, input, textarea, select, button {
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
       }
     `;
     document.head.appendChild(style);
@@ -174,20 +178,22 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       height: '100vh',
       backgroundColor: '#f8fafc',
       overflow: 'hidden',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     },
     sidebar: {
       width: sidebarCollapsed ? '80px' : '280px',
       backgroundColor: '#ffffff',
-      borderRight: '1px solid #e2e8f0',
-      transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      position: 'relative',
-      display: 'flex',
-      flexDirection: 'column',
-      zIndex: 1000,
-      flexShrink: 0,
-      boxShadow: '2px 0 8px rgba(0, 0, 0, 0.04)'
-    },
+      width: sidebarCollapsed ? '80px' : '280px',
+      backgroundColor: '#f8fafc',
+       borderRight: '1px solid #e2e8f0',
+       transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+       position: 'relative',
+       display: 'flex',
+       flexDirection: 'column',
+       zIndex: 1000,
+       flexShrink: 0,
+       boxShadow: '2px 0 8px rgba(0, 0, 0, 0.04)'
+     },
     sidebarHeader: {
       height: '70px',
       padding: sidebarCollapsed ? '0 20px' : '0 24px',
@@ -199,7 +205,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       flexShrink: 0
     },
     logo: {
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       fontSize: sidebarCollapsed ? '0px' : '20px',
       fontWeight: '700',
       color: '#0f172a',
@@ -230,7 +236,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       fontSize: '14px'
     },
     userSection: {
-      padding: sidebarCollapsed ? '20px 16px' : '24px',
+      padding: sidebarCollapsed ? '20px 16px' : '0 24px',
       borderBottom: '1px solid #f1f5f9',
       display: 'flex',
       flexDirection: 'column',
@@ -241,7 +247,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     userAvatar: {
       width: sidebarCollapsed ? '40px' : '56px',
       height: sidebarCollapsed ? '40px' : '56px',
-      borderRadius: '14px',
+      borderRadius: '50px',
       background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
       display: 'flex',
       alignItems: 'center',
@@ -299,7 +305,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       marginBottom: '28px'
     },
     navGroupTitle: {
-      fontSize: sidebarCollapsed ? '0px' : '11px',
+      fontSize: sidebarCollapsed ? '0px' : '15px',
       fontWeight: '700',
       color: '#94a3b8',
       textTransform: 'uppercase',
@@ -496,7 +502,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       padding: '32px',
       textAlign: 'center',
       maxWidth: '700px',
-  margin: '40px auto 24px',
+      margin: '40px auto 24px',
       boxShadow: '0 20px 60px rgba(102, 126, 234, 0.3)',
       color: 'white',
       position: 'relative',
@@ -508,7 +514,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+      background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM36 0V4h-2V0h-4v2h4v4h2V2h4V0h-4zM0 34v-4H2v4h4v2H2v4H0v-4H2v-2H0zM0 0h4V2H0v4h2v2H0V4h2V2H0z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
       opacity: 0.3,
       pointerEvents: 'none'
     },
@@ -639,31 +645,18 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       lineHeight: '1.6',
       margin: 0
     },
+// ...existing code...
     panelContainer: {
       backgroundColor: 'white',
       border: '1px solid #f1f5f9',
       borderRadius: '16px',
-      height: 'calc(100vh - 134px)',
+      height: 'auto',                // allow container to size to content and sit at the top
       display: 'flex',
       flexDirection: 'column',
+      alignItems: 'stretch',
+      justifyContent: 'flex-start',  // keep content anchored to top
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
       overflow: 'hidden'
-    },
-    panelHeader: {
-      padding: '24px 32px',
-      borderBottom: '1px solid #f1f5f9',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: '#fafbfc',
-      flexShrink: 0
-    },
-    panelTitle: {
-      fontSize: '20px',
-      fontWeight: '700',
-      color: '#0f172a',
-      margin: 0,
-      letterSpacing: '-0.5px'
     },
     panelBody: {
       flex: 1,
@@ -906,15 +899,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
 
     return (
       <>
-        <div style={styles.welcomeCard}>
-          <div style={styles.welcomeCardOverlay}></div>
-          <div style={styles.welcomeIcon}>👋</div>
-          <h2 style={styles.welcomeTitle}>Welcome back, {user?.firstName}!</h2>
-          <p style={styles.welcomeSubtitle}>
-            Manage your marching band operations with ease. Select an option from the sidebar to get started.
-          </p>
-        </div>
-
+        {/* swapped: statsGrid first, welcomeCard below */}
         <div style={styles.statsGrid}>
           {statCards.map((card, index) => (
             <div 
@@ -939,6 +924,19 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             </div>
           ))}
         </div>
+
+
+        <div style={styles.welcomeCard}>
+          <div style={styles.welcomeCardOverlay}></div>
+          <h2 style={styles.welcomeTitle}>
+            <span style={{ display: 'inline-block', marginRight: 12, fontSize: 48, lineHeight: 1, verticalAlign: 'middle' }}></span>
+            <span style={{ verticalAlign: 'middle' }}>{getGreeting()}, {user?.firstName || 'there'}! 👋</span>
+          </h2>
+          <p style={styles.welcomeSubtitle}>
+            Manage your marching band operations with ease. Select an option from the sidebar to get started.
+          </p>
+        </div>
+
 
         {/* My Instrument Requests Section */}
         {myInstrumentRequests.length > 0 && (
@@ -1304,9 +1302,6 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       case 'notifications':
         return (
           <div style={styles.panelContainer}>
-            <div style={styles.panelHeader}>
-              <h2 style={styles.panelTitle}>Recent Notifications</h2>
-            </div>
             <div style={styles.panelBody}>
               {getNotificationsContent()}
             </div>
@@ -1433,9 +1428,6 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       case 'performance-history':
         return (
           <div style={styles.panelContainer}>
-            <div style={styles.panelHeader}>
-              <h2 style={styles.panelTitle}>Performance History</h2>
-            </div>
             <div style={styles.panelBody}>
               {getComingSoonContent('Performance History', '🎭')}
             </div>
@@ -1445,12 +1437,6 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       case 'my-profile':
         return (
           <div style={styles.panelContainer}>
-            <div style={styles.panelHeader}>
-              <h2 style={styles.panelTitle}>My Profile</h2>
-              <p style={{ color: '#64748b', margin: '8px 0 0 0', fontSize: '14px' }}>
-                Manage your personal information and account settings
-              </p>
-            </div>
             <div style={styles.panelBody}>
               {/* Profile Content */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 32, alignItems: 'start' }}>
@@ -1775,9 +1761,6 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       case 'help-support':
         return (
           <div style={styles.panelContainer}>
-            <div style={styles.panelHeader}>
-              <h2 style={styles.panelTitle}>Help & Support</h2>
-            </div>
             <div style={styles.panelBody}>
               {getComingSoonContent('Help & Support', '❓')}
             </div>
@@ -1792,14 +1775,22 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
   const getUserInitials = () => {
     const firstName = user?.firstName || '';
     const lastName = user?.lastName || '';
-    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'U';
+       return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'U';
   };
 
+  // Returns time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+  
   return (
     <div style={styles.container}>
       {/* Sidebar */}
       <div style={styles.sidebar}>
-        {/* Sidebar Header */}
+               {/* Sidebar Header */}
         <div style={styles.sidebarHeader}>
           <div style={styles.logo}>
             {!sidebarCollapsed && <span>Admin Dashboard</span>}
@@ -1960,5 +1951,3 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
 };
 
 export default Dashboard;
-
-
