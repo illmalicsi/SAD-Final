@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
 import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock, FaUser, FaMusic, FaCreditCard, FaMobileAlt, FaUniversity, FaStore, FaWallet, FaFileInvoiceDollar, FaCheckCircle, FaSpinner, FaCalendarAlt } from 'react-icons/fa';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import bg2 from "./Assets/bg2.jpg";
@@ -17,19 +16,19 @@ import TestPaymentGateway from './TestPaymentGateway'
 
 
 const Home = () => {
-  const navigate = useNavigate();
   const containerStyle = {
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
     background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-    position: 'relative'
+    position: 'relative',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
   };
 
   const navStyle = {
-    // Solid non-transparent navbar for clearer separation from page content
     background: 'linear-gradient(180deg, #0b3b78 0%, #0b4f8a 100%)',
     color: '#fff',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
     padding: '14px 30px',
     position: 'sticky',
     top: 0,
@@ -38,7 +37,6 @@ const Home = () => {
     gridTemplateColumns: 'auto 1fr auto',
     alignItems: 'center',
     justifyContent: 'space-between',
-    // Subtle shadow to lift the nav from the page
     boxShadow: '0 6px 18px rgba(7, 24, 48, 0.14)',
     transition: 'background 220ms ease, box-shadow 220ms ease'
   };
@@ -86,7 +84,7 @@ const Home = () => {
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     cursor: 'pointer',
     position: 'relative',
-    fontFamily: 'Georgia, Times, "Times New Roman", serif'
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
   };
 
   const buttonContainerStyle = {
@@ -105,7 +103,7 @@ const Home = () => {
     cursor: 'pointer',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     textDecoration: 'none',
-    fontFamily: 'Georgia, Times, "Times New Roman", serif',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
     letterSpacing: '0.01em'
   };
 
@@ -122,19 +120,18 @@ const Home = () => {
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     textDecoration: 'none',
     boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2)',
-    fontFamily: 'Georgia, Times, "Times New Roman", serif',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
     position: 'relative',
     overflow: 'hidden'
   };
 
   const handleMouseEnter = (e) => {
     const t = e.currentTarget || e.target;
-    t.style.color = '#60a5fa'; // Blue text on hover
+    t.style.color = '#60a5fa';
   };
 
   const handleMouseLeave = (e) => {
     const t = e.currentTarget || e.target;
-    // Check if this is the active hash - if so, keep blue color
     const hash = t.getAttribute('href');
     if (hash === activeHash) {
       t.style.color = '#60a5fa';
@@ -201,7 +198,8 @@ const Home = () => {
     padding: '60px 40px',
     position: 'relative',
     zIndex: 10,
-    minHeight: '80vh'
+    minHeight: '80vh',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
   };
 
   const taglineStyle = {
@@ -234,8 +232,6 @@ const Home = () => {
     animation: 'fadeInUp 1.4s ease-out 0.8s forwards',
     fontStyle: 'italic'
   };
-
-
 
   const heroButtonContainerStyle = {
     display: 'flex',
@@ -274,18 +270,18 @@ const Home = () => {
     position: 'relative'
   };
 
-  const aboutHeaderStyle = {
-    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    fontFamily: 'Marcellus, serif',
-    fontWeight: 700,
-    fontSize: '64px',
-    lineHeight: 1.0,
-    margin: '0 0 16px 0',
-    letterSpacing: '-0.02em',
-    textAlign: 'left'
-  };
+const aboutHeaderStyle = {
+  background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  fontWeight: 700,
+  fontSize: '67px',
+  lineHeight: 1.0,
+  margin: '0 0 16px 0',
+  letterSpacing: '-0.02em',
+  textAlign: 'center'
+};
 
   const aboutSubtextStyle = {
     color: '#6b7280',
@@ -298,13 +294,13 @@ const Home = () => {
   };
 
   // About side-by-side layout
-  const aboutWrapStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)',
-    gap: '24px',
-    alignItems: 'stretch',
-    marginBottom: '28px'
-  };
+const aboutWrapStyle = {
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)',
+  gap: '24px',
+  alignItems: 'stretch',
+  marginBottom: '28px'
+};
 
   const aboutTextCardStyle = {
     background: 'rgba(255, 255, 255, 0.7)',
@@ -317,6 +313,7 @@ const Home = () => {
 
   const aboutStoryParagraphStyle = {
     color: '#374151',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
     textAlign: 'justify',
     lineHeight: 1.8,
     margin: '0 0 16px 0',
@@ -325,24 +322,24 @@ const Home = () => {
   };
 
   // Carousel styles
-  const carouselWrapperStyle = {
-    position: 'relative',
-    width: '100%',
-    maxWidth: '980px',
-    margin: '0 auto 32px',
-    borderRadius: '24px',
-    overflow: 'hidden',
-    border: '1px solid rgba(255, 255, 255, 0.3)',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
-    height: '100%'
-  };
+const carouselWrapperStyle = {
+  position: 'relative',
+  width: '100%',
+  maxWidth: '980px',
+  margin: '0 auto 32px',
+  borderRadius: '24px',
+  overflow: 'hidden',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
+  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset',
+  height: '100%'
+};
 
-  const carouselImageStyle = {
-    height: '100%',
-    minHeight: '400px',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center'
-  };
+const carouselImageStyle = {
+  height: '100%',
+  minHeight: '400px',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center'
+};
 
   const carouselControlsStyle = {
     position: 'absolute',
@@ -413,27 +410,17 @@ const Home = () => {
   // Contact section styles
 
   const contactHeaderStyle = {
-    background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    fontFamily: 'Marcellus, serif',
-    fontWeight: 700,
-    fontSize: '64px',
-    lineHeight: 1.0,
-    margin: '0 0 16px 0',
-    letterSpacing: '-0.02em',
-    textAlign: 'left'
-  };
-
-  const contactSubTextStyle = {
-    color: '#6b7280',
-    fontSize: '16px',
-    fontWeight: '500',
-    maxWidth: '540px',
-    textAlign: 'center',
-    margin: '0 auto',
-    lineHeight: '1.6'
-  };
+  background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+  fontWeight: 700,
+  fontSize: '67px',
+  lineHeight: 1.0,
+  margin: '0 0 16px 0',
+  letterSpacing: '-0.02em',
+  textAlign: 'center'
+};
 
   const contactGridStyle = {
     display: 'grid',
@@ -464,11 +451,12 @@ const Home = () => {
     background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    fontFamily: 'Marcellus, serif',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
     fontSize: '24px',
     fontWeight: 600,
     margin: '0 0 32px 0',
-    letterSpacing: '0.04em'
+    letterSpacing: '0.04em',
+    textAlign: 'center'
   };
 
   const contactInfoListStyle = {
@@ -702,6 +690,7 @@ const Home = () => {
 
   const footerDescriptionStyle = {
     color: '#6b7280',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
     fontSize: '16px',
     fontWeight: '500',
     lineHeight: 1.6,
@@ -719,6 +708,7 @@ const Home = () => {
   const socialLinkStyle = {
     display: 'flex',
     alignItems: 'center',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
     justifyContent: 'center',
     width: '44px',
     height: '44px',
@@ -751,7 +741,7 @@ const Home = () => {
     background: 'linear-gradient(135deg, #374151 0%, #6b7280 100%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    fontFamily: 'Marcellus, serif',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
     fontSize: '18px',
     fontWeight: 600,
     margin: 0,
@@ -858,36 +848,27 @@ const Home = () => {
     margin: '0 auto'
   };
 
-  const sectionEyebrowStyle = {
-    background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-    textTransform: 'uppercase',
-    letterSpacing: '0.25em',
-    fontSize: '15px',
-    marginBottom: '16px',
-    textAlign: 'left',
-    fontWeight: 700,
-  };
+const sectionEyebrowStyle = {
+  background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+  textTransform: 'uppercase',
+  letterSpacing: '0.25em',
+  fontSize: '15px',
+  marginBottom: '16px',
+  textAlign: 'center',
+  fontWeight: 700,
+};
 
-  const servicesHeaderWrapStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0,1.2fr) minmax(0,1fr)',
-    gap: '24px',
-    alignItems: 'end',
-    marginBottom: '28px'
-  };
-
-  const servicesSubTextStyle = {
-    color: '#6b7280',
-    fontSize: '16px',
-    lineHeight: 1.6,
-    textAlign: 'left',
-    maxWidth: '540px',
-    fontWeight: 400,
-    letterSpacing: '0.025em'
-  };
+const servicesHeaderWrapStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  textAlign: 'center',
+  marginBottom: '28px'
+};
 
 
   const servicesHeaderStyle = {
@@ -897,19 +878,11 @@ const Home = () => {
     backgroundClip: 'text',
     fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
     fontWeight: 800,
-    fontSize: '64px',
+    fontSize: '67px',
     lineHeight: 1.1,
     margin: '0 0 8px 0',
     letterSpacing: '-0.025em',
-    textAlign: 'left'
-  };
-
-  const servicesHeaderRightStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    justifySelf: 'end',
-    alignItems: 'flex-end'
+    textAlign: 'center'
   };
 
   const servicesHeaderActionsStyle = {
@@ -1354,6 +1327,7 @@ const Home = () => {
   // Services data
   const [modalService, setModalService] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [servicesSlide, setServicesSlide] = useState(0);
   const [user, setUser] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -1364,7 +1338,7 @@ const Home = () => {
     // Check if user was previously on dashboard
     const savedView = localStorage.getItem('davaoBlueEaglesCurrentView');
     const savedUser = localStorage.getItem('davaoBlueEaglesUser');
-
+    
     // Only restore dashboard view if user is logged in and is admin
     if (savedView === 'dashboard' && savedUser) {
       try {
@@ -1376,14 +1350,14 @@ const Home = () => {
         // If there's an error parsing, fallback to home
       }
     }
-
+    
     return 'home';
   });
   const [loginError, setLoginError] = useState('');
   const [bookings, setBookings] = useState([]);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingService, setBookingService] = useState(null);
-  // Removed showMyBookings state (now handled by dedicated page)
+  const [showMyBookings, setShowMyBookings] = useState(false);
   const [bookingForm, setBookingForm] = useState({
     service: '',
     name: '',
@@ -1423,7 +1397,7 @@ const Home = () => {
   const [serviceCols, setServiceCols] = useState(5);
   const [serviceCardH, setServiceCardH] = useState(240);
   const aboutImages = [bandGigs, paradeEvents, musicWorkshop, musicArrangement, instrumentRentals];
-
+  
   // Date formatting utility
   const formatDate = (dateValue) => {
     if (!dateValue) return '';
@@ -1435,10 +1409,10 @@ const Home = () => {
       }
       const dateObj = new Date(dateStr + 'T00:00:00'); // Add time to avoid timezone issues
       if (!isNaN(dateObj.getTime())) {
-        return dateObj.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+        return dateObj.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
         });
       }
       return dateValue;
@@ -1447,7 +1421,7 @@ const Home = () => {
       return dateValue;
     }
   };
-
+  
   // Instrument Request States
   const [showInstrumentRequest, setShowInstrumentRequest] = useState(false);
   const [availableInstruments, setAvailableInstruments] = useState([]);
@@ -1461,6 +1435,7 @@ const Home = () => {
     notes: ''
   });
 
+  // ABOUT CAROUSEL FUNCTIONS
   const goPrev = () => {
     setCurrentSlide((prev) => (prev === 0 ? aboutImages.length - 1 : prev - 1));
   };
@@ -1475,6 +1450,38 @@ const Home = () => {
     }, 5000);
     return () => clearInterval(id);
   }, []);
+
+  // SERVICES CAROUSEL FUNCTIONS
+  const goServicesPrev = () => {
+    setServicesSlide((prev) => Math.max(0, prev - 1));
+  };
+
+  const goServicesNext = () => {
+    setServicesSlide((prev) => Math.min(services.length - 3, prev + 1));
+  };
+
+  // SCROLL REVEAL ANIMATION
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+        } else {
+          entry.target.classList.remove('revealed');
+        }
+      });
+    }, observerOptions);
+
+    const elements = document.querySelectorAll('.scroll-reveal, .scroll-reveal-left, .scroll-reveal-right, .scroll-reveal-scale');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [currentView]);
 
   // Load available instruments
   useEffect(() => {
@@ -1541,7 +1548,6 @@ const Home = () => {
             }));
             console.log('Home: Loaded', formatted.length, 'bookings from API');
             setBookings(formatted);
-            localStorage.setItem('dbeInventoryBookings', JSON.stringify(formatted));
           }
         }
       } catch (error) {
@@ -1549,9 +1555,9 @@ const Home = () => {
         setBookings([]);
       }
     };
-
+    
     loadBookingsFromAPI();
-
+    
     // If opened in a new tab with a requested service, auto-open booking
     const svc = localStorage.getItem('dbeOpenBookingForService');
     if (svc) {
@@ -1626,7 +1632,7 @@ const Home = () => {
     if (hash) {
       setActiveHash(hash);
       // navigate
-      try { window.location.hash = hash; } catch (err) { }
+      try { window.location.hash = hash; } catch (err) {}
     }
     if (isMobile) setMobileOpen(false);
   };
@@ -1744,7 +1750,7 @@ const Home = () => {
         'Custom musical arrangements for parades, field shows, and ceremonial pieces. We adapt to your theme and instrumentation to deliver a polished performance.'
     },
     {
-
+     
       title: 'Parade Events',
       img: paradeEvents,
       description:
@@ -1793,7 +1799,7 @@ const Home = () => {
   // Save current view to localStorage to persist dashboard state on refresh
   useEffect(() => {
     localStorage.setItem('davaoBlueEaglesCurrentView', currentView);
-
+    
     // Update URL hash when view changes to maintain consistency
     if (currentView === 'dashboard') {
       window.history.replaceState(null, null, '#dashboard');
@@ -1807,11 +1813,11 @@ const Home = () => {
     if (showPaymentModal && selectedPaymentNotification?.data) {
       console.log('🟡 PAYMENT MODAL OPENED - Initializing payment form');
       console.log('Selected notification data:', selectedPaymentNotification.data);
-
+      
       // Reset success state to show form, not success screen
       setPaymentSuccess(false);
       setPaymentProcessing(false);
-
+      
       const totalAmount = selectedPaymentNotification.data.amount || 0;
       setPaymentForm({
         cardholderName: '',
@@ -1849,7 +1855,7 @@ const Home = () => {
     };
 
     window.addEventListener('notificationsUpdated', handleNotificationsUpdate);
-
+    
     return () => {
       window.removeEventListener('notificationsUpdated', handleNotificationsUpdate);
     };
@@ -1862,8 +1868,6 @@ const Home = () => {
   };
 
   const unreadCount = () => notifications.filter(n => !n.read).length;
-
-
 
   const markAllRead = () => {
     if (user && user.email) {
@@ -1917,122 +1921,171 @@ const Home = () => {
   // Handle payment submission
   const handlePaymentSubmit = async (e) => {
     console.log('🔵 PAYMENT FORM SUBMITTED - handlePaymentSubmit called');
+    console.log('Event type:', e.type);
+    console.log('Event target:', e.target);
     e.preventDefault();
     setPaymentProcessing(true);
 
     try {
-      // Derive bookingId from the selected notification
-      const bookingId = selectedPaymentNotification?.data?.bookingId
-        || selectedPaymentNotification?.bookingId
-        || selectedPaymentNotification?.data?.booking_id;
+      // Get booking ID from notification with multiple fallbacks
+      console.log('=== PAYMENT SUBMIT DEBUG ===');
+      console.log('Full selectedPaymentNotification:', JSON.stringify(selectedPaymentNotification, null, 2));
+      console.log('selectedPaymentNotification?.data:', selectedPaymentNotification?.data);
+      
+      // Try multiple paths to find booking ID
+      const bookingId = selectedPaymentNotification?.data?.bookingId 
+                     || selectedPaymentNotification?.bookingId
+                     || selectedPaymentNotification?.data?.booking_id;
+                     
+      const amount = selectedPaymentNotification?.data?.amount 
+                  || selectedPaymentNotification?.amount
+                  || selectedPaymentNotification?.data?.paymentDetails?.totalAmount
+                  || selectedPaymentNotification?.data?.estimated_value;
+
+      console.log('Extracted bookingId:', bookingId);
+      console.log('Extracted amount:', amount);
 
       if (!bookingId) {
+        console.error('❌ Booking ID not found!');
+        console.error('Available keys in data:', Object.keys(selectedPaymentNotification?.data || {}));
+        console.error('Full notification structure:', selectedPaymentNotification);
         alert('Booking information not found. Please use "My Bookings" to make payment instead.');
         setPaymentProcessing(false);
         return;
       }
 
-      // Map UI payment method to backend enum
-      const methodMap = { gcash: 'online', card: 'card', bank: 'bank_transfer' };
-      const methodValue = methodMap[paymentMethod] || 'cash';
-
-      // Use selected option (downpayment/fullpayment); server computes amount from booking price
+      // Use selected amount (down payment or full payment)
+      const paymentAmount = paymentForm.selectedAmount || amount;
       const paymentType = paymentForm.paymentOption || 'fullpayment';
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const email = (currentUser && currentUser.email)
-        || selectedPaymentNotification?.data?.email
-        || selectedPaymentNotification?.userEmail
-        || '';
+      
+      console.log('Payment details:', { paymentAmount, paymentType, originalAmount: amount });
 
-      if (!email) {
-        alert('Missing email for payment. Please login and try again.');
-        setPaymentProcessing(false);
-        return;
-      }
-
-      console.log('💳 Calling backend to record payment:', { bookingId, email, paymentOption: paymentType, paymentMethod: methodValue });
-      const resp = await fetch('http://localhost:5000/api/billing/pay-booking', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId, email, paymentOption: paymentType, paymentMethod: methodValue })
-      });
-      const payData = await resp.json();
-      console.log('🔙 Payment API response:', resp.status, payData);
-      if (!resp.ok || !payData.success) {
-        throw new Error(payData.message || 'Payment failed');
-      }
-
-      // Create success notification for the user
-      // Format paid amount for display (fallback to invoice amount if available)
-      const paidAmount = payData.payment?.amount_paid || payData.payment?.amount || payData.amount || 0;
-      const paidFormatted = Number(paidAmount).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
-
-      NotificationService.createNotification(email, {
-        type: 'success',
-        title: `Payment Recorded ${paidFormatted} 💰`,
-        message: `Your ${paymentType === 'downpayment' ? 'down payment' : 'full payment'} of ${paidFormatted} for ${selectedPaymentNotification?.data?.service ? `${selectedPaymentNotification.data.service}${selectedPaymentNotification.data?.date ? ` on ${selectedPaymentNotification.data.date}` : ''}` : `reservation ID ${bookingId}`} has been recorded.`,
-        data: {
-          bookingId,
-          invoiceId: payData.invoiceId,
-          paymentId: payData.payment?.payment_id,
-          amount: payData.payment?.amount_paid,
-          method: methodValue,
-          totalPaid: payData.payment?.total_paid,
-          invoiceAmount: payData.payment?.invoice_amount,
+      // Simulate payment processing (store in localStorage instead of API call)
+      console.log('💳 Processing simulated payment...');
+      
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Store payment record in localStorage
+      const payments = JSON.parse(localStorage.getItem('payments') || '[]');
+      const newPayment = {
+        id: Date.now(),
+        bookingId,
+        amount: paymentAmount,
+        totalAmount: amount,
+        paymentType,
+        paymentMethod,
+        timestamp: new Date().toISOString(),
+        service: selectedPaymentNotification.data?.service,
+        date: selectedPaymentNotification.data?.date,
+        status: 'completed',
+        ...paymentForm
+      };
+      payments.push(newPayment);
+      localStorage.setItem('payments', JSON.stringify(payments));
+      
+      console.log('✅ Payment stored in localStorage:', newPayment);
+      
+      // Mark as successful
+      const data = {
+        success: true,
+        booking: {
+          id: bookingId,
           service: selectedPaymentNotification.data?.service,
-          date: selectedPaymentNotification.data?.date
+          date: selectedPaymentNotification.data?.date,
+          email: user?.email,
+          amount: paymentAmount,
+          paymentMethod: paymentMethod
+        },
+        bookingId,
+        invoiceId: newPayment.id
+      };
+      
+      console.log('✅ Payment successful - Creating success notification');
+      
+      // Create success notification (only if user is logged in)
+      if (data.booking && user && user.email) {
+        try {
+          const paymentStatusText = paymentType === 'downpayment' 
+            ? `Down payment (50%) of ₱${paymentAmount.toLocaleString()} has been received. Remaining balance: ₱${(amount - paymentAmount).toLocaleString()}`
+            : 'Your booking is now fully paid!';
+          
+          // Format date safely
+          const formattedDate = data.booking.date || 'your booking date';
+            
+          NotificationService.createNotification(user.email, {
+            type: 'success',
+            title: 'Payment Successful! 💳',
+            message: `Your payment of ₱${paymentAmount.toLocaleString()} for "${data.booking.service}" on ${formattedDate} has been confirmed. ${paymentStatusText}`,
+            data: {
+              bookingId: data.bookingId,
+              invoiceId: data.invoiceId,
+              amount: paymentAmount,
+              totalAmount: amount,
+              paymentType: paymentType,
+              paymentMethod: paymentMethod,
+              service: data.booking.service,
+              date: data.booking.date
+            }
+          });
+          
+          console.log('✅ Notification created successfully');
+          
+          // Trigger notification refresh
+          loadNotifications();
+        } catch (notifError) {
+          console.error('⚠️ Failed to create notification, but payment was successful:', notifError);
+          // Don't throw - payment was successful, just notification failed
         }
-      });
-      // Mark original notification as read and update its data to indicate payment completed
-      try {
-        if (selectedPaymentNotification && selectedPaymentNotification.id) {
-          // mark as read
-          NotificationService.markAsRead(selectedPaymentNotification.id);
-          // update notification data locally so renderNotificationMessage won't show payment link again
-          const updated = { ...selectedPaymentNotification, data: { ...(selectedPaymentNotification.data || {}), paid: true }, read: true };
-          const all = NotificationService.getAllNotifications().map(n => n.id === selectedPaymentNotification.id ? updated : n);
-          localStorage.setItem('userNotifications', JSON.stringify(all));
-          window.dispatchEvent(new Event('notificationsUpdated'));
-        }
-      } catch (e) {
-        console.warn('Failed to update original notification after payment', e);
       }
-
+      
+      // Set success state AFTER notification is created (or skipped)
       setPaymentSuccess(true);
-      // Clear selected payment notification to prevent reopening the modal via stale click
-      setSelectedPaymentNotification(null);
+      
+      // Wait 2 seconds then close modal
       setTimeout(() => {
-        setPaymentProcessing(false);
         setShowPaymentModal(false);
         setPaymentSuccess(false);
-        // Let other pages (e.g., transactions) refresh
-        window.dispatchEvent(new CustomEvent('transactionsUpdated'));
-      }, 1200);
+        setPaymentForm({
+          cardholderName: '',
+          cardNumber: '',
+          expiryDate: '',
+          cvv: '',
+          gcashNumber: '',
+          referenceNumber: ''
+        });
+        
+        // Reload bookings to show updated status
+        window.dispatchEvent(new CustomEvent('bookingsUpdated', {
+          detail: { reload: true }
+        }));
+      }, 2000);
     } catch (error) {
       console.error('❌ Payment error caught:', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
       alert(`Payment processing failed: ${error.message}. Please try again later.`);
     } finally {
-      if (paymentProcessing) {
-        console.log('🔵 Payment processing completed, setting paymentProcessing to false');
-        setPaymentProcessing(false);
-      }
+      console.log('🔵 Payment processing completed, setting paymentProcessing to false');
+      setPaymentProcessing(false);
     }
   };
 
   // Render notification message with clickable payment link
   const renderNotificationMessage = (notification) => {
     const message = notification.message || '';
-    const hasPaymentLink = message.includes('<payment-link>') && !(notification.data && notification.data.paid);
-
+    const hasPaymentLink = message.includes('<payment-link>');
+    
     console.log('Rendering notification:', { message, hasPaymentLink, notification });
-
+    
     if (!hasPaymentLink) {
       return <div style={{ color: '#4b5563' }}>{message}</div>;
     }
-
+    
     // Split message by payment link tags
     const parts = message.split(/<payment-link>|<\/payment-link>/);
-
+    
     return (
       <div style={{ color: '#4b5563' }}>
         {parts.map((part, index) => {
@@ -2092,7 +2145,7 @@ const Home = () => {
 
   const handleLogin = (userData) => {
     console.log('Home - handleLogin called with:', userData);
-
+    
     // New authentication flow: userData is already an authenticated user object
     // (not raw email/password like the old flow)
     if (userData && userData.id) {
@@ -2105,7 +2158,7 @@ const Home = () => {
         isLoggedIn: true,
         isBlocked: false
       };
-
+      
       console.log('Home - Setting authenticated user:', authenticatedUser);
       setUser(authenticatedUser);
       localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(authenticatedUser));
@@ -2125,7 +2178,7 @@ const Home = () => {
       }
       return;
     }
-
+    
     // Fallback: if for some reason we get old-style credentials, handle them
     console.warn('Home - Received unexpected userData format:', userData);
     setLoginError('Authentication failed. Please try again.');
@@ -2249,7 +2302,7 @@ const Home = () => {
   const handleSubmitInstrumentRequest = (e) => {
     e.preventDefault();
     const { instrumentType, instrumentName, quantity, startDate, endDate, purpose } = instrumentRequestForm;
-
+    
     if (!instrumentType || !instrumentName || !quantity || !startDate || !endDate || !purpose) {
       setToast({ type: 'error', message: 'Please fill in all required fields' });
       return;
@@ -2261,7 +2314,7 @@ const Home = () => {
     }
 
     const requestType = user.role === 'user' ? 'rent' : 'borrow';
-
+    
     const newRequest = {
       id: Date.now(),
       userId: user.id,
@@ -2288,9 +2341,9 @@ const Home = () => {
     // Dispatch event for dashboard to update
     window.dispatchEvent(new Event(`${requestType}RequestsUpdated`));
 
-    setToast({
-      type: 'success',
-      message: `Instrument ${requestType} request submitted successfully!`
+    setToast({ 
+      type: 'success', 
+      message: `Instrument ${requestType} request submitted successfully!` 
     });
     setShowInstrumentRequest(false);
   };
@@ -2387,7 +2440,7 @@ const Home = () => {
                         delete updated.avatar;
                         localStorage.setItem('davaoBlueEaglesUser', JSON.stringify(updated));
                         const users = JSON.parse(localStorage.getItem('davaoBlueEaglesUsers') || '[]');
-                        const updatedUsers = users.map(u => u.id === updated.id ? (function () { const o = { ...u }; delete o.avatar; return o; })() : u);
+                        const updatedUsers = users.map(u => u.id === updated.id ? (function(){ const o = { ...u }; delete o.avatar; return o; })() : u);
                         if (users.length) localStorage.setItem('davaoBlueEaglesUsers', JSON.stringify(updatedUsers));
                         setUser(updated);
                         window.dispatchEvent(new CustomEvent('davaoUserUpdated', { detail: updated }));
@@ -2437,7 +2490,7 @@ const Home = () => {
             ) : notifications.slice().reverse().map((n, idx) => {
               const origIndex = notifications.length - 1 - idx;
               const menuOpen = openNotificationMenu === n.id;
-
+              
               return (
                 <div key={n.id || idx} style={{ padding: 16, borderRadius: 12, border: '1px solid rgba(11,59,120,0.06)', background: n.read ? '#ffffff' : '#eef6ff', position: 'relative' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
@@ -2447,14 +2500,14 @@ const Home = () => {
                       <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 8 }}>{new Date(n.createdAt).toLocaleString()}</div>
                     </div>
                     <div style={{ position: 'relative' }}>
-                      <button
+                      <button 
                         onClick={() => setOpenNotificationMenu(menuOpen ? null : n.id)}
-                        style={{
-                          padding: '8px',
-                          borderRadius: 8,
-                          background: 'transparent',
-                          border: 'none',
-                          color: '#64748b',
+                        style={{ 
+                          padding: '8px', 
+                          borderRadius: 8, 
+                          background: 'transparent', 
+                          border: 'none', 
+                          color: '#64748b', 
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -2463,48 +2516,48 @@ const Home = () => {
                       >
                         <BsThreeDotsVertical size={18} />
                       </button>
-
+                      
                       {/* Dropdown Menu */}
                       {menuOpen && (
                         <>
                           {/* Backdrop to close menu when clicking outside */}
-                          <div
+                          <div 
                             onClick={() => setOpenNotificationMenu(null)}
-                            style={{
-                              position: 'fixed',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              zIndex: 999
+                            style={{ 
+                              position: 'fixed', 
+                              top: 0, 
+                              left: 0, 
+                              right: 0, 
+                              bottom: 0, 
+                              zIndex: 999 
                             }}
                           />
-
+                          
                           {/* Menu */}
-                          <div style={{
-                            position: 'absolute',
-                            top: '100%',
-                            right: 0,
+                          <div style={{ 
+                            position: 'absolute', 
+                            top: '100%', 
+                            right: 0, 
                             marginTop: 4,
-                            background: 'white',
-                            borderRadius: '8px',
+                            background: 'white', 
+                            borderRadius: '8px', 
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                             zIndex: 1000,
                             minWidth: 140,
                             overflow: 'hidden'
                           }}>
-                            <button
+                            <button 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleNotificationRead(origIndex);
                                 setOpenNotificationMenu(null);
                               }}
-                              style={{
+                              style={{ 
                                 width: '100%',
-                                padding: '10px 16px',
-                                background: 'transparent',
-                                border: 'none',
-                                color: '#0b62d6',
+                                padding: '10px 16px', 
+                                background: 'transparent', 
+                                border: 'none', 
+                                color: '#0b62d6', 
                                 fontWeight: 600,
                                 fontSize: 14,
                                 cursor: 'pointer',
@@ -2520,18 +2573,18 @@ const Home = () => {
                               {n.read ? 'Mark as Unread' : 'Mark as Read'}
                             </button>
                             <div style={{ height: 1, background: '#e2e8f0' }} />
-                            <button
+                            <button 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteNotification(origIndex);
                                 setOpenNotificationMenu(null);
                               }}
-                              style={{
+                              style={{ 
                                 width: '100%',
-                                padding: '10px 16px',
-                                background: 'transparent',
-                                border: 'none',
-                                color: '#dc2626',
+                                padding: '10px 16px', 
+                                background: 'transparent', 
+                                border: 'none', 
+                                color: '#dc2626', 
                                 fontWeight: 600,
                                 fontSize: 14,
                                 cursor: 'pointer',
@@ -2558,10 +2611,6 @@ const Home = () => {
         </div>
       )}
 
-
-
-
-
       {/* Home view */}
       {currentView === 'home' && (
         <div style={containerStyle}>
@@ -2571,6 +2620,63 @@ const Home = () => {
             .nav-link:focus { outline: 3px solid rgba(99,102,241,0.18); outline-offset: 4px; }
             .dropdown-enter { transform: translateY(-6px); opacity: 0; }
             .dropdown-enter-active { transform: translateY(0); opacity: 1; transition: all 220ms ease; }
+
+            .scroll-reveal {
+              opacity: 0;
+              transform: translateY(40px);
+              transition: opacity 0.8s ease, transform 0.8s ease;
+            }
+            
+            .scroll-reveal.revealed {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            
+            .scroll-reveal-left {
+              opacity: 0;
+              transform: translateX(-40px);
+              transition: opacity 0.8s ease, transform 0.8s ease;
+            }
+            
+            .scroll-reveal-left.revealed {
+              opacity: 1;
+              transform: translateX(0);
+            }
+            
+            .scroll-reveal-right {
+              opacity: 0;
+              transform: translateX(40px);
+              transition: opacity 0.8s ease, transform 0.8s ease;
+            }
+            
+            .scroll-reveal-right.revealed {
+              opacity: 1;
+              transform: translateX(0);
+            }
+            
+            .scroll-reveal-scale {
+              opacity: 0;
+              transform: scale(0.9);
+              transition: opacity 0.8s ease, transform 0.8s ease;
+            }
+            
+            .scroll-reveal-scale.revealed {
+              opacity: 1;
+              transform: scale(1);
+            }
+
+            .footer-link:hover {
+              color: #fbbf24 !important;
+              transform: translateX(4px);
+            }
+            
+            .footer-bottom-link:hover {
+              background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+              -webkit-background-clip: text !important;
+              -webkit-text-fill-color: transparent !important;
+              background-clip: text !important;
+              transform: translateY(-1px);
+            }
           `}</style>
           <nav style={{ ...navStyle, alignItems: 'center' }} aria-label="Main navigation">
             {/* Left: Logo */}
@@ -2586,8 +2692,8 @@ const Home = () => {
             {/* Center: links (hidden on mobile) */}
             <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
               <ul style={{ ...ulStyle, display: isMobile ? 'none' : 'flex' }} role="menubar">
-                {['#home', '#services', '#about', '#contact'].map((hash, i) => {
-                  const labels = ['Home', 'Services', 'About Us', 'Contact'];
+                {['#home','#services','#about','#contact'].map((hash, i) => {
+                  const labels = ['Home','Services','About Us','Contact'];
                   return (
                     <li key={hash} style={{ listStyle: 'none' }}>
                       <a
@@ -2619,7 +2725,7 @@ const Home = () => {
                 {mobileOpen ? (
                   <span style={{ fontSize: 22 }} aria-hidden>×</span>
                 ) : (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 12h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 18h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 12h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 )}
               </button>
 
@@ -2627,7 +2733,7 @@ const Home = () => {
                 {/* Notifications */}
                 <div style={{ position: 'relative' }}>
                   <button aria-label="Notifications" data-notif-toggle="true" onClick={(e) => { e.stopPropagation(); setShowNotifications(!showNotifications); setShowUserMenu(false); }} style={{ background: 'transparent', border: 'none', color: 'rgba(240,248,255,0.95)', cursor: 'pointer', padding: '8px', position: 'relative' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 1 0-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h11z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 1 0-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h11z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     {unreadCount() > 0 && (
                       <span style={{ position: 'absolute', top: 2, right: 2, background: '#ef4444', color: 'white', fontSize: 11, fontWeight: 800, padding: '2px 6px', borderRadius: 999 }}>{unreadCount()}</span>
                     )}
@@ -2639,8 +2745,8 @@ const Home = () => {
                         <div style={{ fontWeight: 800, color: '#06264a' }}>Notifications</div>
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button onClick={markAllRead} style={{ background: 'transparent', border: 'none', color: '#0b62d6', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}>Mark all</button>
-                          <button
-                            onClick={() => setShowOnlyUnread(!showOnlyUnread)}
+                          <button 
+                            onClick={() => setShowOnlyUnread(!showOnlyUnread)} 
                             style={{ background: 'transparent', border: 'none', color: showOnlyUnread ? '#10b981' : '#6b7280', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}
                           >
                             {showOnlyUnread ? 'Show All' : 'Unread'}
@@ -2650,20 +2756,20 @@ const Home = () => {
 
                       <div style={{ maxHeight: '260px', overflowY: 'auto', display: 'grid', gap: 8 }}>
                         {(() => {
-                          const filteredNotifications = showOnlyUnread
-                            ? notifications.filter(n => !n.read)
+                          const filteredNotifications = showOnlyUnread 
+                            ? notifications.filter(n => !n.read) 
                             : notifications;
-
+                          
                           if (filteredNotifications.length === 0) {
                             return <div style={{ color: '#6b7280' }}>
                               {showOnlyUnread ? 'No unread notifications' : 'No notifications'}
                             </div>;
                           }
-
+                          
                           return filteredNotifications.slice().reverse().map((n, idx) => {
                             const origIndex = notifications.indexOf(n);
                             const menuOpen = openNotificationMenu === n.id;
-
+                            
                             return (
                               <div key={n.id || idx} style={{ padding: '8px', borderRadius: 8, background: n.read ? '#f8fafc' : '#eef6ff', border: '1px solid rgba(11,59,120,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, position: 'relative' }}>
                                 <div onClick={() => handleOpenNotification(origIndex)} style={{ flex: 1, cursor: 'pointer' }}>
@@ -2672,16 +2778,16 @@ const Home = () => {
                                   <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>{new Date(n.createdAt).toLocaleString()}</div>
                                 </div>
                                 <div style={{ position: 'relative' }}>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
+                                  <button 
+                                    onClick={(e) => { 
+                                      e.stopPropagation(); 
                                       setOpenNotificationMenu(menuOpen ? null : n.id);
-                                    }}
-                                    style={{
-                                      padding: '4px',
-                                      background: 'transparent',
-                                      border: 'none',
-                                      color: '#64748b',
+                                    }} 
+                                    style={{ 
+                                      padding: '4px', 
+                                      background: 'transparent', 
+                                      border: 'none', 
+                                      color: '#64748b', 
                                       cursor: 'pointer',
                                       display: 'flex',
                                       alignItems: 'center',
@@ -2690,48 +2796,48 @@ const Home = () => {
                                   >
                                     <BsThreeDotsVertical size={16} />
                                   </button>
-
+                                  
                                   {/* Dropdown Menu */}
                                   {menuOpen && (
                                     <>
                                       {/* Backdrop */}
-                                      <div
+                                      <div 
                                         onClick={() => setOpenNotificationMenu(null)}
-                                        style={{
-                                          position: 'fixed',
-                                          top: 0,
-                                          left: 0,
-                                          right: 0,
-                                          bottom: 0,
-                                          zIndex: 1199
+                                        style={{ 
+                                          position: 'fixed', 
+                                          top: 0, 
+                                          left: 0, 
+                                          right: 0, 
+                                          bottom: 0, 
+                                          zIndex: 1199 
                                         }}
                                       />
-
+                                      
                                       {/* Menu */}
-                                      <div style={{
-                                        position: 'absolute',
-                                        top: '100%',
-                                        right: 0,
+                                      <div style={{ 
+                                        position: 'absolute', 
+                                        top: '100%', 
+                                        right: 0, 
                                         marginTop: 4,
-                                        background: 'white',
-                                        borderRadius: '8px',
+                                        background: 'white', 
+                                        borderRadius: '8px', 
                                         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                                         zIndex: 1201,
                                         minWidth: 140,
                                         overflow: 'hidden'
                                       }}>
-                                        <button
+                                        <button 
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             toggleNotificationRead(origIndex);
                                             setOpenNotificationMenu(null);
                                           }}
-                                          style={{
+                                          style={{ 
                                             width: '100%',
-                                            padding: '10px 16px',
-                                            background: 'transparent',
-                                            border: 'none',
-                                            color: '#0b62d6',
+                                            padding: '10px 16px', 
+                                            background: 'transparent', 
+                                            border: 'none', 
+                                            color: '#0b62d6', 
                                             fontWeight: 600,
                                             fontSize: 13,
                                             cursor: 'pointer',
@@ -2744,18 +2850,18 @@ const Home = () => {
                                           {n.read ? 'Mark as Unread' : 'Mark as Read'}
                                         </button>
                                         <div style={{ height: 1, background: '#e2e8f0' }} />
-                                        <button
+                                        <button 
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             deleteNotification(origIndex);
                                             setOpenNotificationMenu(null);
                                           }}
-                                          style={{
+                                          style={{ 
                                             width: '100%',
-                                            padding: '10px 16px',
-                                            background: 'transparent',
-                                            border: 'none',
-                                            color: '#dc2626',
+                                            padding: '10px 16px', 
+                                            background: 'transparent', 
+                                            border: 'none', 
+                                            color: '#dc2626', 
                                             fontWeight: 600,
                                             fontSize: 13,
                                             cursor: 'pointer',
@@ -2802,12 +2908,12 @@ const Home = () => {
                       aria-expanded={showUserMenu}
                     >
                       <div style={{ width: '34px', height: '34px', borderRadius: '999px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: user?.avatar ? 'transparent' : 'linear-gradient(135deg,#06b6d4,#3b82f6)' }}>
-                        {user?.avatar ? (
-                          <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          <FaUser style={{ color: 'white' }} />
-                        )}
-                      </div>
+                          {user?.avatar ? (
+                            <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <FaUser style={{ color: 'white' }} />
+                          )}
+                        </div>
                       <div style={{ textAlign: 'left', lineHeight: 1 }}>
                         <div style={{ fontSize: '13px', fontWeight: 800 }}>{user.firstName || (user.email || '').split('@')[0]}</div>
                         <div style={{ fontSize: '11px', color: 'rgba(229, 231, 235, 0.9)', marginTop: '2px' }}>{user.role || 'Member'}</div>
@@ -2834,38 +2940,24 @@ const Home = () => {
                         <div style={{ marginTop: '12px', display: 'grid', gap: '8px' }}>
                           {/* Avatar controls for all users */}
                           {/* Avatar editing moved to profile page. Preview only shown above. */}
-                          <a href="#profile" onClick={(e) => { e.preventDefault(); openProfile(); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                          >
+                          <a href="#profile" onClick={(e) => { e.preventDefault(); openProfile(); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
                             <FaUser style={{ color: '#0b62d6', minWidth: '18px' }} />
                             <span>View Profile</span>
                           </a>
 
-                          <a href="#bookings" onClick={(e) => { e.preventDefault(); navigate('/bookings'); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                          <a href="#bookings" onClick={(e) => { e.preventDefault(); setShowMyBookings(true); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             <span>Bookings</span>
                           </a>
 
-
-
-                          <a href="#instruments" onClick={(e) => { e.preventDefault(); setShowUserMenu(false); const url = (user && user.role === 'user') ? '/#/instrument-booking' : '/#/instrument-borrowing'; window.open(url, '_blank'); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                          >
+                          <a href="#instruments" onClick={(e) => { e.preventDefault(); handleOpenInstrumentRequest(); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
                             <FaMusic style={{ color: '#0b62d6', minWidth: '18px' }} />
                             <span>{user.role === 'user' ? 'Rent Instrument' : 'Borrow Instrument'}</span>
                           </a>
 
                           {user.role === 'admin' && (
-                            <a href="#dashboard" onClick={(e) => { e.preventDefault(); if (user?.role === 'admin') { setCurrentView('dashboard'); } else { alert('Dashboard access is restricted to administrators.'); } setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}
-                              onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
-                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            <a href="#dashboard" onClick={(e) => { e.preventDefault(); if (user?.role === 'admin') { setCurrentView('dashboard'); } else { alert('Dashboard access is restricted to administrators.'); } setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                               <span>Admin Dashboard</span>
                             </a>
                           )}
@@ -2932,7 +3024,7 @@ const Home = () => {
               filter: 'blur(100px)',
               animation: 'ambientGlow 8s ease-in-out infinite'
             }}></div>
-
+            
             <div style={{
               position: 'absolute',
               bottom: '20%',
@@ -2947,25 +3039,26 @@ const Home = () => {
 
             <div style={heroContentStyle}>
               {/* Main Tagline */}
-              <h1 style={taglineStyle}>
+              <h1 style={taglineStyle} className="scroll-reveal">
                 Cirva a la gente por la música
               </h1>
 
               {/* Translation */}
-              <p style={translationStyle}>
+              <p style={translationStyle} className="scroll-reveal">
                 "Serve the people through music"
               </p>
 
               {/* Call to Action */}
               <button
                 onClick={handleShowSignup}
+                className="scroll-reveal-scale"
                 style={{
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                  background: 'linear-gradient(135deg, #1e40af 0%, #06b6d4 100%)',
                   border: 'none',
-                  color: '#ffffff',
+                  color: 'white',
                   padding: '16px 40px',
                   borderRadius: '12px',
-                  fontFamily: 'Georgia, Times, "Times New Roman", serif',
+                  fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial", 
                   fontWeight: 600,
                   fontSize: '16px',
                   letterSpacing: '0.01em',
@@ -2974,9 +3067,7 @@ const Home = () => {
                   textDecoration: 'none',
                   boxShadow: '0 8px 24px rgba(59, 130, 246, 0.3)',
                   position: 'relative',
-                  overflow: 'hidden',
-                  opacity: 0,
-                  animation: 'slideInFromBottom 1.5s ease-out 1.2s forwards'
+                  overflow: 'hidden'
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.transform = 'translateY(-4px) scale(1.05)';
@@ -2997,61 +3088,158 @@ const Home = () => {
           {/* Services Section */}
           <section id="services" style={servicesSectionStyle}>
             <div style={servicesContainerStyle}>
-              <div style={servicesHeaderWrapStyle}>
+              <div style={servicesHeaderWrapStyle} className="scroll-reveal">
                 <div>
                   <h3 style={servicesHeaderStyle}>Our Services</h3>
                   <div style={sectionEyebrowStyle}>What we offer</div>
                 </div>
-                <div style={servicesHeaderRightStyle}>
-                  <div style={{ color: '#e5e7eb', fontFamily: 'Marcellus, serif', fontSize: '20px', fontWeight: 600 }}>Certified Excellence</div>
-                  <p style={servicesSubTextStyle}>From parades and corporate shows to workshops and rentals—we tailor each service to your event with professional coordination and musical excellence.</p>
+              </div>
+
+              {/* Services Carousel */}
+              <div style={{ position: 'relative', maxWidth: '100%', margin: '0 auto', padding: '0 80px' }}>
+                <div style={{ overflow: 'hidden', borderRadius: '20px' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    transition: 'transform 0.5s ease-in-out',
+                    transform: `translateX(-${servicesSlide * 33.33}%)`,
+                    gap: '16px'
+                  }}>
+                    {services.map((service, idx) => (
+                      <div 
+                        key={service.title} 
+                        style={{ 
+                          minWidth: 'calc(33.33% - 11px)',
+                          flexShrink: 0
+                        }}
+                      >
+                        <div 
+                          className="scroll-reveal" 
+                          style={{ 
+                            position: 'relative', 
+                            borderRadius: '20px', 
+                            overflow: 'hidden', 
+                            border: '1px solid rgba(100,255,218,0.2)', 
+                            backgroundColor: 'rgba(10,25,47,0.6)',
+                            cursor: 'pointer',
+                            height: '500px'
+                          }}
+                          onClick={() => setModalService(service)}
+                        >
+                          <div style={{ position: 'relative', height: '100%' }}>
+                            <div style={{ ...cardImageStyle, backgroundImage: `url(${service.img})`, height: '100%' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(2,6,23,0.92), rgba(2,6,23,0.2) 60%)' }} />
+                            <div style={cardBodyStyle}>
+                              <div style={cardBottomPillStyle}>{service.title}</div>
+                              <button aria-label="Open" style={cardArrowButtonStyle} onClick={(e) => { e.stopPropagation(); setModalService(service); }}>↗</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Navigation Buttons */}
+                <button 
+                  onClick={goServicesPrev}
+                  disabled={servicesSlide === 0}
+                  style={{
+                    position: 'absolute',
+                    left: '-60px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(10px)',
+                    color: '#1e40af',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '50%',
+                    width: '48px',
+                    height: '48px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+                    fontSize: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10,
+                    opacity: servicesSlide === 0 ? 0.3 : 1
+                  }}
+                  aria-label="Previous service"
+                >
+                  ‹
+                </button>
+
+                <button 
+                  onClick={goServicesNext}
+                  disabled={servicesSlide >= services.length - 3}
+                  style={{
+                    position: 'absolute',
+                    right: '-60px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(10px)',
+                    color: '#1e40af',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '50%',
+                    width: '48px',
+                    height: '48px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+                    fontSize: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10,
+                    opacity: servicesSlide >= services.length - 3 ? 0.3 : 1
+                  }}
+                  aria-label="Next service"
+                >
+                  ›
+                </button>
+
+                {/* Dots Indicator */}
+                <div style={{
+                  display: 'flex',
+                  gap: '8px',
+                  justifyContent: 'center',
+                  marginTop: '24px'
+                }}>
+                  {Array.from({ length: services.length - 2 }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setServicesSlide(idx)}
+                      style={{
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        backgroundColor: idx === servicesSlide ? '#1e40af' : 'rgba(255, 255, 255, 0.6)',
+                        border: idx === servicesSlide ? '2px solid #06b6d4' : '2px solid rgba(255, 255, 255, 0.8)',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        cursor: 'pointer',
+                        padding: 0
+                      }}
+                      aria-label={`Go to slide ${idx + 1}`}
+                    />
+                  ))}
                 </div>
               </div>
-
-              {/* New card layout: 3 on top, 2 centered below */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', marginBottom: '16px' }}>
-                {services.slice(0, 3).map((service) => (
-                  <div key={service.title} style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(100,255,218,0.2)', backgroundColor: 'rgba(10,25,47,0.6)' }}>
-                    <div style={{ position: 'relative', height: `${serviceCardH}px` }}>
-                      <div style={{ ...cardImageStyle, backgroundImage: `url(${service.img})` }} />
-                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(2,6,23,0.92), rgba(2,6,23,0.2) 60%)' }} />
-                      <div style={cardBodyStyle}>
-                        <div style={cardBottomPillStyle}>{service.title}</div>
-                        <button aria-label="Open" style={cardArrowButtonStyle} onClick={() => setModalService(service)}>↗</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px', maxWidth: '860px', margin: '16px auto 0' }}>
-                {services.slice(3).map((service) => (
-                  <div key={service.title} style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(100,255,218,0.2)', backgroundColor: 'rgba(10,25,47,0.6)' }}>
-                    <div style={{ position: 'relative', height: `${serviceCardH}px` }}>
-                      <div style={{ ...cardImageStyle, backgroundImage: `url(${service.img})` }} />
-                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(2,6,23,0.92), rgba(2,6,23,0.2) 60%)' }} />
-                      <div style={cardBodyStyle}>
-                        <div style={cardBottomPillStyle}>{service.title}</div>
-                        <button aria-label="Open" style={cardArrowButtonStyle} onClick={() => setModalService(service)}>↗</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
             </div>
           </section>
 
           {/* About Section */}
           <section id="about" style={aboutSectionStyle}>
             <div style={servicesContainerStyle}>
-              <div style={servicesHeaderWrapStyle}>
+              <div style={servicesHeaderWrapStyle} className="scroll-reveal">
                 <div>
                   <h3 style={aboutHeaderStyle}>About Us</h3>
                   <div style={sectionEyebrowStyle}>Who we are</div>
                 </div>
               </div>
               <div style={aboutWrapStyle}>
-                <div style={aboutTextCardStyle}>
+                <div style={aboutTextCardStyle} className="scroll-reveal-left">
                   <div>
                     <p style={aboutStoryParagraphStyle}>
                       The Davao Blue Eagles Marching Band (DBEMB) was founded in 2012, with November 24, 2012, as its official anniversary date. This marks the band's first-ever competition in Bohol, where it made history by sweeping all four major awards and breaking the 15-year championship streak of Bohol Island State University (BISU).
@@ -3069,7 +3257,7 @@ const Home = () => {
                 </div>
 
                 {/* Carousel */}
-                <div style={carouselWrapperStyle}>
+                <div style={carouselWrapperStyle} className="scroll-reveal-right">
                   <div
                     style={{
                       ...carouselImageStyle,
@@ -3093,19 +3281,16 @@ const Home = () => {
           {/* Contact Section */}
           <section id="contact" style={contactSectionStyle}>
             <div style={servicesContainerStyle}>
-              <div style={servicesHeaderWrapStyle}>
+              <div style={servicesHeaderWrapStyle} className="scroll-reveal">
                 <div>
                   <h3 style={contactHeaderStyle}>Contact Us</h3>
                   <div style={sectionEyebrowStyle}>Get in touch</div>
                 </div>
-                <p style={contactSubTextStyle}>
-                  Ready to bring the Davao Blue Eagles Marching Band to your event? Get in touch with us for bookings, inquiries, or collaborations.
-                </p>
               </div>
 
               <div style={contactGridStyle}>
                 {/* Contact Information */}
-                <div style={contactInfoCardStyle}>
+                <div style={contactInfoCardStyle} className="scroll-reveal-left">
                   <h4 style={contactCardTitleStyle}>Get In Touch</h4>
                   <div style={contactInfoListStyle}>
                     <div style={contactInfoItemStyle}>
@@ -3137,10 +3322,50 @@ const Home = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Booking Process, Service Areas, and Payment Terms */}
+                  <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div style={{ 
+                      border: '1px solid rgba(255, 255, 255, 0.2)', 
+                      borderRadius: '15px', 
+                      padding: '20px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                    }}>
+                      <h5 style={infoCardTitleStyle}>Booking Process</h5>
+                      <p style={infoCardTextStyle}>
+                        We'll review your request and get back to you within 24 hours with availability and pricing details.
+                      </p>
+                    </div>
+                    <div style={{ 
+                      border: '1px solid rgba(255, 255, 255, 0.2)', 
+                      borderRadius: '15px', 
+                      padding: '20px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                    }}>
+                      <h5 style={infoCardTitleStyle}>Service Areas</h5>
+                      <p style={infoCardTextStyle}>
+                        We serve Davao City and surrounding areas. For events outside our immediate area, please contact us for special arrangements.
+                      </p>
+                    </div>
+                    <div style={{ 
+                      border: '1px solid rgba(255, 255, 255, 0.2)', 
+                      borderRadius: '15px', 
+                      padding: '20px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                    }}>
+                      <h5 style={infoCardTitleStyle}>Payment Terms</h5>
+                      <p style={infoCardTextStyle}>
+                        We require a 50% deposit upon booking confirmation, with the remaining balance due on the event date.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Contact Form */}
-                <div style={contactFormCardStyle}>
+                <div style={contactFormCardStyle} className="scroll-reveal-right">
                   <h4 style={contactCardTitleStyle}>Send Us a Message</h4>
                   <form style={contactFormStyle}>
                     <div style={formRowStyle}>
@@ -3214,28 +3439,6 @@ const Home = () => {
                   </form>
                 </div>
               </div>
-
-              {/* Additional Info */}
-              <div style={additionalInfoStyle}>
-                <div style={infoCardStyle}>
-                  <h5 style={infoCardTitleStyle}>Booking Process</h5>
-                  <p style={infoCardTextStyle}>
-                    We'll review your request and get back to you within 24 hours with availability and pricing details.
-                  </p>
-                </div>
-                <div style={infoCardStyle}>
-                  <h5 style={infoCardTitleStyle}>Service Areas</h5>
-                  <p style={infoCardTextStyle}>
-                    We serve Davao City and surrounding areas. For events outside our immediate area, please contact us for special arrangements.
-                  </p>
-                </div>
-                <div style={infoCardStyle}>
-                  <h5 style={infoCardTitleStyle}>Payment Terms</h5>
-                  <p style={infoCardTextStyle}>
-                    We require a 50% deposit upon booking confirmation, with the remaining balance due on the event date.
-                  </p>
-                </div>
-              </div>
             </div>
           </section>
 
@@ -3275,7 +3478,7 @@ const Home = () => {
                   </h4>
                   <button style={closeButtonStyle} onClick={() => setShowInstrumentRequest(false)}>×</button>
                 </div>
-
+                
                 <form onSubmit={handleSubmitInstrumentRequest} style={modalBodyStyle}>
                   <div style={{ marginBottom: '16px' }}>
                     <label style={darkLabelStyle}>Instrument Type *</label>
@@ -3386,24 +3589,24 @@ const Home = () => {
                     />
                   </div>
 
-                  <div style={{
-                    padding: '16px',
-                    background: user && user.role === 'user' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-                    borderRadius: '12px',
+                  <div style={{ 
+                    padding: '16px', 
+                    background: user && user.role === 'user' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)', 
+                    borderRadius: '12px', 
                     marginBottom: '20px',
                     border: user && user.role === 'user' ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid rgba(34, 197, 94, 0.2)'
                   }}>
                     <p style={{ margin: 0, fontSize: '14px', color: '#374151', lineHeight: 1.5 }}>
-                      {user && user.role === 'user'
+                      {user && user.role === 'user' 
                         ? '💵 As a customer, you can rent this instrument. Rental fees will be discussed upon approval.'
                         : '🎵 As a member, you can borrow this instrument for free. Please ensure to return it in good condition.'}
                     </p>
                   </div>
 
                   <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                    <button
-                      type="button"
-                      style={closeButtonStyle}
+                    <button 
+                      type="button" 
+                      style={closeButtonStyle} 
                       onClick={() => setShowInstrumentRequest(false)}
                     >
                       Cancel
@@ -3432,6 +3635,7 @@ const Home = () => {
               </div>
             </div>
           )}
+
           {/* Footer */}
           <footer style={footerStyle}>
             <div style={footerContainerStyle}>
@@ -3440,8 +3644,14 @@ const Home = () => {
                 {/* Brand Section */}
                 <div style={footerBrandStyle}>
                   <div style={footerLogoStyle}>
-                    <h3 style={footerLogoTitleStyle}>DAVAO</h3>
-                    <p style={footerLogoSubtitleStyle}>BLUE EAGLES</p>
+                    <a 
+                      href="#home" 
+                      onClick={(e) => handleNavClick(e, '#home')}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <h3 style={footerLogoTitleStyle}>DAVAO</h3>
+                      <p style={footerLogoSubtitleStyle}>BLUE EAGLES</p>
+                    </a>
                   </div>
                   <p style={footerDescriptionStyle}>
                     Serving the people through music since 2012. We bring excellence, passion, and unforgettable performances to every event.
@@ -3466,12 +3676,12 @@ const Home = () => {
                 <div style={footerSectionStyle}>
                   <h4 style={footerSectionTitleStyle}>Quick Links</h4>
                   <ul style={footerLinkListStyle}>
-                    <li><a href="#home" style={footerLinkStyle}>Home</a></li>
-                    <li><a href="#services" style={footerLinkStyle}>Services</a></li>
-                    <li><a href="#about" style={footerLinkStyle}>About Us</a></li>
-                    <li><a href="#contact" style={footerLinkStyle}>Contact</a></li>
-                    <li><a href="#" style={footerLinkStyle}>Gallery</a></li>
-                    <li><a href="#" style={footerLinkStyle}>News & Events</a></li>
+                    <li><a href="#home" onClick={(e) => handleNavClick(e, '#home')} style={footerLinkStyle} className="footer-link">Home</a></li>
+                    <li><a href="#services" onClick={(e) => handleNavClick(e, '#services')} style={footerLinkStyle} className="footer-link">Services</a></li>
+                    <li><a href="#about" onClick={(e) => handleNavClick(e, '#about')} style={footerLinkStyle} className="footer-link">About Us</a></li>
+                    <li><a href="#contact" onClick={(e) => handleNavClick(e, '#contact')} style={footerLinkStyle} className="footer-link">Contact</a></li>
+                    <li><a href="#" style={footerLinkStyle} className="footer-link">Gallery</a></li>
+                    <li><a href="#" style={footerLinkStyle} className="footer-link">News & Events</a></li>
                   </ul>
                 </div>
 
@@ -3479,12 +3689,12 @@ const Home = () => {
                 <div style={footerSectionStyle}>
                   <h4 style={footerSectionTitleStyle}>Our Services</h4>
                   <ul style={footerLinkListStyle}>
-                    <li><a href="#" style={footerLinkStyle}>Band Gigs</a></li>
-                    <li><a href="#" style={footerLinkStyle}>Music Arrangement</a></li>
-                    <li><a href="#" style={footerLinkStyle}>Parade Events</a></li>
-                    <li><a href="#" style={footerLinkStyle}>Music Workshops</a></li>
-                    <li><a href="#" style={footerLinkStyle}>Instrument Rentals</a></li>
-                    <li><a href="#" style={footerLinkStyle}>Custom Performances</a></li>
+                    <li><a href="#services" onClick={(e) => handleNavClick(e, '#services')} style={footerLinkStyle} className="footer-link">Band Gigs</a></li>
+                    <li><a href="#services" onClick={(e) => handleNavClick(e, '#services')} style={footerLinkStyle} className="footer-link">Music Arrangement</a></li>
+                    <li><a href="#services" onClick={(e) => handleNavClick(e, '#services')} style={footerLinkStyle} className="footer-link">Parade Events</a></li>
+                    <li><a href="#services" onClick={(e) => handleNavClick(e, '#services')} style={footerLinkStyle} className="footer-link">Music Workshops</a></li>
+                    <li><a href="#services" onClick={(e) => handleNavClick(e, '#services')} style={footerLinkStyle} className="footer-link">Instrument Rentals</a></li>
+                    <li><a href="#services" onClick={(e) => handleNavClick(e, '#services')} style={footerLinkStyle} className="footer-link">Custom Performances</a></li>
                   </ul>
                 </div>
 
@@ -3519,9 +3729,9 @@ const Home = () => {
                     © 2025 Davao Blue Eagles Marching Band. All rights reserved.
                   </p>
                   <div style={footerBottomLinksStyle}>
-                    <a href="#" style={footerBottomLinkStyle}>Privacy Policy</a>
-                    <a href="#" style={footerBottomLinkStyle}>Terms of Service</a>
-                    <a href="#" style={footerBottomLinkStyle}>Cookie Policy</a>
+                    <a href="#" style={footerBottomLinkStyle} className="footer-bottom-link">Privacy Policy</a>
+                    <a href="#" style={footerBottomLinkStyle} className="footer-bottom-link">Terms of Service</a>
+                    <a href="#" style={footerBottomLinkStyle} className="footer-bottom-link">Cookie Policy</a>
                   </div>
                 </div>
               </div>
@@ -3529,33 +3739,208 @@ const Home = () => {
           </footer>
         </div>
       )}
-      
-      {/* Payment Modal */}
-      {showPaymentModal && selectedPaymentNotification && (
-        <div
-          onClick={() => !paymentProcessing && setShowPaymentModal(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+
+      {/* My Bookings Modal */}
+      {showMyBookings && (
+        <div 
+          onClick={() => setShowMyBookings(false)}
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            background: 'rgba(0, 0, 0, 0.7)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
             zIndex: 9999,
             padding: '20px'
           }}
         >
-          <div
+          <div 
             onClick={(e) => e.stopPropagation()}
-            style={{
-              background: 'white',
-              borderRadius: '16px',
-              maxWidth: '600px',
-              width: '100%',
-              maxHeight: '90vh',
+            style={{ 
+              background: 'white', 
+              borderRadius: '16px', 
+              maxWidth: '900px', 
+              width: '100%', 
+              maxHeight: '90vh', 
+              overflow: 'auto',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+            }}
+          >
+            {/* Header */}
+            <div style={{ 
+              padding: '24px', 
+              borderBottom: '1px solid #e2e8f0',
+              background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+              borderRadius: '16px 16px 0 0'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ margin: 0, color: 'white', fontSize: 24, fontWeight: 800 }}>My Bookings</h2>
+                <button 
+                  onClick={() => setShowMyBookings(false)}
+                  style={{ 
+                    background: 'rgba(255, 255, 255, 0.2)', 
+                    border: 'none', 
+                    color: 'white', 
+                    fontSize: 24, 
+                    width: 36, 
+                    height: 36, 
+                    borderRadius: '50%', 
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Bookings List */}
+            <div style={{ padding: '24px' }}>
+              {bookings.filter(b => b.email === user?.email).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748b' }}>
+                  <FaCalendarAlt style={{ fontSize: 48, marginBottom: 16, color: '#cbd5e1' }} />
+                  <h3 style={{ margin: '0 0 8px 0', color: '#475569' }}>No Bookings Yet</h3>
+                  <p style={{ margin: 0 }}>You haven't made any bookings yet.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  {bookings.filter(b => b.email === user?.email).map(booking => (
+                    <div 
+                      key={booking.id} 
+                      style={{ 
+                        background: booking.status === 'approved' ? '#f0f9ff' : '#f8fafc',
+                        border: `2px solid ${booking.status === 'approved' ? '#bae6fd' : '#e2e8f0'}`, 
+                        borderRadius: 12, 
+                        padding: 20,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
+                            Booking #{booking.id} - {booking.service}
+                          </h3>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginTop: 12 }}>
+                            <div>
+                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Date</div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: '#475569' }}>
+                                {formatDate(booking.date)}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Time</div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: '#475569' }}>
+                                {booking.startTime} - {booking.endTime}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Location</div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: '#475569' }}>{booking.location}</div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Amount</div>
+                              <div style={{ fontSize: 16, fontWeight: 700, color: '#0369a1' }}>
+                                ₱{booking.estimatedValue?.toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+                          {booking.notes && (
+                            <div style={{ marginTop: 12, padding: 12, background: '#f1f5f9', borderRadius: 8 }}>
+                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Notes</div>
+                              <div style={{ fontSize: 13, color: '#475569', whiteSpace: 'pre-wrap' }}>{booking.notes}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{
+                            padding: '6px 12px',
+                            borderRadius: 20,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: booking.status === 'approved' ? '#d1fae5' : booking.status === 'pending' ? '#fef3c7' : booking.status === 'paid' ? '#dbeafe' : '#fee2e2',
+                            color: booking.status === 'approved' ? '#065f46' : booking.status === 'pending' ? '#92400e' : booking.status === 'paid' ? '#1e40af' : '#991b1b'
+                          }}>
+                            {booking.status === 'approved' ? '✓ Approved' : booking.status === 'pending' ? '⏳ Pending' : booking.status === 'paid' ? '💳 Paid' : booking.status === 'rejected' ? '✕ Rejected' : booking.status}
+                          </span>
+                        </div>
+
+                        {booking.status === 'approved' && (
+                          <button 
+                            onClick={() => {
+                              setSelectedPaymentNotification({
+                                data: {
+                                  bookingId: booking.id,
+                                  amount: booking.estimatedValue,
+                                  service: booking.service,
+                                  date: booking.date
+                                }
+                              });
+                              setShowPaymentModal(true);
+                              setShowMyBookings(false);
+                            }}
+                            style={{
+                              padding: '10px 20px',
+                              borderRadius: 8,
+                              background: '#059669',
+                              border: 'none',
+                              color: 'white',
+                              fontWeight: 700,
+                              fontSize: 14,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8
+                            }}
+                          >
+                            <FaCreditCard />
+                            Proceed to Payment
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedPaymentNotification && (
+        <div 
+          onClick={() => !paymentProcessing && setShowPaymentModal(false)}
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            background: 'rgba(0, 0, 0, 0.7)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 9999,
+            padding: '20px'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{ 
+              background: 'white', 
+              borderRadius: '16px', 
+              maxWidth: '600px', 
+              width: '100%', 
+              maxHeight: '90vh', 
               overflow: 'auto',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
             }}
@@ -3569,8 +3954,8 @@ const Home = () => {
             ) : (
               <>
                 {/* Header */}
-                <div style={{
-                  padding: '24px',
+                <div style={{ 
+                  padding: '24px', 
                   borderBottom: '1px solid #e2e8f0',
                   background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
                   borderRadius: '16px 16px 0 0'
@@ -3585,17 +3970,17 @@ const Home = () => {
                         {selectedPaymentNotification.data?.service || 'Booking Service'}
                       </p>
                     </div>
-                    <button
+                    <button 
                       onClick={() => setShowPaymentModal(false)}
                       disabled={paymentProcessing}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.2)',
-                        border: 'none',
-                        color: 'white',
-                        fontSize: 24,
-                        width: 36,
-                        height: 36,
-                        borderRadius: '50%',
+                      style={{ 
+                        background: 'rgba(255, 255, 255, 0.2)', 
+                        border: 'none', 
+                        color: 'white', 
+                        fontSize: 24, 
+                        width: 36, 
+                        height: 36, 
+                        borderRadius: '50%', 
                         cursor: paymentProcessing ? 'not-allowed' : 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -3616,19 +4001,19 @@ const Home = () => {
                       ₱{(selectedPaymentNotification.data?.amount || selectedPaymentNotification.data?.paymentDetails?.totalAmount || 0).toLocaleString()}
                     </div>
                   </div>
-
+                  
                   {/* Payment Option Selection */}
                   <div style={{ display: 'flex', gap: 12, maxWidth: 500, margin: '0 auto' }}>
-                    <div
+                    <div 
                       onClick={() => {
                         const totalAmount = selectedPaymentNotification.data?.amount || 0;
-                        setPaymentForm({ ...paymentForm, paymentOption: 'downpayment', selectedAmount: totalAmount * 0.5 });
+                        setPaymentForm({...paymentForm, paymentOption: 'downpayment', selectedAmount: totalAmount * 0.5});
                       }}
-                      style={{
+                      style={{ 
                         flex: 1,
-                        padding: '16px',
-                        border: `3px solid ${paymentForm.paymentOption === 'downpayment' ? '#10b981' : '#e2e8f0'}`,
-                        borderRadius: 12,
+                        padding: '16px', 
+                        border: `3px solid ${paymentForm.paymentOption === 'downpayment' ? '#10b981' : '#e2e8f0'}`, 
+                        borderRadius: 12, 
                         cursor: 'pointer',
                         background: paymentForm.paymentOption === 'downpayment' ? '#ecfdf5' : 'white',
                         transition: 'all 0.2s',
@@ -3640,17 +4025,17 @@ const Home = () => {
                         ₱{((selectedPaymentNotification.data?.amount || 0) * 0.5).toLocaleString()}
                       </div>
                     </div>
-
-                    <div
+                    
+                    <div 
                       onClick={() => {
                         const totalAmount = selectedPaymentNotification.data?.amount || 0;
-                        setPaymentForm({ ...paymentForm, paymentOption: 'fullpayment', selectedAmount: totalAmount });
+                        setPaymentForm({...paymentForm, paymentOption: 'fullpayment', selectedAmount: totalAmount});
                       }}
-                      style={{
+                      style={{ 
                         flex: 1,
-                        padding: '16px',
-                        border: `3px solid ${paymentForm.paymentOption === 'fullpayment' ? '#0ea5e9' : '#e2e8f0'}`,
-                        borderRadius: 12,
+                        padding: '16px', 
+                        border: `3px solid ${paymentForm.paymentOption === 'fullpayment' ? '#0ea5e9' : '#e2e8f0'}`, 
+                        borderRadius: 12, 
                         cursor: 'pointer',
                         background: paymentForm.paymentOption === 'fullpayment' ? '#f0f9ff' : 'white',
                         transition: 'all 0.2s',
@@ -3668,18 +4053,18 @@ const Home = () => {
                 {/* Payment Form */}
                 <form onSubmit={handlePaymentSubmit} style={{ padding: '24px' }}>
                   <h3 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>Choose Payment Method</h3>
-
+                  
                   {/* Payment Method Selection */}
                   <div style={{ marginBottom: 20 }}>
                     {['gcash', 'card', 'bank'].map(method => (
-                      <div
+                      <div 
                         key={method}
                         onClick={() => setPaymentMethod(method)}
-                        style={{
-                          padding: 16,
-                          border: `2px solid ${paymentMethod === method ? '#0ea5e9' : '#e2e8f0'}`,
-                          borderRadius: 12,
-                          cursor: 'pointer',
+                        style={{ 
+                          padding: 16, 
+                          border: `2px solid ${paymentMethod === method ? '#0ea5e9' : '#e2e8f0'}`, 
+                          borderRadius: 12, 
+                          cursor: 'pointer', 
                           marginBottom: 12,
                           background: paymentMethod === method ? '#f0f9ff' : 'white',
                           transition: 'all 0.2s'
@@ -3714,7 +4099,7 @@ const Home = () => {
                           type="text"
                           placeholder="Cardholder Name"
                           value={paymentForm.cardholderName}
-                          onChange={(e) => setPaymentForm({ ...paymentForm, cardholderName: e.target.value })}
+                          onChange={(e) => setPaymentForm({...paymentForm, cardholderName: e.target.value})}
                           required
                           style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
                         />
@@ -3722,7 +4107,7 @@ const Home = () => {
                           type="text"
                           placeholder="Card Number"
                           value={paymentForm.cardNumber}
-                          onChange={(e) => setPaymentForm({ ...paymentForm, cardNumber: e.target.value.replace(/\D/g, '').slice(0, 16) })}
+                          onChange={(e) => setPaymentForm({...paymentForm, cardNumber: e.target.value.replace(/\D/g, '').slice(0, 16)})}
                           required
                           maxLength={16}
                           style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
@@ -3732,7 +4117,7 @@ const Home = () => {
                             type="text"
                             placeholder="MM/YY"
                             value={paymentForm.expiryDate}
-                            onChange={(e) => setPaymentForm({ ...paymentForm, expiryDate: e.target.value })}
+                            onChange={(e) => setPaymentForm({...paymentForm, expiryDate: e.target.value})}
                             required
                             maxLength={5}
                             style={{ padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
@@ -3741,7 +4126,7 @@ const Home = () => {
                             type="text"
                             placeholder="CVV"
                             value={paymentForm.cvv}
-                            onChange={(e) => setPaymentForm({ ...paymentForm, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                            onChange={(e) => setPaymentForm({...paymentForm, cvv: e.target.value.replace(/\D/g, '').slice(0, 4)})}
                             required
                             maxLength={4}
                             style={{ padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
@@ -3756,7 +4141,7 @@ const Home = () => {
                           type="text"
                           placeholder="GCash Number (09XXXXXXXXX)"
                           value={paymentForm.gcashNumber}
-                          onChange={(e) => setPaymentForm({ ...paymentForm, gcashNumber: e.target.value })}
+                          onChange={(e) => setPaymentForm({...paymentForm, gcashNumber: e.target.value})}
                           required
                           maxLength={11}
                           style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
@@ -3765,7 +4150,7 @@ const Home = () => {
                           type="text"
                           placeholder="Reference Number"
                           value={paymentForm.referenceNumber}
-                          onChange={(e) => setPaymentForm({ ...paymentForm, referenceNumber: e.target.value })}
+                          onChange={(e) => setPaymentForm({...paymentForm, referenceNumber: e.target.value})}
                           required
                           style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
                         />
@@ -3784,7 +4169,7 @@ const Home = () => {
                           type="text"
                           placeholder="Reference Number"
                           value={paymentForm.referenceNumber}
-                          onChange={(e) => setPaymentForm({ ...paymentForm, referenceNumber: e.target.value })}
+                          onChange={(e) => setPaymentForm({...paymentForm, referenceNumber: e.target.value})}
                           required
                           style={{ width: '100%', padding: 12, marginBottom: 12, borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
                         />
@@ -3793,16 +4178,16 @@ const Home = () => {
                   </div>
 
                   {/* Submit Button */}
-                  <button
+                  <button 
                     type="submit"
                     disabled={paymentProcessing}
-                    style={{
+                    style={{ 
                       width: '100%',
-                      padding: 14,
-                      borderRadius: 8,
-                      background: paymentProcessing ? '#94a3b8' : '#0ea5e9',
-                      border: 'none',
-                      color: 'white',
+                      padding: 14, 
+                      borderRadius: 8, 
+                      background: paymentProcessing ? '#94a3b8' : '#0ea5e9', 
+                      border: 'none', 
+                      color: 'white', 
                       fontWeight: 700,
                       fontSize: 16,
                       cursor: paymentProcessing ? 'not-allowed' : 'pointer',
