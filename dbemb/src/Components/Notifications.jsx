@@ -1,0 +1,298 @@
+import React, { useEffect, useState } from 'react';
+import { BsBell, BsX, BsTrash, BsCheckAll, BsInfoCircle, BsCheckCircle, BsExclamationTriangle } from 'react-icons/bs';
+import NotificationService from '../services/notificationService';
+
+const Notifications = ({ user }) => {
+  const [notifications, setNotifications] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [showOnlyUnread, setShowOnlyUnread] = useState(false);
+
+  const loadNotifications = async () => {
+    if (user && user.email) {
+      try {
+        const resp = await NotificationService.getUserNotifications(user.email);
+        const arr = Array.isArray(resp) ? resp : (resp && resp.notifications) ? resp.notifications : [];
+        setNotifications(arr);
+      } catch (err) {
+        console.error('Notifications: Failed to load notifications:', err);
+        setNotifications([]);
+      }
+    } else {
+      setNotifications([]);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+    const h = () => loadNotifications();
+    window.addEventListener('notificationsUpdated', h);
+    return () => window.removeEventListener('notificationsUpdated', h);
+  }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (open && !event.target.closest('[data-notif-toggle]') && !event.target.closest('#notification-menu')) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const timeAgo = (inputDate) => {
+    if (!inputDate) return 'Recently';
+    const date = new Date(inputDate);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) return 'Recently';
+    
+    const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+    
+    if (diff < 0) return 'Just now'; // Handle future dates
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  };
+
+  const markAllRead = async () => {
+    if (!user || !user.email) return;
+    try {
+      await Promise.all(notifications.filter(n => !n.read).map(n => NotificationService.markAsRead(n.id)));
+    } catch (e) {
+      console.warn('markAllRead: some marks failed', e);
+    }
+    await loadNotifications();
+  };
+
+  const clearAllNotifications = async () => {
+    if (!user || !user.email) return;
+    try {
+      await Promise.all(notifications.map(n => NotificationService.deleteNotification(n.id).catch(() => null)));
+    } catch (e) {
+      console.warn('clearAllNotifications failed', e);
+    }
+    await loadNotifications();
+  };
+
+  const handleOpenNotification = async (n) => {
+    if (!n) return;
+    try { await NotificationService.markAsRead(n.id); } catch (e) {}
+    // Prefer structured payment data when available (invoiceId or amount)
+    const hasPaymentData = n.data && (n.data.invoiceId || n.data.invoice_id || n.data.amount);
+    if (hasPaymentData) {
+      const amount = n.data && (n.data.amount || n.data.totalAmount || 100);
+      const invoiceId = n.data && (n.data.invoiceId || n.data.invoice_id || '');
+      window.location.href = `/payment?amount=${amount}&invoiceId=${invoiceId}`;
+    } else if (n.message && n.message.toLowerCase().includes('payment')) {
+      // Fallback: if message text mentions payment, navigate to payment route with best-effort params
+      window.location.href = `/payment?amount=${n.data && n.data.amount ? n.data.amount : 100}&invoiceId=${n.data && n.data.invoiceId ? n.data.invoiceId : ''}`;
+    } else {
+      setOpen(false);
+    }
+    await loadNotifications();
+  };
+
+  const handleDelete = async (n) => {
+    if (!n) return;
+    try { await NotificationService.deleteNotification(n.id); } catch (e) { console.warn(e); }
+    await loadNotifications();
+  };
+
+  const renderNotificationMessage = (notification) => {
+    const message = notification.message || '';
+    // Only render 'payment' as a clickable link if the notification contains payment-related data
+    // and is not already marked as paid.
+    if (message.toLowerCase().includes('payment') && notification.data && notification.data.invoiceId && !notification.data.paid) {
+      const parts = message.split(/(payment)/i);
+      return (
+        <>
+          {parts.map((p, i) => {
+            if (/^payment$/i.test(p)) {
+              return (
+                <a
+                  key={i}
+                  href="#"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.location.href = `/payment?amount=${notification.data && notification.data.amount ? notification.data.amount : 100}&invoiceId=${notification.data.invoiceId || ''}`;
+                  }}
+                  style={{ color: '#3b82f6', textDecoration: 'underline' }}
+                >
+                  {p}
+                </a>
+              );
+            }
+            return <span key={i}>{p}</span>;
+          })}
+        </>
+      );
+    }
+    return message;
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'success':
+        return <BsCheckCircle style={{ color: '#10b981' }} />;
+      case 'warning':
+        return <BsExclamationTriangle style={{ color: '#f59e0b' }} />;
+      default:
+        return <BsInfoCircle style={{ color: '#3b82f6' }} />;
+    }
+  };
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        aria-label="Notifications"
+        aria-expanded={open}
+        data-notif-toggle="true"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          color: '#374151',
+          cursor: 'pointer',
+          padding: '8px',
+          position: 'relative',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '10px'
+        }}
+        title="Open notifications"
+      >
+        <div style={{ position: 'relative', display: 'inline-flex' }}>
+          <BsBell size={20} color="#ffffff" />
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: -6,
+              right: -6,
+              background: '#ef4444',
+              color: 'white',
+              fontSize: 10,
+              fontWeight: 700,
+              padding: '2px 6px',
+              borderRadius: 999,
+              minWidth: 18,
+              textAlign: 'center',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.15)'
+            }}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </div>
+      </button>
+
+      {open && (
+        <div
+          id="notification-menu"
+          role="menu"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 8px)',
+            right: 0,
+            background: '#ffffff',
+            border: '1px solid #e5e7eb',
+            borderRadius: '12px',
+            padding: 0,
+            minWidth: '340px',
+            maxWidth: '420px',
+            boxShadow: '0 10px 30px rgba(2,6,23,0.2)',
+            zIndex: 1200,
+            maxHeight: '520px',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #eef2f7' }}>
+            <div>
+              <div style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#111827' }}>Notifications</div>
+              <div style={{ fontSize: '12px', color: '#6b7280' }}>{unreadCount} unread</div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {unreadCount > 0 && (
+                <button title="Mark all as read" onClick={markAllRead} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#2563eb', padding: 6 }}>
+                  <BsCheckAll size={16} />
+                </button>
+              )}
+              <button title="Close" onClick={() => setOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6b7280', padding: 6 }}>
+                <BsX size={16} />
+              </button>
+            </div>
+          </div>
+
+          <div style={{ overflowY: 'auto', maxHeight: '380px', padding: '12px 12px' }}>
+            {(() => {
+              const list = showOnlyUnread ? notifications.filter(n => !n.read) : notifications;
+              if (!list || list.length === 0) {
+                return (
+                  <div style={{ color: '#6b7280', padding: '36px 12px', textAlign: 'center', fontSize: '14px' }}>
+                    You're all caught up
+                  </div>
+                );
+              }
+
+              return list.map((n) => (
+                <div
+                  key={n.id}
+                  style={{
+                    padding: '10px',
+                    borderRadius: 10,
+                    background: n.read ? '#ffffff' : '#f8fdff',
+                    border: `1px solid ${n.read ? '#f8fafc' : '#e0f2fe'}`,
+                    marginBottom: 10,
+                    display: 'flex',
+                    gap: 12,
+                    alignItems: 'flex-start',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => handleOpenNotification(n)}
+                >
+                  <div style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: n.read ? '#f8fafc' : '#e6f5ff'
+                  }}>
+                    {getNotificationIcon(n.type)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</div>
+                      <div style={{ fontSize: 12, color: '#9ca3af', flexShrink: 0 }}>{timeAgo(n.createdAt)}</div>
+                    </div>
+                    <div style={{ marginTop: 6, fontSize: 13, color: '#374151', lineHeight: 1.4, overflow: 'hidden' }}>{renderNotificationMessage(n)}</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+                    {!n.read && (
+                      <div style={{ width: 8, height: 8, background: '#2563eb', borderRadius: '50%' }} />
+                    )}
+                    <button title="Delete" onClick={(e) => { e.stopPropagation(); handleDelete(n); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444', padding: 4 }}>
+                      <BsTrash size={12} />
+                    </button>
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+
+          <div style={{ padding: '10px 12px', borderTop: '1px solid #eef2f7', display: 'flex', gap: 8 }}>
+            <button onClick={() => { setShowOnlyUnread(!showOnlyUnread); }} style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #e6edf3', background: showOnlyUnread ? '#f1f5f9' : '#ffffff', cursor: 'pointer' }}>{showOnlyUnread ? 'Showing unread' : 'Show unread only'}</button>
+            <button onClick={clearAllNotifications} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e6edf3', background: '#ffffff', cursor: 'pointer', color: '#ef4444' }}>Clear</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Notifications;
