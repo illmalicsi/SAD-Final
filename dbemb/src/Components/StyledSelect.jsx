@@ -18,13 +18,13 @@ const StyledSelect = React.forwardRef(({ children, style, iconStyle, containerSt
     WebkitAppearance: 'none',
     MozAppearance: 'none',
     paddingRight: '44px',
-    width: '100%',
+    width: 'auto',
     boxSizing: 'border-box'
   };
 
   const containerBase = {
     position: 'relative',
-    width: '100%'
+    width: 'auto'
   };
 
   const iconBase = {

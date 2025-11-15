@@ -6,6 +6,7 @@ import BookingHistory from "./Components/BookingHistory";
 import AdminExpenses from "./Components/AdminExpenses";
 import FinancialReport from "./Components/FinancialReport";
 import TestPaymentGateway from "./Components/TestPaymentGateway";
+import ExactPaymentGateway from "./Components/ExactPaymentGateway";
 import InstrumentItemsManager from "./Components/InstrumentItemsManager";
 import MaintenanceManager from "./Components/MaintenanceManager";
 
@@ -20,6 +21,7 @@ function App() {
         <Route path="/admin/expenses" element={<AdminExpenses />} />
         <Route path="/admin/reports/financial" element={<FinancialReport />} />
         <Route path="/payment" element={<TestPaymentGateway />} />
+        <Route path="/pay-exact" element={<ExactPaymentGateway />} />
         <Route path="/admin/instrument-items" element={<InstrumentItemsManager />} />
         <Route path="/admin/maintenance" element={<MaintenanceManager />} />
       </Routes>

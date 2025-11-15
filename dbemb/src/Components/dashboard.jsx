@@ -296,14 +296,14 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     {
       title: 'Management',
       items: [
-  { id: 'instrument-items', icon: <FaBoxes size={14} color="currentColor" />, text: 'Instrument Management', view: 'instrument-items', adminOnly: true },
-  { id: 'inventory-report', icon: <FaClipboardList size={14} color="currentColor" />, text: 'Inventory Report', view: 'inventory-report', adminOnly: false },
-  { id: 'maintenance', icon: <FaTools size={14} color="currentColor" />, text: 'Maintenance', view: 'maintenance', adminOnly: true },
-  { id: 'customers', icon: <FaUsers size={14} color="currentColor" />, text: 'Customers', view: 'customer-management', adminOnly: false },
-  { id: 'booking-calendar', icon: <FaCalendarAlt size={14} color="currentColor" />, text: 'Bookings Calendar', view: 'booking-calendar', adminOnly: false },
-  { id: 'upcoming-schedule', icon: <FaHistory size={14} color="currentColor" />, text: 'Pending Bookings', view: 'upcoming-schedule', adminOnly: false },
-  { id: 'performances', icon: <FaMusic size={14} color="currentColor" />, text: 'Performances', view: 'performance-history', adminOnly: false },
   { id: 'approval', icon: <FaCheckCircle size={14} color="currentColor" />, text: 'Approval', view: 'approval', adminOnly: false },
+  { id: 'instrument-items', icon: <FaBoxes size={14} color="currentColor" />, text: 'Instrument Management', view: 'instrument-items', adminOnly: true },
+  { id: 'inventory-report', icon: <FaClipboardList size={14} color="currentColor" />, text: 'Instrument Report', view: 'inventory-report', adminOnly: false },
+  { id: 'customers', icon: <FaUsers size={14} color="currentColor" />, text: 'Customers', view: 'customer-management', adminOnly: false },
+  { id: 'booking-calendar', icon: <FaCalendarAlt size={14} color="currentColor" />, text: 'Booking Calendar', view: 'booking-calendar', adminOnly: false },
+  { id: 'upcoming-schedule', icon: <FaHistory size={14} color="currentColor" />, text: 'Pending Bookings', view: 'upcoming-schedule', adminOnly: false },
+  { id: 'maintenance', icon: <FaTools size={14} color="currentColor" />, text: 'Maintenance', view: 'maintenance', adminOnly: true },
+  { id: 'performances', icon: <FaMusic size={14} color="currentColor" />, text: 'Performances', view: 'performance-history', adminOnly: false },
   { id: 'sales-report', icon: <FaChartLine size={14} color="currentColor" />, text: 'Sales Report', view: 'sales-report', adminOnly: true }
       ]
     },
@@ -1006,6 +1006,20 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
         window.dispatchEvent(new CustomEvent('navigateTo', { detail: { type: 'invoice', id: data.invoiceId || data.invoice_id } }));
         setCurrentView('invoice');
         return;
+      }
+
+      // Reminder / payment link -> open exact-payment flow
+      if (data.paymentLink || data.exact || (notification && notification.type === 'reminder' && (data.invoiceId || data.invoice_id))) {
+        try {
+          const invId = data.invoiceId || data.invoice_id;
+          const amt = data.amount || data.balance || '';
+          const link = data.paymentLink || `${window.location.origin}/pay-exact?invoiceId=${invId || ''}${amt ? `&amount=${encodeURIComponent(amt)}` : ''}${data.forceFull ? '&forceFull=1' : ''}`;
+          // Navigate to exact payment page (same tab)
+          window.location.href = link;
+          return;
+        } catch (e) {
+          console.error('Failed to navigate to exact payment link', e);
+        }
       }
 
       // Generic path/url handler: if the notification contains an internal path, try to map it

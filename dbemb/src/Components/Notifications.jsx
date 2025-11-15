@@ -103,34 +103,22 @@ const Notifications = ({ user }) => {
 
   const renderNotificationMessage = (notification) => {
     const message = notification.message || '';
-    // Only render 'payment' as a clickable link if the notification contains payment-related data
-    // and is not already marked as paid.
-    if (message.toLowerCase().includes('payment') && notification.data && notification.data.invoiceId && !notification.data.paid) {
-      const parts = message.split(/(payment)/i);
-      return (
-        <>
-          {parts.map((p, i) => {
-            if (/^payment$/i.test(p)) {
-              return (
-                <a
-                  key={i}
-                  href="#"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.location.href = `/payment?amount=${notification.data && notification.data.amount ? notification.data.amount : 100}&invoiceId=${notification.data.invoiceId || ''}`;
-                  }}
-                  style={{ color: '#3b82f6', textDecoration: 'underline' }}
-                >
-                  {p}
-                </a>
-              );
-            }
-            return <span key={i}>{p}</span>;
-          })}
-        </>
-      );
-    }
-    return message;
+    const paragraphs = String(message).split(/\n\s*\n/);
+    const data = notification.data || {};
+    const hasPayment = data.paymentLink || data.invoiceId || data.invoice_id || data.amount || notification.type === 'reminder';
+    const origin = window.location && window.location.origin ? window.location.origin : '';
+    const link = data.paymentLink || (data.exact ? `${origin}/pay-exact?invoiceId=${data.invoiceId || data.invoice_id || ''}${data.amount ? `&amount=${encodeURIComponent(data.amount)}` : ''}${data.forceFull ? '&forceFull=1' : ''}` : `${origin}/payment?invoiceId=${data.invoiceId || data.invoice_id || ''}${data.amount ? `&amount=${encodeURIComponent(data.amount)}` : ''}`);
+
+    return (
+      <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.4 }}>
+        {paragraphs.map((p, i) => (
+          <p key={i} style={{ margin: i === paragraphs.length - 1 ? 0 : '0 0 8px 0' }}>{p}</p>
+        ))}
+        {hasPayment && (
+          <p style={{ marginTop: 8 }}><a href={link} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontWeight: 700 }}>Please proceed to payment.</a></p>
+        )}
+      </div>
+    );
   };
 
   const getNotificationIcon = (type) => {
@@ -250,9 +238,8 @@ const Notifications = ({ user }) => {
                     display: 'flex',
                     gap: 12,
                     alignItems: 'flex-start',
-                    cursor: 'pointer'
+                    cursor: 'default'
                   }}
-                  onClick={() => handleOpenNotification(n)}
                 >
                   <div style={{
                     width: 36,
@@ -280,6 +267,7 @@ const Notifications = ({ user }) => {
                       <BsTrash size={12} />
                     </button>
                   </div>
+                  {/* No inline CTA buttons — payment link will be rendered in the message body as a text link */}
                 </div>
               ));
             })()}

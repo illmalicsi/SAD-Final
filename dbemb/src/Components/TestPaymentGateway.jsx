@@ -58,6 +58,7 @@ const TestPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }
   let routeAmount = 100;
   let routeInvoiceId = undefined;
   let routeBookingDetails = undefined;
+  let routeExact = false;
   if (isRoute) {
     const params = new URLSearchParams(location.search);
     const amt = params.get('amount');
@@ -65,6 +66,7 @@ const TestPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }
     if (amt && !isNaN(Number(amt))) routeAmount = Number(amt);
     if (invId) routeInvoiceId = invId;
     routeBookingDetails = routeInvoiceId ? { invoiceId: routeInvoiceId } : undefined;
+    routeExact = params.get('exact') === '1' || params.get('exact') === 'true';
   }
 
   const finalAmount = isRoute ? routeAmount : (amount || 100);
@@ -84,7 +86,21 @@ const TestPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentMode, setPaymentMode] = useState('credit-card');
   const [paymentType, setPaymentType] = useState('full');
-  const [activeStep, setActiveStep] = useState(1); // 1: Payment Type, 2: Payment Details
+  // Determine if we should force an "exact-only" flow (route param or notification data)
+  let initialExactMode = !!routeExact;
+  // bookingDetails may come from a notification payload (home.jsx passes notification.data)
+  if (!initialExactMode && !isRoute) {
+    const data = bookingDetails || {};
+    let parsedData = data;
+    if (typeof data === 'string') {
+      try { parsedData = JSON.parse(data); } catch (e) { parsedData = { message: data }; }
+    }
+    if (parsedData && (parsedData.exact === true || parsedData.exact === '1' || parsedData.exact === 'true' || parsedData.exactOnly === true)) {
+      initialExactMode = true;
+    }
+  }
+
+  const [activeStep, setActiveStep] = useState(initialExactMode ? 2 : 1); // 1: Payment Type, 2: Payment Details
   // Determine if forceFull was requested. Support route query param OR bookingDetails (notification.data)
   let initialForceFull = false;
   if (isRoute) {
