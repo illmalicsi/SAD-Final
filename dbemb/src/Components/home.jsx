@@ -2154,19 +2154,9 @@ const servicesHeaderWrapStyle = {
   const handleNotificationItemClick = async (notification, origIndex) => {
     if (!notification) return;
     try { await NotificationService.markAsRead(notification.id); } catch (e) { /* ignore */ }
-
-    // If notification appears to be payment-related, open TestPaymentGateway modal
-    const isPayment = (notification.message && notification.message.toLowerCase().includes('payment'))
-      || (notification.data && (notification.data.amount || notification.data.invoiceId || notification.data.invoice_id));
-
-    if (isPayment) {
-      setSelectedPaymentNotification(notification);
-      setShowTestPaymentModal(true);
-      // keep notifications view open for context
-    } else {
-      setSelectedNotification(notification);
-      // keep user on notifications view
-    }
+    // Keep notification selected; do not auto-open payment modal from the card.
+    setSelectedNotification(notification);
+    // Payment actions are provided explicitly via the 'Proceed to payment' button inside each notification.
   };
 
   const deleteNotification = (index) => {
@@ -2355,48 +2345,53 @@ const servicesHeaderWrapStyle = {
     }
   };
 
-  // Render notification message with clickable payment link
+  // Render notification message with readable paragraphs. Preserve legacy <payment-link> tags.
   const renderNotificationMessage = (notification) => {
     const message = notification.message || '';
     const hasPaymentLink = message.includes('<payment-link>');
 
-    console.log('Rendering notification:', { message, hasPaymentLink, notification });
-
-    if (!hasPaymentLink) {
-      return <div style={{ color: '#4b5563' }}>{message}</div>;
+    if (hasPaymentLink) {
+      const parts = message.split(/<payment-link>|<\/payment-link>/);
+      const data = notification.data || {};
+      const origin = window.location && window.location.origin ? window.location.origin : '';
+      const link = data.paymentLink || (data.exact ? `${origin}/pay-exact?invoiceId=${data.invoiceId || data.invoice_id || ''}${data.amount ? `&amount=${encodeURIComponent(data.amount)}` : ''}${data.forceFull ? '&forceFull=1' : ''}` : `${origin}/payment?invoiceId=${data.invoiceId || data.invoice_id || ''}${data.amount ? `&amount=${encodeURIComponent(data.amount)}` : ''}`);
+      return (
+        <div style={{ color: '#4b5563' }}>
+          {parts.map((part, index) => {
+            if (index % 2 === 1) {
+              return (
+                <a
+                  key={index}
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ color: '#0ea5e9', fontWeight: 700, textDecoration: 'underline' }}
+                >
+                  {part}
+                </a>
+              );
+            }
+            return <span key={index}>{part}</span>;
+          })}
+        </div>
+      );
     }
 
-    // Split message by payment link tags
-    const parts = message.split(/<payment-link>|<\/payment-link>/);
+    const paragraphs = String(message).split(/\n\s*\n/);
+    const data = notification.data || {};
+    const hasPayment = data.paymentLink || data.invoiceId || data.invoice_id || data.amount || notification.type === 'reminder';
+    const origin = window.location && window.location.origin ? window.location.origin : '';
+    const link = data.paymentLink || (data.exact ? `${origin}/pay-exact?invoiceId=${data.invoiceId || data.invoice_id || ''}${data.amount ? `&amount=${encodeURIComponent(data.amount)}` : ''}${data.forceFull ? '&forceFull=1' : ''}` : `${origin}/payment?invoiceId=${data.invoiceId || data.invoice_id || ''}${data.amount ? `&amount=${encodeURIComponent(data.amount)}` : ''}`);
 
     return (
       <div style={{ color: '#4b5563' }}>
-        {parts.map((part, index) => {
-          // Every odd index is the clickable "payment" text
-          if (index % 2 === 1) {
-            return (
-              <span
-                key={index}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Open Test Payment modal instead of real payment modal
-                  setSelectedPaymentNotification(notification);
-                  setShowTestPaymentModal(true);
-                  console.log('Test Payment modal opened from notification.');
-                }}
-                style={{
-                  color: '#0ea5e9',
-                  fontWeight: 700,
-                  textDecoration: 'underline',
-                  cursor: 'pointer'
-                }}
-              >
-                {part}
-              </span>
-            );
-          }
-          return <span key={index}>{part}</span>;
-        })}
+        {paragraphs.map((p, i) => (
+          <p key={i} style={{ margin: i === paragraphs.length - 1 ? 0 : '0 0 10px 0' }}>{p}</p>
+        ))}
+        {hasPayment && (
+          <p style={{ marginTop: 10 }}><a href={link} target="_blank" rel="noopener noreferrer" style={{ color: '#0ea5e9', fontWeight: 700 }}>Please proceed to payment.</a></p>
+        )}
       </div>
     );
   };
@@ -2874,7 +2869,7 @@ const servicesHeaderWrapStyle = {
               const menuOpen = openNotificationMenu === n.id;
               
               return (
-                <div key={n.id || idx} onClick={() => handleNotificationItemClick(n, origIndex)} style={{ padding: 16, borderRadius: 12, border: '1px solid rgba(11,59,120,0.06)', background: n.read ? '#ffffff' : '#eef6ff', position: 'relative', cursor: 'pointer' }}>
+                <div key={n.id || idx} style={{ padding: 16, borderRadius: 12, border: '1px solid rgba(11,59,120,0.06)', background: n.read ? '#ffffff' : '#eef6ff', position: 'relative', cursor: 'default' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 800, color: '#06264a' }}>{n.title}</div>
@@ -2986,6 +2981,7 @@ const servicesHeaderWrapStyle = {
                       )}
                     </div>
                   </div>
+                  {/* No inline CTA buttons — payment link is provided inside the notification message as a text link */}
                 </div>
               );
             })}

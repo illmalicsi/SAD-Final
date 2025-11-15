@@ -10,58 +10,73 @@ import {
   FaGuitar,
   FaCompactDisc,
   FaSearch,
-  FaFilter,
-  FaPlus
-} from '../icons/fa';
+  FaPlus,
+  FaChevronDown,
+  FaSpinner
+} from 'react-icons/fa';
 import mysqlService from '../services/mysqlService';
+import StyledSelect from './StyledSelect';
 
 const BookingCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [bookings, setBookings] = useState([]);
-  const [selectedWeek, setSelectedWeek] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [hoveredDate, setHoveredDate] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('month'); // 'month' or 'week'
+  const [viewMode, setViewMode] = useState('timeline'); // 'calendar' | 'timeline'
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Fetch bookings from API
   useEffect(() => {
     fetchBookings();
   }, []);
 
   const fetchBookings = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const response = await mysqlService.get('/bookings');
-      if (response.success) {
-        // Normalize booking.date to a date-only string (YYYY-MM-DD) to avoid
-        // timezone-driven shifts when the client constructs Date objects.
-        const normalized = response.bookings.map(b => {
-          const raw = b?.date || '';
-          const dateOnly = String(raw).split('T')[0];
-          return { ...b, date: dateOnly };
-        });
-        setBookings(normalized);
+      let list = [];
+      if (response) {
+        if (response.success && Array.isArray(response.bookings)) {
+          list = response.bookings;
+        } else if (Array.isArray(response)) {
+          list = response;
+        } else if (Array.isArray(response.bookings)) {
+          list = response.bookings;
+        }
       }
+
+      const normalized = (list || []).map(b => {
+        const raw = b?.date || '';
+        const dateOnly = String(raw).split('T')[0];
+        const customer_name = b.customer_name || [b.first_name, b.last_name].filter(Boolean).join(' ') || b.customerName || '';
+        return { ...b, date: dateOnly, customer_name };
+      });
+
+      setBookings(normalized);
     } catch (error) {
       console.error('Error fetching bookings:', error);
+      setBookings([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper: format Date -> YYYY-MM-DD (local date parts)
   const toYMD = (d) => {
     if (!d) return '';
     if (typeof d === 'string') return String(d).split('T')[0];
-    // Date object
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   };
 
-  // Get calendar days for current month
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -71,101 +86,31 @@ const BookingCalendar = () => {
     const startingDayOfWeek = firstDay.getDay();
 
     const days = [];
-    
-    // Add empty cells for days before month starts
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
-    
-    // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
-    
     return days;
   };
 
-  // Get bookings for a specific date
   const getBookingsForDate = (date) => {
     if (!date) return [];
-    // Compare using local date parts (YYYY-MM-DD) to avoid timezone conversion
     const dateStr = toYMD(date);
-    return bookings.filter(booking => {
-      const bookingDate = toYMD(booking.date);
-      return bookingDate === dateStr;
-    });
+    return bookings.filter(booking => toYMD(booking.date) === dateStr);
   };
 
-  // Get color based on status
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'approved':
-        return '#10b981'; // green
-      case 'pending':
-        return '#f59e0b'; // yellow
-      case 'upcoming':
-        return '#3b82f6'; // blue
-      case 'rejected':
-        return '#ef4444'; // red
-      default:
-        return '#6b7280'; // gray
+      case 'approved': return '#0f9d58';
+      case 'pending': return '#f4b400';
+      case 'upcoming': return '#4285f4';
+      case 'rejected': return '#db4437';
+      default: return '#5f6368';
     }
   };
 
-  // Get status background color
-  const getStatusBackground = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'approved':
-        return 'rgba(16, 185, 129, 0.1)';
-      case 'pending':
-        return 'rgba(245, 158, 11, 0.1)';
-      case 'upcoming':
-        return 'rgba(59, 130, 246, 0.1)';
-      case 'rejected':
-        return 'rgba(239, 68, 68, 0.1)';
-      default:
-        return 'rgba(107, 114, 128, 0.1)';
-    }
-  };
-
-  // Get filtered bookings for current week
-  const getWeekBookings = () => {
-    if (selectedWeek.length === 0) return [];
-    
-    let weekBookings = [];
-    selectedWeek.forEach(date => {
-      if (date) {
-        const dayBookings = getBookingsForDate(date);
-        dayBookings.forEach(booking => {
-          weekBookings.push({
-            ...booking,
-            displayDate: date
-          });
-        });
-      }
-    });
-    
-    // Apply filters
-    weekBookings = weekBookings.filter(booking => {
-      const matchesSearch = !searchTerm || 
-        booking.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.service?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.location?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesStatus = statusFilter === 'all' || 
-        booking.status?.toLowerCase() === statusFilter.toLowerCase();
-      
-      return matchesSearch && matchesStatus;
-    });
-    
-    return weekBookings.sort((a, b) => 
-      // booking.date is normalized to YYYY-MM-DD so string comparison is safe
-      (a.date > b.date ? 1 : a.date < b.date ? -1 : 0) ||
-      (a.start_time?.localeCompare(b.start_time) || 0)
-    );
-  };
-
-  // Navigation functions
   const prevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
@@ -174,46 +119,7 @@ const BookingCalendar = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  const handleMonthChange = (e) => {
-    const newMonth = parseInt(e.target.value);
-    setCurrentDate(new Date(currentDate.getFullYear(), newMonth, 1));
-  };
-
-  const handleYearChange = (e) => {
-    const newYear = parseInt(e.target.value);
-    setCurrentDate(new Date(newYear, currentDate.getMonth(), 1));
-  };
-
-  // Handle date click to select week
-  const handleDateClick = (date) => {
-    if (!date) return;
-    
-    const dayOfWeek = date.getDay();
-    const startOfWeek = new Date(date);
-    startOfWeek.setDate(date.getDate() - dayOfWeek);
-    
-    const week = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(startOfWeek);
-      day.setDate(startOfWeek.getDate() + i);
-      week.push(day);
-    }
-    
-    setSelectedWeek(week);
-    setViewMode('week');
-  };
-
-  // Check if date is in selected week
-  const isInSelectedWeek = (date) => {
-    if (!date || selectedWeek.length === 0) return false;
-    const dateStr = toYMD(date);
-    return selectedWeek.some(weekDate => toYMD(weekDate) === dateStr);
-  };
-
-  // Format functions
   const formatDate = (date) => {
-    // Accept either a Date object or a YYYY-MM-DD string. Construct a local
-    // Date from parts to avoid timezone shifts when parsing ISO strings.
     try {
       if (typeof date === 'string') {
         const parts = date.split('T')[0].split('-');
@@ -240,14 +146,17 @@ const BookingCalendar = () => {
 
   const formatTime = (time) => {
     if (!time) return '';
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
+    try {
+      return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      return String(time);
+    }
   };
 
-  // Get service icon
   const getServiceIcon = (service) => {
     const serviceStr = service?.toLowerCase() || '';
     if (serviceStr.includes('band')) return <FaMusic />;
@@ -256,659 +165,534 @@ const BookingCalendar = () => {
     return <FaCalendarAlt />;
   };
 
-  const days = getDaysInMonth(currentDate);
-  const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  const weekBookings = getWeekBookings();
+  const categorizeBookings = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  const styles = {
-    container: {
-      padding: '24px',
-      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-      minHeight: '100vh',
-      fontFamily: 'Inter, system-ui, sans-serif'
-    },
-    header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '20px',
-      padding: '16px',
-      background: 'white',
-      borderRadius: '16px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-      border: '1px solid #e2e8f0'
-    },
-    titleSection: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '16px'
-    },
-    titleIcon: {
-      width: '48px',
-      height: '48px',
-      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-      borderRadius: '12px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'white',
-      fontSize: '20px'
-    },
-    titleContent: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '4px'
-    },
-    title: {
-      fontSize: '20px',
-      fontWeight: '700',
-      color: '#1e293b',
-      margin: 0
-    },
-    subtitle: {
-      fontSize: '12px',
-      color: '#64748b',
-      margin: 0
-    },
-    controls: {
-      display: 'flex',
-      gap: '16px',
-      alignItems: 'center',
-      flexWrap: 'wrap'
-    },
-    searchBox: {
-      padding: '10px 14px',
-      borderRadius: '12px',
-      border: '1px solid #e2e8f0',
-      background: '#f8fafc',
-      minWidth: '220px',
-      fontSize: '14px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      transition: 'all 0.2s ease'
-    },
-    searchInput: {
-      border: 'none',
-      background: 'transparent',
-      outline: 'none',
-      fontSize: '14px',
-      width: '100%',
-      color: '#374151'
-    },
-    filterSelect: {
-      padding: '12px 16px',
-      borderRadius: '12px',
-      border: '1px solid #e2e8f0',
-      background: '#f8fafc',
-      fontSize: '14px',
-      fontWeight: '500',
-      color: '#374151',
-      cursor: 'pointer',
-      outline: 'none',
-      minWidth: '140px'
-    },
-    viewToggle: {
-      display: 'flex',
-      background: '#f1f5f9',
-      borderRadius: '12px',
-      padding: '4px',
-      border: '1px solid #e2e8f0'
-    },
-    viewButton: {
-      padding: '8px 16px',
-      borderRadius: '8px',
-      border: 'none',
-      background: 'transparent',
-      fontSize: '14px',
-      fontWeight: '500',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      color: '#64748b'
-    },
-    activeView: {
-      background: 'white',
-      color: '#3b82f6',
-      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-    },
-    navSection: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px'
-    },
-    navButton: {
-      padding: '12px 16px',
-      background: 'white',
-      color: '#374151',
-      border: '1px solid #e2e8f0',
-      borderRadius: '12px',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      fontSize: '14px',
-      fontWeight: '600',
-      transition: 'all 0.2s ease',
-      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-    },
-    primaryButton: {
-      padding: '10px 18px',
-      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-      color: 'white',
-      border: 'none',
-      borderRadius: '12px',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      fontSize: '14px',
-      fontWeight: '600',
-      transition: 'all 0.2s ease',
-      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
-    },
-    monthYearSelector: {
-      display: 'flex',
-      gap: '8px',
-      alignItems: 'center'
-    },
-    dropdown: {
-      padding: '12px 16px',
-      fontSize: '14px',
-      fontWeight: '600',
-      color: '#374151',
-      background: 'white',
-      border: '1px solid #e2e8f0',
-      borderRadius: '12px',
-      cursor: 'pointer',
-      outline: 'none',
-      transition: 'all 0.2s ease',
-      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-    },
-    calendarContainer: {
-      display: 'grid',
-      gridTemplateColumns: viewMode === 'month' ? '1fr 400px' : '1fr',
-      gap: '24px',
-      height: 'calc(100vh - 200px)'
-    },
-    calendarGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(7, 1fr)',
-      gap: '8px',
-      background: 'white',
-      padding: '24px',
-      borderRadius: '16px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-      border: '1px solid #e2e8f0',
-      height: '100%',
-      overflow: 'auto'
-    },
-    dayHeader: {
-      textAlign: 'center',
-      fontWeight: '600',
-      color: '#374151',
-      padding: '16px 0',
-      fontSize: '14px',
-      textTransform: 'uppercase',
-      letterSpacing: '0.05em'
-    },
-    dayCell: {
-      minHeight: '98px',
-      padding: '10px',
-      background: 'white',
-      border: '1px solid #f1f5f9',
-      borderRadius: '10px',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      position: 'relative',
-      display: 'flex',
-      flexDirection: 'column'
-    },
-    emptyCell: {
-      minHeight: '120px',
-      background: 'transparent',
-      border: 'none'
-    },
-    dateNumber: {
-      fontSize: '14px',
-      fontWeight: '600',
-      color: '#1e293b',
-      marginBottom: '8px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between'
-    },
-    todayBadge: {
-      fontSize: '9px',
-      padding: '2px 6px',
-      borderRadius: '6px',
-      background: '#3b82f6',
-      color: 'white',
-      fontWeight: '600'
-    },
-    bookingsContainer: {
-      flex: 1,
-      overflowY: 'auto',
-      minHeight: 0
-    },
-    bookingItem: {
-      fontSize: '12px',
-      padding: '6px 8px',
-      borderRadius: '8px',
-      color: '#1f2937',
-      fontWeight: '600',
-      marginBottom: '6px',
-      whiteSpace: 'nowrap',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      cursor: 'pointer',
-      transition: 'all 0.18s ease',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px'
-    },
-    moreBookings: {
-      fontSize: '12px',
-      color: '#3b82f6',
-      fontWeight: '600',
-      marginTop: '6px',
-      textAlign: 'center',
-      cursor: 'pointer'
-    },
-    sidebar: {
-      background: 'white',
-      padding: '24px',
-      borderRadius: '16px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-      border: '1px solid #e2e8f0',
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%'
-    },
-    sidebarHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '20px'
-    },
-    sidebarTitle: {
-      fontSize: '20px',
-      fontWeight: '600',
-      color: '#1e293b',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px'
-    },
-    weekRange: {
-      fontSize: '14px',
-      color: '#64748b',
-      fontWeight: '500',
-      padding: '8px 12px',
-      background: '#f8fafc',
-      borderRadius: '8px',
-      border: '1px solid #e2e8f0'
-    },
-    bookingsList: {
-      flex: 1,
-      overflowY: 'auto',
-      minHeight: 0
-    },
-    bookingCard: {
-      padding: '16px',
-      marginBottom: '12px',
-      borderRadius: '12px',
-      border: '1px solid #e2e8f0',
-      background: 'white',
-      transition: 'all 0.2s ease',
-      cursor: 'pointer'
-    },
-    bookingHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: '12px'
-    },
-    serviceInfo: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px'
-    },
-    serviceIcon: {
-      color: '#3b82f6',
-      fontSize: '16px'
-    },
-    serviceName: {
-      fontWeight: '600',
-      color: '#1e293b',
-      fontSize: '14px'
-    },
-    statusBadge: {
-      padding: '6px 12px',
-      borderRadius: '8px',
-      fontSize: '12px',
-      fontWeight: '600',
-      color: 'white'
-    },
-    bookingDetails: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '6px'
-    },
-    detailItem: {
-      fontSize: '13px',
-      color: '#64748b',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px'
-    },
-    emptyState: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 20px',
-      color: '#94a3b8',
-      textAlign: 'center'
-    },
-    emptyIcon: {
-      fontSize: '48px',
-      marginBottom: '16px',
-      opacity: 0.5
-    },
-    loadingState: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '60px 20px',
-      color: '#64748b',
-      fontSize: '16px'
-    }
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() + 1);
+    const endOfWeek = new Date(today);
+    endOfWeek.setDate(today.getDate() + 7);
+
+    const past = [];
+    const current = [];
+    const upcoming = [];
+    const future = [];
+
+    bookings.forEach(b => {
+      const parts = String(b.date).split('T')[0].split('-');
+      if (parts.length !== 3) return;
+      const d = new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
+      d.setHours(0, 0, 0, 0);
+
+      const matchesSearch = !searchTerm || 
+        b.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.service?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.location?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'all' || b.status?.toLowerCase() === statusFilter.toLowerCase();
+      
+      if (!matchesSearch || !matchesStatus) return;
+
+      if (d < today) {
+        past.push(b);
+      } else if (d.getTime() === today.getTime()) {
+        current.push(b);
+      } else if (d >= startOfWeek && d <= endOfWeek) {
+        upcoming.push(b);
+      } else if (d > endOfWeek) {
+        future.push(b);
+      }
+    });
+
+    const sortByDateTime = (arr) => arr.sort((a, b) => {
+      if (a.date === b.date) return (a.start_time || '').localeCompare(b.start_time || '');
+      return a.date > b.date ? 1 : a.date < b.date ? -1 : 0;
+    });
+
+    return {
+      past: sortByDateTime(past),
+      current: sortByDateTime(current),
+      upcoming: sortByDateTime(upcoming),
+      future: sortByDateTime(future)
+    };
   };
 
-  if (loading) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.loadingState}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <FaCalendarAlt />
-            Loading calendar...
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const days = getDaysInMonth(currentDate);
+  const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const categorized = categorizeBookings();
 
   return (
-    <div style={styles.container}>
+    <div style={{
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: '#ffffff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
       {/* Header */}
-      <div style={styles.header}>
-        <div style={styles.titleSection}>
-          <div style={styles.titleIcon}>
-            <FaCalendarAlt />
-          </div>
-          <div style={styles.titleContent}>
-            <h1 style={styles.title}>Booking Calendar</h1>
-            <p style={styles.subtitle}>Manage and view all your bookings</p>
+      <div style={{
+        borderBottom: '1px solid #dadce0',
+        padding: '8px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        background: '#fff',
+        minHeight: '64px',
+        flexWrap: 'wrap',
+        gap: '8px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              background: '#1a73e8',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              borderRadius: '8px'
+            }}>
+              <FaCalendarAlt size={18} />
+            </div>
+            <h1 style={{
+              fontSize: '22px',
+              fontWeight: '400',
+              color: '#202124',
+              margin: 0
+            }}>Calendar</h1>
           </div>
         </div>
 
-        <div style={styles.controls}>
-          {/* Search */}
-          <div style={styles.searchBox}>
-            <FaSearch color="#94a3b8" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            border: '1px solid #dadce0',
+            padding: '0 8px',
+            height: '36px',
+            background: '#fff',
+            minWidth: '150px',
+            borderRadius: '6px'
+          }}>
+            <FaSearch size={14} color="#5f6368" />
             <input
-              style={styles.searchInput}
-              placeholder="Search bookings..."
+              type="text"
+              placeholder="Search bookings"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                border: 'none',
+                outline: 'none',
+                padding: '0 8px',
+                fontSize: '14px',
+                width: '100%',
+                background: 'transparent'
+              }}
             />
           </div>
 
-          {/* Status Filter */}
-          <select 
-            style={styles.filterSelect}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All Status</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-            <option value="upcoming">Upcoming</option>
-            <option value="rejected">Rejected</option>
-          </select>
-
-          {/* View Toggle */}
-          <div style={styles.viewToggle}>
-            <button 
-              style={{ ...styles.viewButton, ...(viewMode === 'month' && styles.activeView) }}
-              onClick={() => setViewMode('month')}
+          <div style={{ width: 170 }}>
+            <StyledSelect
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{ height: '36px', fontSize: '14px', padding: '6px 10px' }}
             >
-              Month
-            </button>
-            <button 
-              style={{ ...styles.viewButton, ...(viewMode === 'week' && styles.activeView) }}
-              onClick={() => setViewMode('week')}
-            >
-              Week
-            </button>
+              <option value="all">All status</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="rejected">Rejected</option>
+            </StyledSelect>
           </div>
 
-          {/* Navigation */}
-          <div style={styles.navSection}>
-            <button 
-              style={styles.navButton}
-              onClick={prevMonth}
-            >
-              <FaChevronLeft />
-            </button>
-            
-            <div style={styles.monthYearSelector}>
-              <select 
-                value={currentDate.getMonth()} 
-                onChange={handleMonthChange}
-                style={styles.dropdown}
-              >
-                <option value={0}>January</option>
-                <option value={1}>February</option>
-                <option value={2}>March</option>
-                <option value={3}>April</option>
-                <option value={4}>May</option>
-                <option value={5}>June</option>
-                <option value={6}>July</option>
-                <option value={7}>August</option>
-                <option value={8}>September</option>
-                <option value={9}>October</option>
-                <option value={10}>November</option>
-                <option value={11}>December</option>
-              </select>
-              
-              <select 
-                value={currentDate.getFullYear()} 
-                onChange={handleYearChange}
-                style={styles.dropdown}
-              >
-                {Array.from({ length: 10 }, (_, i) => {
-                  const year = new Date().getFullYear() - 2 + i;
-                  return <option key={year} value={year}>{year}</option>;
-                })}
-              </select>
+          {loading && (
+            <div style={{ fontSize: '12px', color: '#5f6368', paddingLeft: '8px' }}>
+              Loading bookings...
             </div>
-            
-            <button 
-              style={styles.navButton}
-              onClick={nextMonth}
+          )}
+
+          <div style={{
+            display: 'flex',
+            border: '1px solid #dadce0',
+            height: '36px',
+            borderRadius: '6px',
+            overflow: 'hidden'
+          }}>
+            <button
+              onClick={() => setViewMode('calendar')}
+              style={{
+                padding: '0 16px',
+                border: 'none',
+                background: viewMode === 'calendar' ? '#e8f0fe' : '#fff',
+                color: viewMode === 'calendar' ? '#1967d2' : '#5f6368',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                borderRight: '1px solid #dadce0'
+              }}
             >
-              <FaChevronRight />
+              Calendar
+            </button>
+            <button
+              onClick={() => setViewMode('timeline')}
+              style={{
+                padding: '0 16px',
+                border: 'none',
+                background: viewMode === 'timeline' ? '#e8f0fe' : '#fff',
+                color: viewMode === 'timeline' ? '#1967d2' : '#5f6368',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}
+            >
+              Timeline
             </button>
           </div>
 
-          <button style={styles.primaryButton}>
-            <FaPlus />
-            New Booking
+          <button style={{
+            padding: '0 16px',
+            height: '36px',
+            background: '#1a73e8',
+            color: 'white',
+            border: 'none',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            borderRadius: '6px'
+          }}>
+            <FaPlus size={12} />
+            Create
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div style={styles.calendarContainer}>
-        {/* Calendar Grid */}
-        <div style={styles.calendarGrid}>
-          {/* Day headers */}
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} style={styles.dayHeader}>{day}</div>
-          ))}
-          
-          {/* Calendar days */}
-          {days.map((date, index) => {
-            if (!date) {
-              return <div key={`empty-${index}`} style={styles.emptyCell}></div>;
-            }
-            
-            const dayBookings = getBookingsForDate(date);
-            const isSelected = isInSelectedWeek(date);
-            const isToday = new Date().toDateString() === date.toDateString();
-            
-            return (
-              <div
-                key={index}
-                style={{
-                  ...styles.dayCell,
-                  background: isSelected ? 'rgba(59, 130, 246, 0.05)' : 
-                             isToday ? 'rgba(59, 130, 246, 0.08)' : 'white',
-                  border: isToday ? '2px solid #3b82f6' : '1px solid #f1f5f9',
-                  transform: hoveredDate === index ? 'translateY(-2px)' : 'translateY(0)',
-                  boxShadow: hoveredDate === index ? '0 8px 16px rgba(0, 0, 0, 0.1)' : 
-                            isToday ? '0 2px 8px rgba(59, 130, 246, 0.2)' : 'none'
-                }}
-                onClick={() => handleDateClick(date)}
-                onMouseEnter={() => setHoveredDate(index)}
-                onMouseLeave={() => setHoveredDate(null)}
-              >
-                <div style={styles.dateNumber}>
-                  {date.getDate()}
-                  {isToday && <span style={styles.todayBadge}>Today</span>}
-                </div>
-                
-                {/* Bookings */}
-                <div style={styles.bookingsContainer}>
-                  {dayBookings.slice(0, 4).map((booking, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        ...styles.bookingItem,
-                        background: getStatusBackground(booking.status),
-                        color: getStatusColor(booking.status),
-                        borderLeft: `4px solid ${getStatusColor(booking.status)}`
-                      }}
-                      title={`${booking.customer_name} - ${booking.service}`}
-                    >
-                      <span style={{ fontSize: '12px', opacity: 0.9 }}>{formatTime(booking.start_time)}</span>
-                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{booking.service}</span>
-                    </div>
-                  ))}
-                  
-                  {dayBookings.length > 4 && (
-                    <div style={styles.moreBookings}>
-                      +{dayBookings.length - 4} more
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Sidebar - Only show in month view */}
-        {viewMode === 'month' && (
-          <div style={styles.sidebar}>
-            <div style={styles.sidebarHeader}>
-              <div style={styles.sidebarTitle}>
-                <FaClock />
-                Week Overview
-              </div>
-              {selectedWeek.length > 0 && (
-                <div style={styles.weekRange}>
-                  {selectedWeek[0]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {' '}
-                  {selectedWeek[6]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </div>
-              )}
+      {viewMode === 'calendar' ? (
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: windowWidth < 768 ? 'column' : 'row' }}>
+          {/* Mini Calendar Sidebar */}
+          <div style={{
+            width: windowWidth < 768 ? '100%' : '256px',
+            borderRight: windowWidth < 768 ? 'none' : '1px solid #dadce0',
+            borderBottom: windowWidth < 768 ? '1px solid #dadce0' : 'none',
+            padding: '16px',
+            overflowY: 'auto'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '16px'
+            }}>
+              <button onClick={prevMonth} style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px'
+              }}>
+                <FaChevronLeft size={14} color="#5f6368" />
+              </button>
+              <span style={{ fontSize: '14px', fontWeight: '500', color: '#202124' }}>
+                {monthName}
+              </span>
+              <button onClick={nextMonth} style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px'
+              }}>
+                <FaChevronRight size={14} color="#5f6368" />
+              </button>
             </div>
-            
-            <div style={styles.bookingsList}>
-              {weekBookings.length === 0 ? (
-                <div style={styles.emptyState}>
-                  <div style={styles.emptyIcon}>
-                    <FaCalendarAlt />
-                  </div>
-                  <h3 style={{ color: '#475569', marginBottom: '8px' }}>
-                    {selectedWeek.length > 0 ? 'No bookings this week' : 'Select a date'}
-                  </h3>
-                  <p style={{ color: '#94a3b8', margin: 0, fontSize: '14px' }}>
-                    {selectedWeek.length > 0 ? 
-                      'No bookings match your current filters' : 
-                      'Click on any date to view week events'}
-                  </p>
+
+            {/* Mini Calendar Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, 1fr)',
+              gap: '2px',
+              fontSize: '11px',
+              textAlign: 'center'
+            }}>
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
+                <div key={day} style={{ color: '#70757a', padding: '4px', fontWeight: '500' }}>
+                  {day}
                 </div>
-              ) : (
-                weekBookings.map((booking, idx) => (
+              ))}
+              {days.map((date, idx) => {
+                if (!date) return <div key={`empty-${idx}`} />;
+                const hasBooking = getBookingsForDate(date).length > 0;
+                const isToday = new Date().toDateString() === date.toDateString();
+                return (
                   <div
                     key={idx}
                     style={{
-                      ...styles.bookingCard,
-                      background: getStatusBackground(booking.status),
-                      borderLeft: `4px solid ${getStatusColor(booking.status)}`
+                      padding: '4px',
+                      cursor: 'pointer',
+                      color: isToday ? '#1a73e8' : '#202124',
+                      fontWeight: isToday ? '700' : '400',
+                      background: isToday ? '#e8f0fe' : 'transparent',
+                      position: 'relative',
+                      borderRadius: '4px'
                     }}
-                    onMouseEnter={(e) => e.target.style.transform = 'translateX(4px)'}
-                    onMouseLeave={(e) => e.target.style.transform = 'translateX(0)'}
                   >
-                    <div style={styles.bookingHeader}>
-                      <div style={styles.serviceInfo}>
-                        <div style={styles.serviceIcon}>
-                          {getServiceIcon(booking.service)}
-                        </div>
-                        <div style={styles.serviceName}>{booking.service}</div>
-                      </div>
-                      <div
-                        style={{
-                          ...styles.statusBadge,
-                          background: getStatusColor(booking.status)
-                        }}
-                      >
-                        {booking.status}
-                      </div>
-                    </div>
-                    
-                    <div style={styles.bookingDetails}>
-                      <div style={styles.detailItem}>
-                        <FaUser size={12} />
-                        {booking.customer_name}
-                      </div>
-                      
-                      <div style={styles.detailItem}>
-                        <FaCalendarAlt size={12} />
-                        {formatDate(booking.date)}
-                      </div>
-                      
-                      {booking.start_time && booking.end_time && (
-                        <div style={styles.detailItem}>
-                          <FaClock size={12} />
-                          {formatTime(booking.start_time)} - {formatTime(booking.end_time)}
-                        </div>
-                      )}
-                      
-                      {booking.location && (
-                        <div style={styles.detailItem}>
-                          <FaMapMarkerAlt size={12} />
-                          {booking.location}
-                        </div>
-                      )}
-                    </div>
+                    {date.getDate()}
+                    {hasBooking && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '2px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '4px',
+                        height: '4px',
+                        background: '#1a73e8',
+                        borderRadius: '50%'
+                      }} />
+                    )}
                   </div>
-                ))
-              )}
+                );
+              })}
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Calendar View */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, 1fr)',
+              gap: '1px',
+              background: '#dadce0',
+              border: '1px solid #dadce0'
+            }}>
+              {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
+                <div key={day} style={{
+                  background: '#fff',
+                  padding: '8px',
+                  fontSize: '11px',
+                  fontWeight: '500',
+                  color: '#70757a',
+                  textAlign: 'center',
+                  textTransform: 'uppercase'
+                }}>
+                  {day.slice(0, 3)}
+                </div>
+              ))}
+              
+              {days.map((date, idx) => {
+                if (!date) return <div key={`empty-${idx}`} style={{ background: '#f8f9fa', minHeight: '100px' }} />;
+                const dayBookings = getBookingsForDate(date);
+                const isToday = new Date().toDateString() === date.toDateString();
+                
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      background: '#fff',
+                      minHeight: '100px',
+                      padding: '4px',
+                      position: 'relative'
+                    }}
+                  >
+                    <div style={{
+                      fontSize: '12px',
+                      fontWeight: isToday ? '700' : '400',
+                      color: isToday ? '#1a73e8' : '#202124',
+                      marginBottom: '4px'
+                    }}>
+                      {date.getDate()}
+                    </div>
+                    {dayBookings.slice(0, 3).map((booking, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          fontSize: '11px',
+                          padding: '2px 4px',
+                          marginBottom: '2px',
+                          background: getStatusColor(booking.status),
+                          color: 'white',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          borderRadius: '3px'
+                        }}
+                      >
+                        {booking.service}
+                      </div>
+                    ))}
+                    {dayBookings.length > 3 && (
+                      <div style={{ fontSize: '10px', color: '#5f6368', marginTop: '2px' }}>
+                        +{dayBookings.length - 3} more
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Timeline View */
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: windowWidth < 768 ? '12px' : '16px 24px',
+          background: '#f8f9fa'
+        }}>
+          <div style={{
+            maxWidth: '1400px',
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: windowWidth < 640 ? '1fr' : 
+                                 windowWidth < 1024 ? 'repeat(2, 1fr)' : 
+                                 'repeat(4, 1fr)',
+            gap: '16px'
+          }}>
+                          {[
+              { title: 'Past Bookings', data: categorized.past, color: '#5f6368' },
+              { title: 'Today', data: categorized.current, color: '#1a73e8' },
+              { title: 'This Week', data: categorized.upcoming, color: '#f4b400' },
+              { title: 'Future', data: categorized.future, color: '#0f9d58' }
+            ].map(section => (
+              <div key={section.title} style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #dadce0' }}>
+                <div style={{
+                  padding: '12px 16px',
+                  background: '#fff',
+                  borderBottom: '1px solid #dadce0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <h2 style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#202124',
+                    margin: 0
+                  }}>
+                    {section.title}
+                  </h2>
+                  <span style={{
+                    fontSize: '12px',
+                    color: '#5f6368',
+                    background: '#f1f3f4',
+                    padding: '2px 8px',
+                    fontWeight: '500',
+                    borderRadius: '4px'
+                  }}>
+                    {section.data.length}
+                  </span>
+                </div>
+                
+                <div style={{
+                  background: '#fff',
+                  border: 'none',
+                  borderTop: 'none',
+                  minHeight: '400px',
+                  maxHeight: 'calc(100vh - 180px)',
+                  overflowY: 'auto'
+                }}>
+                  {section.data.length === 0 ? (
+                    <div style={{
+                      padding: '48px 16px',
+                      textAlign: 'center',
+                      color: '#5f6368',
+                      fontSize: '13px'
+                    }}>
+                      No bookings
+                    </div>
+                  ) : (
+                    section.data.map((booking, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: '12px 16px',
+                          borderBottom: '1px solid #f1f3f4',
+                          cursor: 'pointer',
+                          background: '#fff'
+                        }}
+                      >
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px'
+                        }}>
+                          <div style={{
+                            width: '4px',
+                            height: '48px',
+                            background: getStatusColor(booking.status),
+                            flexShrink: 0,
+                            borderRadius: '2px'
+                          }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              color: '#202124',
+                              marginBottom: '4px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {booking.service}
+                            </div>
+                            <div style={{
+                              fontSize: '12px',
+                              color: '#5f6368',
+                              marginBottom: '2px'
+                            }}>
+                              {booking.customer_name}
+                            </div>
+                            <div style={{
+                              fontSize: '11px',
+                              color: '#5f6368',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              marginBottom: '2px'
+                            }}>
+                              <FaClock size={10} />
+                              {formatTime(booking.start_time)} - {formatTime(booking.end_time)}
+                            </div>
+                            {booking.location && (
+                              <div style={{
+                                fontSize: '11px',
+                                color: '#5f6368',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                <FaMapMarkerAlt size={10} />
+                                {booking.location}
+                              </div>
+                            )}
+                          </div>
+                          <div style={{
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            background: getStatusColor(booking.status),
+                            color: 'white',
+                            fontWeight: '500',
+                            textTransform: 'uppercase',
+                            flexShrink: 0,
+                            borderRadius: '4px'
+                          }}>
+                            {booking.status}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { FaCalendarAlt, FaClock, FaUser, FaUsers, FaEnvelope, FaPhone, FaMapMarkerAlt, FaMusic, FaCheckCircle, FaSpinner, FaChevronLeft, FaChevronRight, FaInfoCircle, FaGuitar, FaDrum, FaKeyboard, FaPlus, FaCreditCard, FaTimes } from '../icons/fa';
 import NotificationService from '../services/notificationService';
 import mysqlService from '../services/mysqlService';
+import StyledSelect from './StyledSelect';
 
 // --- Data for Dynamic Form ---
 
@@ -539,14 +540,14 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
           <>
             <div style={styles.inputGroup}>
               <label style={styles.label}><FaUsers /> Package Options <span style={styles.required}>*</span></label>
-              <select value={bandPackage} onChange={e => setBandPackage(e.target.value)} style={styles.input} required>
+              <StyledSelect value={bandPackage} onChange={e => setBandPackage(e.target.value)} style={styles.input} required>
                 <option value="">Select a package...</option>
                 {bandPackages.filter(pkg => pkg.is_active).map((pkg) => (
                   <option key={pkg.package_key} value={pkg.package_key}>
                     {pkg.package_name} - ₱{parseFloat(pkg.price).toLocaleString()}
                   </option>
                 ))}
-              </select>
+              </StyledSelect>
             </div>
             <div style={styles.inputGroup}>
               <label style={styles.label}><FaCalendarAlt /> Event Date <span style={styles.required}>*</span></label>
@@ -568,14 +569,14 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
           <>
             <div style={styles.inputGroup}>
               <label style={styles.label}><FaGuitar /> Instrument <span style={styles.required}>*</span></label>
-              <select value={selectedInstrument} onChange={e => setSelectedInstrument(e.target.value)} style={styles.input} required>
+              <StyledSelect value={selectedInstrument} onChange={e => setSelectedInstrument(e.target.value)} style={styles.input} required>
                 <option value="">
                   {loadingInstruments ? 'Loading instruments...' : availableInstruments.length === 0 ? 'No instruments available' : 'Select an instrument...'}
                 </option>
                 {!loadingInstruments && availableInstruments.map((inst) => (
                   <option key={inst.id} value={inst.id}>{inst.name} - ₱{inst.pricePerDay.toLocaleString()}/day</option>
                 ))}
-              </select>
+              </StyledSelect>
             </div>
             {selectedInst && (
               <div style={{ 
@@ -1100,7 +1101,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
                     Service Type
                     <span style={styles.required}>*</span>
                   </label>
-                  <select
+                  <StyledSelect
                     value={service}
                     onChange={e => setService(e.target.value)}
                     style={styles.input}
@@ -1110,7 +1111,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
                     {services.map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
-                  </select>
+                  </StyledSelect>
                 </div>
 
                 {/* Dynamically Rendered Fields */}

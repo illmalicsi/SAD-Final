@@ -4,7 +4,6 @@ const { authenticateToken } = require('../middleware/auth');
 const { pool } = require('../config/database');
 const billingService = require('../services/billingService');
 const { notifyAllAdmins, notifyUser } = require('../services/notificationService');
-// Removed timezone utils as board endpoint is no longer needed
 
 // Get all bookings (public endpoint for calendar display)
 router.get('/', async (req, res) => {
@@ -41,8 +40,6 @@ router.get('/', async (req, res) => {
     });
   }
 });
-
-// Removed board endpoint (/api/bookings/board)
 
 // Get bookings by user email (for customers)
 router.get('/user/:email', async (req, res) => {
@@ -95,13 +92,13 @@ router.post('/check-conflict', async (req, res) => {
     console.log('🔍 Checking for conflicts:', { date, startTime, endTime, location, excludeBookingId });
 
     // Check for overlapping bookings on the same date and location
-    // Only check approved and pending bookings (not rejected or cancelled)
+    // Only check approved bookings (not pending, rejected or cancelled)
     let query = `
       SELECT booking_id, customer_name, service, start_time, end_time, status
       FROM bookings 
       WHERE date = ? 
       AND location = ?
-      AND status IN ('approved', 'pending')
+      AND status = 'approved'
       AND (
         (start_time < ? AND end_time > ?) OR
         (start_time < ? AND end_time > ?) OR
@@ -112,9 +109,9 @@ router.post('/check-conflict', async (req, res) => {
     const params = [
       date, 
       location,
-      endTime, startTime,  // Existing booking ends after new starts AND starts before new ends
-      endTime, startTime,  // Same as above (different format)
-      startTime, endTime   // Existing booking is completely within new booking
+      endTime, startTime,
+      endTime, startTime,
+      startTime, endTime
     ];
 
     // Exclude a specific booking if provided (for editing)
@@ -125,13 +122,11 @@ router.post('/check-conflict', async (req, res) => {
 
     const [conflicts] = await pool.query(query, params);
 
-    console.log(`✅ Found ${conflicts.length} conflicting bookings`);
+    console.log(`✅ Found ${conflicts.length} conflicting approved bookings`);
 
     res.json({
       success: true,
       hasConflict: conflicts.length > 0,
-      hasApprovedConflict: conflicts.some(c => c.status === 'approved'),
-      hasPendingConflict: conflicts.some(c => c.status === 'pending'),
       conflicts: conflicts.map(c => ({
         id: c.booking_id,
         customerName: c.customer_name,
@@ -191,30 +186,24 @@ router.post('/', async (req, res) => {
     console.log('📅 Backend received booking date:', formattedDate);
     console.log('   Full booking data:', { customerName, service, date: formattedDate, startTime, endTime });
 
-    // Check for schedule conflicts before creating booking
+    // Check for schedule conflicts with APPROVED bookings only
+    // NOTE: conflicts are checked globally (regardless of location) so the band
+    // cannot be double-booked at the same time even at different locations.
+    // Use a robust overlap check: two intervals overlap unless
+    // existing.end_time <= new.start_time OR existing.start_time >= new.end_time
     const [conflicts] = await pool.query(
       `SELECT booking_id, customer_name, service, start_time, end_time, status
-       FROM bookings 
-       WHERE date = ? 
-       AND location = ?
-       AND status IN ('approved', 'pending')
-       AND (
-         (start_time < ? AND end_time > ?) OR
-         (start_time < ? AND end_time > ?) OR
-         (start_time >= ? AND end_time <= ?)
-       )`,
-      [
-        formattedDate,
-        location,
-        endTime, startTime,
-        endTime, startTime,
-        startTime, endTime
-      ]
+       FROM bookings
+       WHERE date = ?
+         AND status = 'approved'
+         AND NOT (end_time <= ? OR start_time >= ?)
+      `,
+      [formattedDate, startTime, endTime]
     );
 
     let conflictDetails = null;
     if (conflicts.length > 0) {
-      // Ensure the booking is recorded as pending so admin can review
+      // There's an approved booking that conflicts, so mark as pending for admin review
       bookingStatus = 'pending';
       conflictDetails = conflicts.map(c => ({
         customerName: c.customer_name,
@@ -223,7 +212,7 @@ router.post('/', async (req, res) => {
         endTime: c.end_time,
         status: c.status
       }));
-      // continue and create the booking; admin will review pending bookings
+      console.log('⚠️ Conflict detected with approved booking, creating as pending');
     }
 
     const [result] = await pool.query(
@@ -246,9 +235,8 @@ router.post('/', async (req, res) => {
     }
 
     console.log('✅ Booking created with date:', newBooking[0].date);
-    console.log('   Stored date type:', typeof newBooking[0].date);
 
-    // Notify all admins about new booking request. Include conflict details when present.
+    // Notify all admins about new booking request
     await notifyAllAdmins(
       'booking_request',
       'New Booking Request',
@@ -259,7 +247,9 @@ router.post('/', async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Booking created successfully',
-      booking: newBooking[0]
+      booking: newBooking[0],
+      hasConflict: conflictDetails !== null,
+      conflicts: conflictDetails
     });
   } catch (error) {
     console.error('Error creating booking:', error);
@@ -305,85 +295,93 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
       const conn = await pool.getConnection();
       let lockName = null;
       try {
-        console.log(`Approval attempt for booking ${id} by user ${approvedBy}`);
+        console.log(`🔒 Approval attempt for booking ${id} by user ${approvedBy}`);
+        
         // Read current booking to know date/location (no locking yet)
         const [curRows] = await conn.query('SELECT date, start_time, end_time, location FROM bookings WHERE booking_id = ?', [id]);
         const current = curRows && curRows[0];
         console.log('Current booking row:', current);
+        
         if (!current) {
           conn.release();
           return res.status(404).json({ success: false, message: 'Booking not found' });
         }
 
-        // Create a stable lock name per date+location to serialize approvals for the same slot
-        lockName = `booking_approval_${String(current.date)}_${String(current.location)}`;
-        console.log('Attempting to acquire lock:', lockName);
+        // Create a stable lock name per date to serialize approvals for the same time slot
+        // across all locations (we want ONE booking for the band at any given time).
+        lockName = `booking_approval_${String(current.date)}`;
+        console.log('🔐 Attempting to acquire lock:', lockName);
 
         // Acquire advisory lock (timeout 10s)
         const [lockRes] = await conn.query('SELECT GET_LOCK(?, 10) as got_lock', [lockName]);
         console.log('GET_LOCK result:', lockRes && lockRes[0]);
         const gotLock = lockRes && lockRes[0] && (lockRes[0].got_lock === 1 || lockRes[0].got_lock === '1');
+        
         if (!gotLock) {
-          console.warn('Could not acquire lock:', lockName);
+          console.warn('⚠️ Could not acquire lock:', lockName);
           conn.release();
           return res.status(423).json({ success: false, message: 'Could not acquire approval lock, try again' });
         }
 
-        console.log('Lock acquired, beginning transaction');
+        console.log('✅ Lock acquired, beginning transaction');
+        
         // Start transaction and perform conflict check + update under lock
         await conn.beginTransaction();
 
         // Re-lock current booking row within transaction
         const [currentRows] = await conn.query('SELECT date, start_time, end_time, location FROM bookings WHERE booking_id = ? FOR UPDATE', [id]);
         const lockedCurrent = currentRows && currentRows[0];
-        console.log('Locked current booking:', lockedCurrent);
+        console.log('🔒 Locked current booking:', lockedCurrent);
 
-        // Check for already-approved OR pending overlapping bookings
-        // CHANGED: Now also checking 'pending' status to prevent approving conflicting pending bookings
+        // ✅ Check for already-approved overlapping bookings ONLY (not pending).
+        // Use the same robust overlap logic as above and ignore location so
+        // the band cannot be double-booked across venues.
         const [conflicts] = await conn.query(
-          `SELECT booking_id, customer_name, service, start_time, end_time, status
+          `SELECT booking_id, customer_name, service, start_time, end_time, status, date
            FROM bookings
            WHERE date = ?
-             AND location = ?
-             AND status IN ('approved', 'pending')  -- CHANGED: Include pending status
-             AND (
-               (start_time < ? AND end_time > ?) OR
-               (start_time < ? AND end_time > ?) OR
-               (start_time >= ? AND end_time <= ?)
-             )
+             AND status = 'approved'
+             AND NOT (end_time <= ? OR start_time >= ?)
              AND booking_id != ?
           `,
           [
             lockedCurrent.date,
-            lockedCurrent.location,
-            lockedCurrent.end_time, lockedCurrent.start_time,
-            lockedCurrent.end_time, lockedCurrent.start_time,
             lockedCurrent.start_time, lockedCurrent.end_time,
             id
           ]
         );
 
-        console.log('Found conflicts count:', conflicts && conflicts.length);
+        console.log('Approval conflict params:', { date: lockedCurrent.date, start: lockedCurrent.start_time, end: lockedCurrent.end_time, bookingId: id });
+
+        console.log(`🔍 Found ${conflicts.length} approved conflicts`);
+        
         if (conflicts && conflicts.length > 0) {
-          console.warn('Approval blocked due to existing approved or pending conflicts:', conflicts);
+          console.warn('❌ Approval blocked due to existing APPROVED conflicts:', conflicts);
           await conn.rollback();
           await conn.query('SELECT RELEASE_LOCK(?)', [lockName]);
           conn.release();
+          
           return res.status(409).json({
             success: false,
-            message: 'Cannot approve: an overlapping approved or pending booking already exists.',
+            message: 'Cannot approve: an overlapping approved booking already exists.',
             conflicts: conflicts.map(c => ({ 
               bookingId: c.booking_id, 
-              customerName: c.customer_name, 
+              customer_name: c.customer_name,
+              customerName: c.customer_name,
               service: c.service, 
-              startTime: c.start_time, 
+              start_time: c.start_time,
+              startTime: c.start_time,
+              end_time: c.end_time,
               endTime: c.end_time,
-              status: c.status  // Include status in response
+              date: c.date,
+              location: c.location,
+              status: c.status
             }))
           });
         }
 
-        console.log('No approved or pending conflicts, proceeding to update');
+        console.log('✅ No approved conflicts, proceeding to update');
+        
         // No conflicts, perform update
         const [result] = await conn.query(
           `UPDATE bookings 
@@ -392,7 +390,8 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
           [status, approvedBy, id]
         );
 
-        console.log('Update affectedRows:', result && result.affectedRows);
+        console.log('📝 Update affectedRows:', result && result.affectedRows);
+        
         if (result.affectedRows === 0) {
           await conn.rollback();
           await conn.query('SELECT RELEASE_LOCK(?)', [lockName]);
@@ -411,19 +410,27 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
         );
 
         await conn.commit();
-        // release advisory lock
+        
+        // Release advisory lock
         await conn.query('SELECT RELEASE_LOCK(?)', [lockName]);
         conn.release();
 
-        // attach updated booking for downstream processing
+        console.log('✅ Transaction committed successfully');
+
+        // Attach updated booking for downstream processing
         const updatedBookingObj = updatedRows[0];
         req.__updatedBooking = updatedBookingObj;
+        
       } catch (tranErr) {
         try { await conn.rollback(); } catch (e) { /* ignore */ }
         try { if (lockName) await conn.query('SELECT RELEASE_LOCK(?)', [lockName]); } catch (e) { /* ignore */ }
         conn.release();
-        console.error('Transaction/error during approval:', tranErr);
-        return res.status(500).json({ success: false, message: 'Failed to approve booking (transaction error)', error: tranErr.message });
+        console.error('❌ Transaction error during approval:', tranErr);
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Failed to approve booking (transaction error)', 
+          error: tranErr.message 
+        });
       }
     }
 

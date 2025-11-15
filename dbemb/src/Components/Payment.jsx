@@ -220,13 +220,25 @@ const Payment = ({ onBackToHome }) => {
     try {
       const balance = (parseFloat(inv.amount) || 0) - (parseFloat(inv.totalPaid || 0) || 0);
       const instrumentName = inv.instrument_name || inv.instrumentName || inv.description || null;
+      const paymentLink = `${window.location.origin}/pay-exact?invoiceId=${inv.invoice_id}&amount=${balance.toFixed(2)}&forceFull=1`;
+      // Professional reminder message and structured payload (polished format)
+      const bookingDetails = inv.description || instrumentName || `Invoice ${inv.invoice_number || inv.invoice_id}`;
+      const formattedAmount = `₱${Number(balance).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const supportEmail = 'dbemb.service@gmail.com';
+
+      const u = (userDetails && userDetails[inv.user_id]) || {};
+      const recipientName = (u.firstName || u.first_name || u.name)
+        ? `${u.firstName || u.first_name || u.name}${(u.lastName || u.last_name) ? ' ' + (u.lastName || u.last_name) : ''}`
+        : 'Customer';
+
+      const message = `Dear ${recipientName},\n\nThis is a gentle reminder regarding your outstanding balance of ${formattedAmount} for your booking: ${bookingDetails}.\n\nShould you have any questions or need further assistance, please feel free to contact us at ${supportEmail} or send us a message through our Facebook page.\n\nThank you for choosing our services.`;
+
       const payload = {
         userEmail: inv.user_email || (userDetails[inv.user_id] && userDetails[inv.user_id].email),
         type: 'reminder',
-        title: 'Payment reminder',
-        message: `You have an outstanding balance of ₱${balance.toFixed(2)} for your rental${instrumentName ? ' for "' + instrumentName + '"' : ' (invoice ' + (inv.invoice_number || inv.invoice_id) + ')'}.
-Please settle the full outstanding balance — partial/down payments are not accepted for this reminder.`,
-        data: { invoiceId: inv.invoice_id, balance, instrumentName, amount: balance, paymentType: 'full', forceFull: true }
+        title: 'Payment Reminder',
+        message,
+        data: { invoiceId: inv.invoice_id, balance, instrumentName, amount: balance, paymentType: 'full', forceFull: true, paymentLink, exact: true }
       };
       const res = await fetch(`${API_BASE_URL}/notifications`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();

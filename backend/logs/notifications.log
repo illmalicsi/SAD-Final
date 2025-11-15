@@ -379,3 +379,102 @@ RETURNED rows=1 id=10
 POST {"userEmail":"illmalicsi@addu.edu.ph","type":"success","title":"Booking Confirmed!","hasData":true,"time":"2025-11-14T19:35:20.170Z"}
 INSERTED id=12 time=2025-11-14T19:35:20.200Z
 RETURNED rows=1 id=12
+POST {"userEmail":"tyrianaven@gmail.com","type":"success","title":"Payment Confirmed","hasData":true,"time":"2025-11-15T02:49:47.856Z"}
+INSERTED id=13 time=2025-11-15T02:49:47.885Z
+RETURNED rows=1 id=13
+POST {"userEmail":"tyrianaven@gmail.com","type":"info","title":"Booking Request Received","hasData":true,"time":"2025-11-15T05:00:08.420Z"}
+POST {"userEmail":"admin@blueeagles.com","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:00:08.442Z"}
+POST {"userEmail":"admin@local","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:00:08.458Z"}
+INSERTED id=16 time=2025-11-15T05:00:08.469Z
+INSERTED id=17 time=2025-11-15T05:00:08.478Z
+INSERTED id=18 time=2025-11-15T05:00:08.487Z
+RETURNED rows=1 id=16
+RETURNED rows=1 id=17
+RETURNED rows=1 id=18
+POST {"userEmail":"admin@blueeagles.com","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:02:19.425Z"}
+POST {"userEmail":"illmalicsi@addu.edu.ph","type":"info","title":"Booking Request Received","hasData":true,"time":"2025-11-15T05:02:19.438Z"}
+POST {"userEmail":"admin@local","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:02:19.453Z"}
+INSERTED id=20 time=2025-11-15T05:02:19.465Z
+INSERTED id=21 time=2025-11-15T05:02:19.470Z
+RETURNED rows=1 id=20
+INSERTED id=22 time=2025-11-15T05:02:19.483Z
+RETURNED rows=1 id=21
+RETURNED rows=1 id=22
+POST {"userEmail":"tyrianaven@gmail.com","type":"success","title":"Booking Confirmed!","hasData":true,"time":"2025-11-15T05:02:37.843Z"}
+INSERTED id=24 time=2025-11-15T05:02:37.874Z
+RETURNED rows=1 id=24
+POST {"userEmail":"illmalicsi@addu.edu.ph","type":"success","title":"Booking Confirmed!","hasData":true,"time":"2025-11-15T05:02:44.824Z"}
+INSERTED id=26 time=2025-11-15T05:02:44.834Z
+RETURNED rows=1 id=26
+POST {"userEmail":"illmalicsi@addu.edu.ph","type":"info","title":"Booking Request Received","hasData":true,"time":"2025-11-15T05:19:39.835Z"}
+POST {"userEmail":"admin@blueeagles.com","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:19:39.853Z"}
+POST {"userEmail":"admin@local","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:19:39.877Z"}
+INSERTED id=28 time=2025-11-15T05:19:39.894Z
+INSERTED id=29 time=2025-11-15T05:19:39.905Z
+INSERTED id=30 time=2025-11-15T05:19:39.919Z
+RETURNED rows=1 id=28
+RETURNED rows=1 id=29
+RETURNED rows=1 id=30
+POST {"userEmail":"tyrianaven@gmail.com","type":"info","title":"Booking Request Received","hasData":true,"time":"2025-11-15T05:20:23.751Z"}
+POST {"userEmail":"admin@blueeagles.com","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:20:23.760Z"}
+INSERTED id=32 time=2025-11-15T05:20:23.772Z
+POST {"userEmail":"admin@local","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:20:23.780Z"}
+INSERTED id=33 time=2025-11-15T05:20:23.790Z
+RETURNED rows=1 id=32
+INSERTED id=34 time=2025-11-15T05:20:23.810Z
+RETURNED rows=1 id=33
+RETURNED rows=1 id=34
+POST {"userEmail":"illmalicsi@addu.edu.ph","type":"success","title":"Booking Confirmed!","hasData":true,"time":"2025-11-15T05:20:50.999Z"}
+INSERTED id=36 time=2025-11-15T05:20:51.024Z
+RETURNED rows=1 id=36
+POST {"userEmail":"tyrianaven@gmail.com","type":"success","title":"Booking Confirmed!","hasData":true,"time":"2025-11-15T05:20:54.826Z"}
+INSERTED id=38 time=2025-11-15T05:20:54.844Z
+RETURNED rows=1 id=38
+POST {"userEmail":"illmalicsi@addu.edu.ph","type":"info","title":"Booking Request Received","hasData":true,"time":"2025-11-15T05:37:59.457Z"}
+POST {"userEmail":"admin@local","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:37:59.491Z"}
+POST {"userEmail":"admin@blueeagles.com","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:37:59.503Z"}
+INSERTED id=40 time=2025-11-15T05:37:59.508Z
+INSERTED id=41 time=2025-11-15T05:37:59.513Z
+INSERTED id=42 time=2025-11-15T05:37:59.516Z
+RETURNED rows=1 id=40
+RETURNED rows=1 id=41
+RETURNED rows=1 id=42
+POST {"userEmail":"tyrianaven@gmail.com","type":"info","title":"Booking Request Received","hasData":true,"time":"2025-11-15T05:38:35.967Z"}
+POST {"userEmail":"admin@blueeagles.com","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:38:35.984Z"}
+POST {"userEmail":"admin@local","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-15T05:38:36.012Z"}
+INSERTED id=44 time=2025-11-15T05:38:36.028Z
+INSERTED id=45 time=2025-11-15T05:38:36.035Z
+RETURNED rows=1 id=44
+INSERTED id=46 time=2025-11-15T05:38:36.051Z
+RETURNED rows=1 id=45
+RETURNED rows=1 id=46
+POST {"userEmail":"illmalicsi@addu.edu.ph","type":"success","title":"Booking Confirmed!","hasData":true,"time":"2025-11-15T05:38:53.082Z"}
+INSERTED id=48 time=2025-11-15T05:38:53.114Z
+RETURNED rows=1 id=48
+POST {"userEmail":"tyrianaven@gmail.com","type":"error","title":"Booking Not Approved","hasData":true,"time":"2025-11-15T06:01:29.967Z"}
+INSERTED id=49 time=2025-11-15T06:01:30.008Z
+RETURNED rows=1 id=49
+POST {"userEmail":"tyrianaven@gmail.com","type":"reminder","title":"Payment reminder","hasData":true,"time":"2025-11-15T07:40:08.281Z"}
+INSERTED id=50 time=2025-11-15T07:40:08.390Z
+RETURNED rows=1 id=50
+POST {"userEmail":"tyrianaven@gmail.com","type":"reminder","title":"Payment reminder","hasData":true,"time":"2025-11-15T07:41:09.815Z"}
+INSERTED id=51 time=2025-11-15T07:41:09.846Z
+RETURNED rows=1 id=51
+POST {"userEmail":"tyrianaven@gmail.com","type":"reminder","title":"Payment reminder","hasData":true,"time":"2025-11-15T07:44:20.846Z"}
+INSERTED id=52 time=2025-11-15T07:44:20.854Z
+RETURNED rows=1 id=52
+POST {"userEmail":"tyrianaven@gmail.com","type":"reminder","title":"Payment reminder — action required","hasData":true,"time":"2025-11-15T07:55:31.257Z"}
+INSERTED id=53 time=2025-11-15T07:55:31.269Z
+RETURNED rows=1 id=53
+POST {"userEmail":"tyrianaven@gmail.com","type":"reminder","title":"Payment reminder — action required","hasData":true,"time":"2025-11-15T08:05:52.043Z"}
+INSERTED id=54 time=2025-11-15T08:05:52.049Z
+RETURNED rows=1 id=54
+POST {"userEmail":"tyrianaven@gmail.com","type":"reminder","title":"Payment Reminder","hasData":true,"time":"2025-11-15T08:21:09.747Z"}
+INSERTED id=55 time=2025-11-15T08:21:09.758Z
+RETURNED rows=1 id=55
+POST {"userEmail":"tyrianaven@gmail.com","type":"reminder","title":"Payment Reminder","hasData":true,"time":"2025-11-15T08:28:17.129Z"}
+INSERTED id=56 time=2025-11-15T08:28:17.140Z
+RETURNED rows=1 id=56
+POST {"userEmail":"tyrianaven@gmail.com","type":"reminder","title":"Payment Reminder","hasData":true,"time":"2025-11-15T08:31:37.267Z"}
+INSERTED id=57 time=2025-11-15T08:31:37.276Z
+RETURNED rows=1 id=57

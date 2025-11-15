@@ -466,7 +466,7 @@ class NotificationService {
     return this.createNotification(booking.email, {
       type: 'error',
       title: 'Booking Not Approved',
-      message: `Unfortunately, your booking for "${booking.service}" on ${formattedDate} could not be approved.`,
+      message: `Unfortunately, your booking for \"${booking.service}\" on ${formattedDate} could not be approved, due to a schedule conflict. Thank you for choosing our service!`,
       data: {
         bookingId: booking.id,
         service: booking.service,

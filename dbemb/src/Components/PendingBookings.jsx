@@ -5,6 +5,7 @@ import {
   FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser,
   FaCheckCircle, FaPhone, FaEnvelope
 } from '../icons/fa';
+import ConflictModal from './ConflictModal';
 
 // Simple helper to PUT booking status with credentials included
 // Returns an object { ok, status, data }
@@ -32,10 +33,14 @@ const UpcomingSchedule = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [bookingToApprove, setBookingToApprove] = useState(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [bookingToReject, setBookingToReject] = useState(null);
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [conflictDetails, setConflictDetails] = useState([]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showCenterModal, setShowCenterModal] = useState(false);
+  const [centerModalMessage, setCenterModalMessage] = useState('');
 
   const containerStyle = {
     minHeight: '100vh',
@@ -271,25 +276,47 @@ const UpcomingSchedule = () => {
   // Reject a single booking
   const rejectBooking = async (booking) => {
     if (!AuthService.isAuthenticated()) return alert('You must be logged in to reject bookings');
-    if (!window.confirm(`Reject booking #${booking.id} for ${booking.customer_name}?`)) return;
+    // open modal instead of window.confirm
+    setBookingToReject(booking);
+    setShowRejectModal(true);
+  };
+
+  // Confirm rejection (modal action)
+  const confirmRejectBooking = async () => {
+    const booking = bookingToReject;
+    if (!booking) return;
     try {
       setProcessingId(booking.id);
-      const data = await updateBookingStatus(booking.id, 'rejected');
-      if (data && data.success) {
-        NotificationService.notifyBookingRejected(data.booking || booking);
+      setShowRejectModal(false);
+      const result = await updateBookingStatus(booking.id, 'rejected');
+      if (result.ok && result.data && result.data.success) {
+        NotificationService.notifyBookingRejected(result.data.booking || booking);
         window.dispatchEvent(new CustomEvent('bookingsUpdated', { detail: { reload: true } }));
         fetchUpcomingBookings();
-        alert(`Booking #${booking.id} rejected`);
+        // Show centered auto-dismissing modal with booking type
+        setCenterModalMessage(`Booking "${booking.service}" rejected`);
+        setShowCenterModal(true);
       } else {
-        throw new Error((data && data.message) || 'Failed to reject booking');
+        throw new Error((result.data && result.data.message) || 'Failed to reject booking');
       }
     } catch (err) {
       console.error('Error rejecting booking:', err);
       alert(err.message || 'Error rejecting booking');
     } finally {
       setProcessingId(null);
+      setBookingToReject(null);
     }
   };
+
+  // Auto-dismiss the centered modal (for rejection) after 3 seconds
+  useEffect(() => {
+    if (!showCenterModal) return;
+    const t = setTimeout(() => {
+      setShowCenterModal(false);
+      setCenterModalMessage('');
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [showCenterModal]);
 
   return (
     <div style={containerStyle}>
@@ -377,32 +404,40 @@ const UpcomingSchedule = () => {
                   </div>
                 )}
 
-                {/* Conflict details modal (shown when server returns 409 on approve) */}
-                {showConflictModal && (
-                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2100 }}>
-                    <div style={{ width: 640, maxHeight: '80vh', overflowY: 'auto', background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 12px 40px rgba(2,6,23,0.3)' }}>
-                      <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Cannot Approve Booking</h3>
-                      <p style={{ marginTop: 8, color: '#475569' }}>One or more overlapping bookings have already been approved. Please review the conflicting bookings below.</p>
-                      <div style={{ marginTop: 12 }}>
-                        {conflictDetails.length === 0 ? (
-                          <div style={{ color: '#64748b' }}>No conflict details were provided.</div>
-                        ) : (
-                          conflictDetails.map((c, idx) => (
-                            <div key={idx} style={{ padding: 12, borderRadius: 8, border: '1px solid #e6eef8', marginBottom: 8, background: '#f8fafc' }}>
-                              <div style={{ fontWeight: 700, color: '#0f172a' }}>{c.customer_name || c.customerName || c.customer}</div>
-                              <div style={{ color: '#475569', fontSize: 14 }}>{c.service || c.title || ''}</div>
-                              <div style={{ marginTop: 6, color: '#64748b', fontSize: 13 }}>{(c.date || c.bookingDate) ? `${(c.date || c.bookingDate)} ${c.start_time || c.startTime || ''} - ${c.end_time || c.endTime || ''}` : `${c.start_time || c.startTime || ''} - ${c.end_time || c.endTime || ''}`}</div>
-                              <div style={{ marginTop: 6, color: '#64748b', fontSize: 13 }}>{c.location || ''}</div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                        <button onClick={() => { setShowConflictModal(false); setConflictDetails([]); }} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer' }}>Close</button>
+                {/* Reject confirmation modal */}
+                {showRejectModal && bookingToReject && (
+                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+                    <div style={{ width: 520, background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 12px 40px rgba(2,6,23,0.3)' }}>
+                      <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Reject Booking</h3>
+                      <p style={{ marginTop: 8, color: '#475569' }}>
+                        Are you sure you want to reject the booking for <strong>{bookingToReject.customer_name}</strong>?
+                      </p>
+                      <div style={{ marginTop: 12, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                        <button onClick={() => { setShowRejectModal(false); setBookingToReject(null); }} style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer' }}>Cancel</button>
+                        <button onClick={confirmRejectBooking} style={{ padding: '10px 14px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer' }}>{processingId ? 'Processing...' : 'Reject'}</button>
                       </div>
                     </div>
                   </div>
                 )}
+
+                <ConflictModal
+                  open={showConflictModal}
+                  conflicts={conflictDetails}
+                  onClose={() => { setShowConflictModal(false); setConflictDetails([]); }}
+                  onView={(bookingId) => {
+                    // try navigate to booking detail or scroll into view in this list
+                    const id = bookingId;
+                    // Attempt to find element in DOM by id used elsewhere
+                    const el = document.getElementById(`booking-${id}`);
+                    if (el && el.scrollIntoView) {
+                      setShowConflictModal(false);
+                      setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+                    } else {
+                      // fallback: open booking detail page if route exists
+                      window.open(`/bookings/${id}`, '_blank');
+                    }
+                  }}
+                />
 
                 {/* Success modal / toast (auto-dismiss after 3s) */}
                 {showSuccessModal && (
@@ -410,6 +445,15 @@ const UpcomingSchedule = () => {
                     <div style={{ minWidth: 280, maxWidth: 420, background: '#0f172a', color: '#fff', borderRadius: 10, padding: '12px 16px', boxShadow: '0 8px 24px rgba(2,6,23,0.24)' }}>
                       <div style={{ fontWeight: 700, fontSize: 15 }}>{successMessage}</div>
                       <div style={{ marginTop: 6, fontSize: 13, color: '#cbd5e1' }}>Approved successfully</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Centered rejection success modal (auto-dismiss) */}
+                {showCenterModal && (
+                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2300 }}>
+                    <div style={{ minWidth: 320, background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 12px 40px rgba(2,6,23,0.3)', textAlign: 'center' }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>{centerModalMessage}</div>
                     </div>
                   </div>
                 )}
