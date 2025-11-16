@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { formatCurrency } from '../utils/formatters';
 import { useLocation } from 'react-router-dom';
 import ReactDOM from 'react-dom';
 import { FaCreditCard, FaArrowLeft, FaDollarSign, FaUser, FaClock, FaCheck, FaTimes, FaSpinner, FaReceipt, FaEye } from '../icons/fa';
@@ -131,7 +132,7 @@ const Payment = ({ onBackToHome }) => {
         // Prefer using invoice description (if present) for a clearer message
         const invoiceLabel = selectedInvoice.description ? selectedInvoice.description : `Invoice ${selectedInvoice.invoice_id}`;
         const paymentStatusMsg = paymentType === 'down' ? 'Partial payment' : 'Full payment';
-        setSuccessMsg(`${paymentStatusMsg} of ₱${paymentAmount.toFixed(2)} recorded successfully for ${invoiceLabel}`);
+        setSuccessMsg(`${paymentStatusMsg} of ${formatCurrency(paymentAmount)} recorded successfully for ${invoiceLabel}`);
         setReceipt({
           invoice: selectedInvoice,
           user: userDetails[selectedInvoice.user_id],
@@ -223,7 +224,7 @@ const Payment = ({ onBackToHome }) => {
       const paymentLink = `${window.location.origin}/pay-exact?invoiceId=${inv.invoice_id}&amount=${balance.toFixed(2)}&forceFull=1`;
       // Professional reminder message and structured payload (polished format)
       const bookingDetails = inv.description || instrumentName || `Invoice ${inv.invoice_number || inv.invoice_id}`;
-      const formattedAmount = `₱${Number(balance).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const formattedAmount = formatCurrency(balance);
       const supportEmail = 'dbemb.service@gmail.com';
 
       const u = (userDetails && userDetails[inv.user_id]) || {};
@@ -671,7 +672,7 @@ const Payment = ({ onBackToHome }) => {
                       </td>
                       <td style={{...styles.td, textAlign: 'center'}}>
                         <div style={{fontWeight: '600', fontSize: '13px', color: '#374151'}}>
-                          ₱{amountRequired.toFixed(2)}
+                          {formatCurrency(amountRequired)}
                         </div>
                       </td>
                       <td style={{...styles.td, textAlign: 'center'}}>
@@ -680,7 +681,7 @@ const Payment = ({ onBackToHome }) => {
                           fontSize: '13px',
                           color: isFullyPaid ? '#059669' : isPartiallyPaid ? '#f59e0b' : '#6b7280'
                         }}>
-                          ₱{amountPaid.toFixed(2)}
+                          {formatCurrency(amountPaid)}
                         </div>
                       </td>
                       <td style={{...styles.td, textAlign: 'center'}}>
@@ -689,7 +690,7 @@ const Payment = ({ onBackToHome }) => {
                           fontSize: '13px',
                           color: balance > 0 ? '#dc2626' : '#059669'
                         }}>
-                          ₱{balance.toFixed(2)}
+                          {formatCurrency(balance)}
                         </div>
                       </td>
                       <td style={styles.td}>
@@ -802,7 +803,7 @@ const Payment = ({ onBackToHome }) => {
                                                 const res = await AuthService.makeAuthenticatedRequest(`${API_BASE_URL}/billing/payments`, { method: 'POST', body: JSON.stringify(payload) });
                                                 const data = await res.json();
                                                 if (res.ok) {
-                                                  setSuccessMsg(`Partial payment of ₱${partialAmount.toFixed(2)} recorded`);
+                                                  setSuccessMsg(`Partial payment of ${formatCurrency(partialAmount)} recorded`);
                                                   // Update payment_status depending on remaining balance (compute locally)
                                                   try {
                                                     const newRemaining = Math.max(0, outstanding - partialAmount);

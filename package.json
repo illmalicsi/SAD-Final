@@ -4,6 +4,7 @@
   },
   "dependencies": {
     "date-fns-tz": "^3.2.0",
+    "lucide-react": "^0.553.0",
     "react-router-dom": "^7.9.4",
     "stripe": "^19.1.0"
   }

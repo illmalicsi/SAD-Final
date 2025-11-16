@@ -17,14 +17,15 @@ const StyledSelect = React.forwardRef(({ children, style, iconStyle, containerSt
     appearance: 'none',
     WebkitAppearance: 'none',
     MozAppearance: 'none',
-    paddingRight: '44px',
-    width: 'auto',
+    paddingRight: '44px', // reserve space for chevron icon
+    width: '100%', // default to fill container column width
     boxSizing: 'border-box'
   };
 
   const containerBase = {
     position: 'relative',
-    width: 'auto'
+    width: '100%',
+    display: 'inline-block'
   };
 
   const iconBase = {
@@ -39,7 +40,12 @@ const StyledSelect = React.forwardRef(({ children, style, iconStyle, containerSt
 
   return (
     <div style={{ ...containerBase, ...(containerStyle || {}) }} className={className}>
-      <select ref={ref} style={{ ...selectBase, ...(style || {}) }} {...props}>
+      {/* Ensure final style reserves space for the icon even if caller provides shorthand padding */}
+      <select
+        ref={ref}
+        style={{ ...selectBase, ...(style || {}), paddingRight: (style && style.paddingRight) ? style.paddingRight : '44px' }}
+        {...props}
+      >
         {children}
       </select>
       <FaChevronDown style={{ ...iconBase, ...(iconStyle || {}) }} />

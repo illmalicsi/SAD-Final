@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { FaCreditCard, FaLock, FaCheckCircle, FaTimes, FaDollarSign, FaMobileAlt, FaUniversity, FaUserShield } from '../icons/fa';
 import AuthService from '../services/authService';
 import NotificationService from '../services/notificationService';
+import { formatCurrency } from '../utils/formatters';
 
 const TestPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }) => {
   // Animation keyframes injection
@@ -191,10 +192,14 @@ const TestPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }
     const user = AuthService.getUser();
     if (user && user.email) {
       try {
+        const recipientName = (user && (user.firstName || user.first_name || user.name))
+          ? `${user.firstName || user.first_name || user.name}${(user.lastName || user.last_name) ? ' ' + (user.lastName || user.last_name) : ''}`
+          : 'Customer';
+
         await NotificationService.createNotification(user.email, {
           type: 'success',
-          title: 'Payment Confirmed',
-          message: `Your payment of ₱${data.amount} has been successfully processed.`,
+          title: 'Payment Received',
+          message: `Dear ${recipientName},\n\nWe're delighted to confirm that your payment of ${formatCurrency(data.amount)} has been successfully received!`,
           data: {
             transactionId: data.transactionId,
             amount: data.amount,
@@ -354,11 +359,11 @@ const TestPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }
           </div>
           <h2 style={styles.successTitle}>Payment Successful!</h2>
           <p style={styles.successMessage}>
-            Your payment of <span style={styles.amountHighlight}>₱{paymentAmount.toLocaleString()}</span> has been processed.
+            Your payment of <span style={styles.amountHighlight}>{formatCurrency(paymentAmount)}</span> has been processed.
           </p>
           {paymentType === 'down' && (
             <div style={styles.balanceNotice}>
-              Remaining balance: ₱{remainingBalance.toLocaleString()}
+              Remaining balance: {formatCurrency(remainingBalance)}
             </div>
           )}
           <button
@@ -414,18 +419,18 @@ const TestPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }
         <div style={styles.amountSection}>
           <div style={styles.amountCard}>
             <div style={styles.amountLabel}>Total Amount</div>
-            <div style={styles.totalAmount}>₱{totalAmount.toLocaleString()}</div>
+            <div style={styles.totalAmount}>{formatCurrency(totalAmount)}</div>
             <div style={styles.paymentAmount}>
               {paymentType === 'down' ? (
                 <>
                   <div>Down Payment (50%)</div>
-                  <div style={styles.downPaymentAmount}>₱{paymentAmount.toLocaleString()}</div>
-                  <div style={styles.remainingBalance}>Remaining: ₱{remainingBalance.toLocaleString()}</div>
+                  <div style={styles.downPaymentAmount}>{formatCurrency(paymentAmount)}</div>
+                  <div style={styles.remainingBalance}>Remaining: {formatCurrency(remainingBalance)}</div>
                 </>
               ) : (
                 <>
                   <div>Amount to Pay</div>
-                  <div style={styles.fullPaymentAmount}>₱{paymentAmount.toLocaleString()}</div>
+                  <div style={styles.fullPaymentAmount}>{formatCurrency(paymentAmount)}</div>
                 </>
               )}
             </div>
@@ -457,7 +462,7 @@ const TestPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }
                   >
                     <div style={styles.paymentTypeContent}>
                       <div style={styles.paymentTypeTitle}>Full Payment</div>
-                      <div style={styles.paymentTypeAmount}>₱{totalAmount.toLocaleString()}</div>
+                      <div style={styles.paymentTypeAmount}>{formatCurrency(totalAmount)}</div>
                     </div>
                   </button>
                   <button
@@ -473,7 +478,7 @@ const TestPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }
                   >
                     <div style={styles.paymentTypeContent}>
                       <div style={styles.paymentTypeTitle}>Down Payment</div>
-                      <div style={styles.paymentTypeAmount}>₱{paymentAmount.toLocaleString()}</div>
+                      <div style={styles.paymentTypeAmount}>{formatCurrency(paymentAmount)}</div>
                       <div style={styles.paymentTypeSubtitle}>50% now, 50% later</div>
                     </div>
                   </button>
@@ -483,30 +488,33 @@ const TestPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }
               <div style={styles.section}>
                 <label style={styles.label}>Payment Method</label>
                 <div style={styles.paymentMethodsGrid}>
-                  {paymentMethods.map((method) => (
-                    <button
-                      key={method.id}
-                      type="button"
-                      onClick={() => {
-                        setPaymentMode(method.id);
-                        setActiveStep(2);
-                      }}
-                      style={{
-                        ...styles.paymentMethodButton,
-                        ...(paymentMode === method.id ? styles.paymentMethodButtonActive : {})
-                      }}
-                    >
-                      <method.icon 
-                        style={{ 
-                          fontSize: 24, 
-                          color: paymentMode === method.id ? '#fff' : method.color,
-                          marginBottom: 8 
-                        }} 
-                      />
-                      <div style={styles.paymentMethodName}>{method.name}</div>
-                      <div style={styles.paymentMethodDescription}>{method.description}</div>
-                    </button>
-                  ))}
+                  {paymentMethods.map((method) => {
+                    const Icon = method.icon;
+                    return (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() => {
+                          setPaymentMode(method.id);
+                          setActiveStep(2);
+                        }}
+                        style={{
+                          ...styles.paymentMethodButton,
+                          ...(paymentMode === method.id ? styles.paymentMethodButtonActive : {})
+                        }}
+                      >
+                        <Icon
+                          style={{
+                            fontSize: 24,
+                            color: paymentMode === method.id ? '#fff' : method.color,
+                            marginBottom: 8
+                          }}
+                        />
+                        <div style={styles.paymentMethodName}>{method.name}</div>
+                        <div style={styles.paymentMethodDescription}>{method.description}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -653,7 +661,7 @@ const TestPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }
                       Processing...
                     </>
                   ) : (
-                    `Pay ₱${paymentAmount.toLocaleString()}`
+                    `Pay ${formatCurrency(paymentAmount)}`
                   )}
                 </button>
               </div>
@@ -1139,4 +1147,4 @@ const styles = {
   }
 };
 
-export default TestPaymentGateway;
+export default TestPaymentGateway;  

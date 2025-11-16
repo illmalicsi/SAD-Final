@@ -12,6 +12,58 @@ const fs = require('fs');
 const path = require('path');
 const emailService = require('./emailService');
 
+// Helper: format invoice number as INV-YYYYMMDD-000NNN using invoiceId and date
+function formatInvoiceNumber(invoiceId, dateInput) {
+  const now = dateInput ? new Date(dateInput) : new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const idPart = String(invoiceId).padStart(6, '0');
+  return `INV-${y}${m}${d}-${idPart}`;
+}
+
+// Send a PDF file as an attachment via SendGrid (lazy-require).
+// Requires environment variable: SENDGRID_API_KEY. Optional: SENDGRID_FROM
+async function sendPdfViaSendGrid(filePath, toEmail, opts = {}) {
+  try {
+    if (!process.env.SENDGRID_API_KEY) throw new Error('SENDGRID_API_KEY not set');
+    let sgMail = null;
+    try {
+      sgMail = require('@sendgrid/mail');
+    } catch (e) {
+      console.warn('SendGrid client not installed (npm install @sendgrid/mail) — skipping send');
+      return false;
+    }
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+    const fileBuffer = fs.readFileSync(filePath);
+    const content = fileBuffer.toString('base64');
+    const filename = opts.filename || path.basename(filePath);
+    const from = process.env.SENDGRID_FROM || process.env.EMAIL_USER || 'no-reply@example.com';
+    const msg = {
+      to: toEmail,
+      from,
+      subject: opts.subject || `Your receipt ${opts.receiptNumber || ''}`,
+      text: opts.text || 'Please find attached your payment receipt.',
+      html: opts.html || `<p>Hi,</p><p>Your payment receipt is attached to this email.</p>`,
+      attachments: [
+        {
+          content,
+          filename,
+          type: 'application/pdf',
+          disposition: 'attachment'
+        }
+      ]
+    };
+
+    await sgMail.send(msg);
+    return true;
+  } catch (err) {
+    console.warn('sendPdfViaSendGrid failed:', err && err.message);
+    return false;
+  }
+}
+
 // Generate a new invoice
 async function generateInvoice(userId, amount, description) {
   // Defensive logging: warn when amount is missing or non-positive so it's
@@ -263,31 +315,128 @@ async function processPayment(invoiceId, processedBy, amountPaid, paymentMethod 
       console.log(`✅ Receipt created - ID: ${receiptId}, Number: ${receiptNumber}`);
       receiptObj = { receipt_id: receiptId, receipt_number: receiptNumber };
 
-      // PDF generation is currently disabled to avoid requiring Puppeteer in dev environments.
+      // Attempt to generate a PDF receipt (uses pdfkit if installed). Falls back gracefully.
       try {
         const [[invoiceInfo]] = await pool.execute(
           `SELECT i.*, u.first_name, u.last_name, u.email FROM invoices i JOIN users u ON i.user_id = u.id WHERE i.invoice_id = ? LIMIT 1`,
           [invoiceId]
         );
 
-        // Do not generate a PDF here. Keep pdf_path NULL so the backend can run without Puppeteer.
-        const publicPath = null;
-        await pool.execute(`UPDATE receipts SET pdf_path = ? WHERE receipt_id = ?`, [publicPath, receiptId]);
-
-        // Optionally send a simple notification email without attachment to the customer
+        let pdfPath = null;
+        // Lazy-require pdfkit so server can run without installing it during dev
+        let PDFDocument = null;
         try {
-          if (invoiceInfo && invoiceInfo.email) {
-            const to = invoiceInfo.email;
-            const subject = `Your receipt ${receiptNumber}`;
-            const htmlBody = `<p>Hi ${invoiceInfo.first_name || ''},</p><p>Your payment has been received and a receipt (${receiptNumber}) was created in our system. You can view it through your account.</p>`;
-            await emailService.sendEmailWithAttachment(to, subject, htmlBody, []);
-            console.log(`ℹ️ Receipt notification emailed to ${to} (no PDF attached)`);
+          PDFDocument = require('pdfkit');
+        } catch (e) {
+          console.warn('pdfkit not installed, skipping PDF generation. To enable, run: npm install pdfkit');
+        }
+
+        if (PDFDocument) {
+          try {
+            const receiptsDir = path.join(__dirname, '..', 'uploads', 'receipts');
+            fs.mkdirSync(receiptsDir, { recursive: true });
+            const safeInvoice = invoiceInfo && invoiceInfo.invoice_number ? invoiceInfo.invoice_number.replace(/[^a-zA-Z0-9-_\.]/g,'') : `inv-${invoiceId}`;
+            const filename = `receipt-${receiptNumber || receiptId}-${safeInvoice}.pdf`;
+            const outPath = path.join(receiptsDir, filename);
+
+            const doc = new PDFDocument({ size: 'A4', margin: 40 });
+            const stream = fs.createWriteStream(outPath);
+            doc.pipe(stream);
+
+            // Try to include logo from frontend public folder (dbemb/public/logo.png)
+            const logoPath = path.join(__dirname, '..', 'dbemb', 'public', 'logo.png');
+            if (fs.existsSync(logoPath)) {
+              try { doc.image(logoPath, 40, 30, { width: 120 }); } catch (imErr) { /* ignore */ }
+            } else {
+              // Draw company name as fallback
+              doc.fontSize(20).text('DAVAO BLUE EAGLES', { align: 'left' });
+            }
+
+            // Header
+            doc.fontSize(18).text('Payment Receipt', { align: 'center' });
+            doc.moveDown(0.5);
+
+            // Use invoice number prominently (user requested)
+            const invNumber = (invoiceInfo && invoiceInfo.invoice_number)
+              ? invoiceInfo.invoice_number
+              : formatInvoiceNumber(invoiceId, invoiceInfo && invoiceInfo.issue_date);
+            doc.fontSize(12).text(`Invoice: ${invNumber}`, { align: 'right' });
+            doc.fontSize(12).text(`Receipt: ${receiptNumber}`, { align: 'right' });
+
+            doc.moveDown();
+            // Customer and payment info
+            const customerName = `${invoiceInfo?.first_name || ''} ${invoiceInfo?.last_name || ''}`.trim();
+            doc.fontSize(12).text(`Customer: ${customerName}`);
+            const paidAt = new Date();
+            doc.text(`Date: ${paidAt.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
+
+            doc.moveDown(1);
+            // Amount section with separator and nicer styling
+            const formattedAmount = Number(amountPaid || 0).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
+            doc.moveDown(0.5);
+            doc.fontSize(10).fillColor('#166534').text('Amount Paid', { continued: false });
+            doc.moveDown(0.2);
+            doc.fontSize(20).fillColor('#059669').text(formattedAmount);
+
+            doc.moveDown(1);
+            // Optional details block
+            if (invoiceInfo && invoiceInfo.description) {
+              doc.fontSize(10).fillColor('#374151').text(`Description: ${invoiceInfo.description}`);
+            }
+
+            doc.moveDown(2);
+            doc.fontSize(10).fillColor('#6b7280').text('This is a computer-generated receipt.', { align: 'center' });
+
+            doc.end();
+
+            await new Promise((resolve, reject) => stream.on('finish', resolve).on('error', reject));
+            pdfPath = `/uploads/receipts/${filename}`;
+            await pool.execute(`UPDATE receipts SET pdf_path = ? WHERE receipt_id = ?`, [pdfPath, receiptId]);
+            console.log(`✅ Receipt PDF generated: ${pdfPath}`);
+
+            // If SendGrid is configured, try sending the PDF as an email attachment
+            try {
+              if (process.env.SENDGRID_API_KEY && invoiceInfo && invoiceInfo.email) {
+                const fullPath = path.join(__dirname, '..', 'uploads', 'receipts', filename);
+                const sent = await sendPdfViaSendGrid(fullPath, invoiceInfo.email, { filename, receiptNumber, subject: `Your receipt ${receiptNumber}`, receiptNumber });
+                if (sent) console.log(`✅ Receipt emailed to ${invoiceInfo.email} via SendGrid`);
+              }
+            } catch (sgErr) {
+              console.warn('Failed to send receipt via SendGrid:', sgErr && sgErr.message);
+            }
+
+            // Notify customer with receipt URL so it appears as a downloadable notification
+            try {
+              if (invoiceInfo && invoiceInfo.email) {
+                const origin = process.env.PUBLIC_ORIGIN || `http://localhost:${process.env.PORT || 5000}`;
+                const receiptUrl = `${origin}${pdfPath}`;
+                await notifyUser(String(invoiceInfo.email).toLowerCase().trim(), 'success', 'Your Payment Receipt', `Your receipt is ready. You can download it here.`, { receiptId, receiptUrl, invoiceId, invoiceNumber: invoiceInfo.invoice_number || null });
+                console.log(`ℹ️ Receipt notification created for ${invoiceInfo.email} (receiptUrl=${receiptUrl})`);
+              }
+            } catch (notifErr) {
+              console.warn('Failed to create receipt notification for user:', notifErr && notifErr.message);
+            }
+          } catch (pdfErr) {
+            console.warn('Failed to generate receipt PDF:', pdfErr && pdfErr.message);
+            await pool.execute(`UPDATE receipts SET pdf_path = ? WHERE receipt_id = ?`, [null, receiptId]);
           }
-        } catch (mailErr) {
-          console.warn('Failed to email receipt notification:', mailErr && mailErr.message);
+        } else {
+          // pdfkit not installed: leave pdf_path null but still notify user via simple email
+          await pool.execute(`UPDATE receipts SET pdf_path = ? WHERE receipt_id = ?`, [null, receiptId]);
+          try {
+            if (invoiceInfo && invoiceInfo.email) {
+              const to = invoiceInfo.email;
+              const subject = `Your receipt ${receiptNumber}`;
+              const htmlBody = `<p>Hi ${invoiceInfo.first_name || ''},</p><p>Your payment has been received and a receipt (${receiptNumber}) was created in our system. You can view it through your account.</p>`;
+              await emailService.sendEmailWithAttachment(to, subject, htmlBody, []);
+              console.log(`ℹ️ Receipt notification emailed to ${to} (no PDF attached)`);
+            }
+          } catch (mailErr) {
+            console.warn('Failed to email receipt notification:', mailErr && mailErr.message);
+          }
         }
       } catch (genErr) {
-        console.warn('Skipped PDF generation and notification (Puppeteer removed):', genErr && genErr.message);
+        console.warn('Error while creating receipt and PDF:', genErr && genErr.message);
       }
     }
   } catch (rErr) {
@@ -302,11 +451,30 @@ async function processPayment(invoiceId, processedBy, amountPaid, paymentMethod 
   );
   
   if (invoiceInfo) {
+    const invoiceNumber = invoiceInfo.invoice_number || null;
+    const invoiceRef = invoiceNumber || formatInvoiceNumber(invoiceId, invoiceInfo && invoiceInfo.issue_date);
+
+    // Prefer a linked booking's service name + formatted date for admin messages
+    let bookingLabel = null;
+    try {
+      const [[bkInfo]] = await pool.execute(`SELECT service, date FROM bookings WHERE invoice_id = ? LIMIT 1`, [invoiceId]);
+      if (bkInfo && bkInfo.service) {
+        const formattedDate = bkInfo.date ? new Date(bkInfo.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : null;
+        bookingLabel = bkInfo.service + (formattedDate ? ` on ${formattedDate}` : '');
+      }
+    } catch (bkErr) {
+      // ignore booking lookup errors and fall back to invoice reference
+    }
+
+    const adminMessage = bookingLabel
+      ? `${invoiceInfo.first_name} ${invoiceInfo.last_name} paid ₱${amountPaid} for ${bookingLabel}`
+      : `${invoiceInfo.first_name} ${invoiceInfo.last_name} paid ₱${amountPaid} for Invoice ${invoiceRef}`;
+
     await notifyAllAdmins(
       'payment_received',
       'Payment Received',
-      `${invoiceInfo.first_name} ${invoiceInfo.last_name} paid ₱${amountPaid} for Invoice #${invoiceId} (${invoiceInfo.description})`,
-      { invoiceId, amountPaid, totalPaid, invoiceAmount, userName: `${invoiceInfo.first_name} ${invoiceInfo.last_name}` }
+      adminMessage,
+      { invoiceId, invoiceNumber, amountPaid, totalPaid, invoiceAmount, userName: `${invoiceInfo.first_name} ${invoiceInfo.last_name}` }
     );
   }
 
@@ -380,10 +548,11 @@ async function processPayment(invoiceId, processedBy, amountPaid, paymentMethod 
           // Send customer notification (if invoiceInfo exists)
           try {
             const userEmail = invoiceInfo?.email || null;
-            if (userEmail) {
+              if (userEmail) {
               const startDateFormatted = requestCheck?.start_date ? new Date(requestCheck.start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : null;
               const endDateFormatted = requestCheck?.end_date ? new Date(requestCheck.end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : null;
-              await notifyUser(String(userEmail).toLowerCase().trim(), 'success', 'Payment Confirmed - Rental Active', `Your payment has been received. Your rental of "${requestCheck?.instrument_name || ''}" is now active${startDateFormatted && endDateFormatted ? ` from ${startDateFormatted} to ${endDateFormatted}` : ''}.`, { requestId, invoiceId, status: 'approved' });
+              const invoiceNumber = invoiceInfo?.invoice_number || null;
+              await notifyUser(String(userEmail).toLowerCase().trim(), 'success', 'Payment Confirmed - Rental Active', `Your payment has been received. Your rental of "${requestCheck?.instrument_name || ''}" is now active${startDateFormatted && endDateFormatted ? ` from ${startDateFormatted} to ${endDateFormatted}` : ''}.`, { requestId, invoiceId, invoiceNumber, status: 'approved' });
             }
           } catch (notifErr) {
             console.warn('Failed to send payment confirmation notification to user:', notifErr && notifErr.message);
@@ -580,3 +749,86 @@ async function getReceiptById(receiptId) {
 module.exports.getUserReceipts = getUserReceipts;
 module.exports.getAllReceipts = getAllReceipts;
 module.exports.getReceiptById = getReceiptById;
+
+// Generate or regenerate a PDF for an existing receipt row. Returns the pdf path or null.
+async function generateReceiptPdf(receiptId) {
+  try {
+    const receipt = await getReceiptById(receiptId);
+    if (!receipt) throw new Error('Receipt not found');
+
+    const [[invoiceInfo]] = await pool.execute(
+      `SELECT i.*, u.first_name, u.last_name, u.email FROM invoices i JOIN users u ON i.user_id = u.id WHERE i.invoice_id = ? LIMIT 1`,
+      [receipt.invoice_id]
+    );
+
+    // Lazy require pdfkit
+    let PDFDocument = null;
+    try { PDFDocument = require('pdfkit'); } catch (e) { throw new Error('pdfkit not installed'); }
+
+    const receiptsDir = path.join(__dirname, '..', 'uploads', 'receipts');
+    fs.mkdirSync(receiptsDir, { recursive: true });
+    const safeInvoice = invoiceInfo && invoiceInfo.invoice_number ? invoiceInfo.invoice_number.replace(/[^a-zA-Z0-9-_\.]/g,'') : `inv-${receipt.invoice_id}`;
+    const filename = `receipt-${receipt.receipt_number || receipt.receipt_id}-${safeInvoice}.pdf`;
+    const outPath = path.join(receiptsDir, filename);
+
+    const doc = new PDFDocument({ size: 'A4', margin: 40 });
+    const stream = fs.createWriteStream(outPath);
+    doc.pipe(stream);
+
+    const logoPath = path.join(__dirname, '..', 'dbemb', 'public', 'logo.png');
+    if (fs.existsSync(logoPath)) {
+      try { doc.image(logoPath, 40, 30, { width: 120 }); } catch (imErr) { /* ignore */ }
+    } else {
+      doc.fontSize(20).text('DAVAO BLUE EAGLES', { align: 'left' });
+    }
+
+    doc.fontSize(18).text('Payment Receipt', { align: 'center' });
+    doc.moveDown(0.5);
+
+    const invNumber = (invoiceInfo && invoiceInfo.invoice_number) ? invoiceInfo.invoice_number : `#${receipt.invoice_id}`;
+    doc.fontSize(12).text(`Invoice: ${invNumber}`, { align: 'right' });
+    doc.fontSize(12).text(`Receipt: ${receipt.receipt_number || receipt.receipt_id}`, { align: 'right' });
+
+    doc.moveDown();
+    const customerName = `${receipt.user_name || ''}`.trim();
+    doc.fontSize(12).text(`Customer: ${customerName}`);
+    const paidAt = receipt.issued_at ? new Date(receipt.issued_at) : new Date();
+    doc.text(`Date: ${paidAt.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
+
+    doc.moveDown(1);
+    const formattedAmount = Number(receipt.amount_paid || 0).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
+    doc.moveDown(0.5);
+    doc.fontSize(10).fillColor('#166534').text('Amount Paid', { continued: false });
+    doc.moveDown(0.2);
+    doc.fontSize(20).fillColor('#059669').text(formattedAmount);
+
+    doc.moveDown(1);
+    if (invoiceInfo && invoiceInfo.description) doc.fontSize(10).fillColor('#374151').text(`Description: ${invoiceInfo.description}`);
+
+    doc.moveDown(2);
+    doc.fontSize(10).fillColor('#6b7280').text('This is a computer-generated receipt.', { align: 'center' });
+
+    doc.end();
+    await new Promise((resolve, reject) => stream.on('finish', resolve).on('error', reject));
+
+    const pdfPath = `/uploads/receipts/${filename}`;
+    await pool.execute(`UPDATE receipts SET pdf_path = ? WHERE receipt_id = ?`, [pdfPath, receiptId]);
+    // Optionally send via SendGrid when configured
+    try {
+      if (process.env.SENDGRID_API_KEY && invoiceInfo && invoiceInfo.email) {
+        const fullPath = path.join(__dirname, '..', 'uploads', 'receipts', filename);
+        const sent = await sendPdfViaSendGrid(fullPath, invoiceInfo.email, { filename, receiptNumber: receipt.receipt_number || receipt.receipt_id, subject: `Your receipt ${receipt.receipt_number || receipt.receipt_id}` });
+        if (sent) console.log(`✅ Receipt emailed to ${invoiceInfo.email} via SendGrid`);
+      }
+    } catch (sgErr) {
+      console.warn('Failed to send receipt via SendGrid:', sgErr && sgErr.message);
+    }
+
+    return pdfPath;
+  } catch (e) {
+    console.warn('generateReceiptPdf failed:', e && e.message);
+    return null;
+  }
+}
+
+module.exports.generateReceiptPdf = generateReceiptPdf;

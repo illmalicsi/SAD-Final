@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock, FaUser, FaMusic, FaCreditCard, FaMobileAlt, FaUniversity, FaCheckCircle, FaSpinner, FaCalendarAlt, FaFileAlt, FaFlag, FaChalkboardTeacher, FaGuitar, FaArrowUp, FaChevronDown, FaBars, FaTimes, FaChevronLeft, FaChevronRight } from '../icons/fa';
+import { FaFacebookF, FaInstagram, FaYoutube, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaClock, FaUser, FaMusic, FaCreditCard, FaMobileAlt, FaUniversity, FaCheckCircle, FaSpinner, FaCalendarAlt, FaFileAlt, FaFlag, FaChalkboardTeacher, FaGuitar, FaArrowUp, FaChevronDown, FaBars, FaTimes, FaChevronLeft, FaChevronRight, FaCog, FaSignOutAlt } from '../icons/fa';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import bg2 from "./Assets/bg2.jpg";
@@ -23,6 +23,8 @@ import NotificationService from '../services/notificationService'
 import Notifications from './Notifications'
 import AuthService from '../services/authService'
 import TestPaymentGateway from './TestPaymentGateway'
+import ErrorBoundary from './ErrorBoundary'
+import { formatCurrency } from '../utils/formatters';
 import CustomerService from './CustomerService'
 
 const containerStyle = {
@@ -114,6 +116,18 @@ const Home = () => {
   const buttonContainerStyle = {
     display: windowWidth <= 768 ? 'none' : 'flex',
     gap: '12px'
+  };
+
+  const menuItemStyle = {
+    display: 'flex',
+    gap: '10px',
+    alignItems: 'center',
+    padding: '10px',
+    borderRadius: '8px',
+    textDecoration: 'none',
+    color: '#0b3b78',
+    fontWeight: 600,
+    cursor: 'pointer'
   };
 
   const loginButtonStyle = {
@@ -2272,24 +2286,31 @@ const servicesHeaderWrapStyle = {
           const formattedDate = data.booking.date || 'your booking date';
 
           // Prepare readable amounts with thousands separator
-          const paidFormatted = `₱${Number(paymentAmount).toLocaleString()}`;
-          const totalFormatted = `₱${Number(amount).toLocaleString()}`;
+          const paidFormatted = formatCurrency(paymentAmount);
+          const totalFormatted = formatCurrency(amount);
 
           // Build message body depending on payment type (downpayment vs full)
           let messageBody = '';
           if (paymentType === 'downpayment' || paymentType === 'partial') {
             const remaining = Number(amount) - Number(paymentAmount);
-            const remainingFormatted = `₱${Number(remaining).toLocaleString()}`;
+            const remainingFormatted = formatCurrency(remaining);
             messageBody = `We received your downpayment of ${paidFormatted} for "${data.booking.service}" on ${formattedDate}. Remaining balance: ${remainingFormatted}.`;
           } else {
-            messageBody = `We received your full payment of ${paidFormatted} for "${data.booking.service}" on ${formattedDate}. Thank you!`;
+            messageBody = `We received your full payment of ${paidFormatted} for "${data.booking.service}" on ${formattedDate}.`;
           }
 
           // Create user notification (do not include transaction IDs)
-          NotificationService.createNotification(user.email, {
+          const recipientName = (user && (user.firstName || user.first_name || user.name))
+            ? `${user.firstName || user.first_name || user.name}${(user.lastName || user.last_name) ? ' ' + (user.lastName || user.last_name) : ''}`
+            : 'Customer';
+
+          const isDownpayment = (paymentType === 'downpayment' || paymentType === 'partial');
+          const notificationPayload = {
             type: 'success',
-            title: paymentType === 'downpayment' || paymentType === 'partial' ? 'Downpayment Received' : 'Payment Confirmed',
-            message: messageBody,
+            title: isDownpayment ? 'Downpayment Received' : 'Payment Received',
+            message: isDownpayment
+              ? messageBody
+              : `Dear ${recipientName},\n\nWe're delighted to confirm that your payment of ${paidFormatted} has been successfully received!`,
             data: {
               bookingId: data.bookingId,
               invoiceId: data.invoiceId,
@@ -2300,7 +2321,9 @@ const servicesHeaderWrapStyle = {
               service: data.booking.service,
               date: data.booking.date
             }
-          });
+          };
+
+          NotificationService.createNotification(user.email, notificationPayload);
           
           console.log('✅ Notification created successfully');
           
@@ -2993,12 +3016,18 @@ const servicesHeaderWrapStyle = {
       {currentView === 'home' && (
         <div style={containerStyle}>
           {/* Test Payment Modal Trigger removed (no floating test button on home) */}
-          <TestPaymentGateway
-            open={showTestPaymentModal}
-            onClose={() => setShowTestPaymentModal(false)}
-            amount={selectedPaymentNotification?.data?.amount || 500}
-            bookingDetails={selectedPaymentNotification?.data}
-          />
+          <ErrorBoundary onError={(err, info) => {
+            console.error('ErrorBoundary (TestPaymentGateway) captured error', err, info && info.componentStack);
+            // Expose last props to window for debugging convenience
+            try { window.__lastTestPaymentProps = { amount: selectedPaymentNotification?.data?.amount, bookingDetails: selectedPaymentNotification?.data }; } catch(e) {}
+          }}>
+            <TestPaymentGateway
+              open={showTestPaymentModal}
+              onClose={() => setShowTestPaymentModal(false)}
+              amount={selectedPaymentNotification?.data?.amount || 500}
+              bookingDetails={selectedPaymentNotification?.data}
+            />
+          </ErrorBoundary>
           {/* small local styles for navbar animations and focus */}
           <style>{`
             .nav-fade { transition: opacity 220ms ease, transform 220ms ease; }
@@ -3154,49 +3183,53 @@ const servicesHeaderWrapStyle = {
                     </button>
 
                     {showUserMenu && (
-                      <div id="user-menu" role="menu" style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, background: '#ffffff', border: '1px solid rgba(15, 76, 129, 0.08)', borderRadius: '12px', padding: '14px', minWidth: '240px', boxShadow: '0 12px 28px rgba(2,6,23,0.18)', zIndex: 1200 }}>
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid rgba(11,59,120,0.04)' }}>
-                          <div style={{ width: '48px', height: '48px', borderRadius: '10px', overflow: 'hidden', background: '#e6f2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0b3b78', fontWeight: 800, fontSize: '18px' }}>
+                      <div id="user-menu" role="menu" style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, background: '#ffffff', border: '1px solid rgba(15, 76, 129, 0.08)', borderRadius: '12px', padding: '12px', minWidth: '260px', boxShadow: '0 12px 28px rgba(2,6,23,0.18)', zIndex: 1200 }}>
+                        {/* Header */}
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '8px 6px', borderBottom: '1px solid rgba(11,59,120,0.04)' }}>
+                          <div style={{ width: 52, height: 52, borderRadius: 12, overflow: 'hidden', background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0b3b78', fontWeight: 800, fontSize: 18 }}>
                             {user?.avatar ? (
                               <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
                               (user.firstName || user.email || 'U').charAt(0).toUpperCase()
                             )}
                           </div>
-                          <div>
-                            <div style={{ fontWeight: 800, fontSize: '15px', color: '#06264a' }}>{user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user.email || '').split('@')[0]}</div>
-                            <div style={{ fontSize: '12px', color: '#1e4f8a', marginTop: '3px' }}>{user.email}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 800, fontSize: 15, color: '#06264a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user.email || '').split('@')[0]}</div>
+                            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                            {/* Manage account link removed per request */}
                           </div>
                         </div>
 
-                        <div style={{ marginTop: '12px', display: 'grid', gap: '8px' }}>
-                          {/* Avatar controls for all users */}
-                          {/* Avatar editing moved to profile page. Preview only shown above. */}
-                          <a href="#profile" onClick={(e) => { e.preventDefault(); openProfile(); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
-                            <FaUser style={{ color: '#0b62d6', minWidth: '18px' }} />
-                            <span>View Profile</span>
+                        {/* Actions */}
+                        <div style={{ paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <a href="#profile" onClick={(e) => { e.preventDefault(); openProfile(); setShowUserMenu(false); }} style={menuItemStyle}>
+                            <FaUser size={14} color="#0b62d6" />
+                            <span>View profile</span>
                           </a>
 
-                          <a href="#bookings" onClick={(e) => { e.preventDefault(); navigate('/bookings'); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                          <a href="#bookings" onClick={(e) => { e.preventDefault(); window.open('/bookings', '_blank'); setShowUserMenu(false); }} style={menuItemStyle}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             <span>Bookings</span>
                           </a>
 
-                          <a href="#instruments" onClick={(e) => { e.preventDefault(); handleOpenInstrumentRequest(user.role === 'user' ? 'rent' : 'borrow'); setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
-                            <FaMusic style={{ color: '#0b62d6', minWidth: '18px' }} />
-                            <span>{user.role === 'user' ? 'Rent Instrument' : 'Borrow Instrument'}</span>
+                          <a href="#instruments" onClick={(e) => { e.preventDefault(); handleOpenInstrumentRequest(user.role === 'user' ? 'rent' : 'borrow'); setShowUserMenu(false); }} style={menuItemStyle}>
+                            <FaMusic size={14} color="#0b62d6" />
+                            <span>{user.role === 'user' ? 'Rent instrument' : 'Borrow instrument'}</span>
                           </a>
 
                           {user.role === 'admin' && (
-                            <a href="#dashboard" onClick={(e) => { e.preventDefault(); if (user?.role === 'admin') { setCurrentView('dashboard'); } else { alert('Dashboard access is restricted to administrators.'); } setShowUserMenu(false); }} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: '#0b3b78', fontWeight: 600 }}>
+                            <a href="#dashboard" onClick={(e) => { e.preventDefault(); if (user?.role === 'admin') { setCurrentView('dashboard'); } else { alert('Dashboard access is restricted to administrators.'); } setShowUserMenu(false); }} style={menuItemStyle}>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ minWidth: '18px' }}><path d="M3 12h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 18h18" stroke="#0b62d6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                              <span>Admin Dashboard</span>
+                              <span>Admin dashboard</span>
                             </a>
                           )}
 
-                          <div style={{ height: '1px', background: 'rgba(11,59,120,0.06)', margin: '6px 0' }} />
+                          <div style={{ height: '1px', background: 'rgba(11,59,120,0.06)', margin: '8px 0' }} />
 
-                          <button onClick={() => { handleLogout(); setShowUserMenu(false); }} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', background: '#0b62d6', color: 'white', fontWeight: 800, cursor: 'pointer' }}>Sign Out</button>
+                          <button onClick={() => { handleLogout(); setShowUserMenu(false); }} style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: '#0b62d6', color: 'white', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                            <FaSignOutAlt size={14} color="#ffffff" />
+                            Sign out
+                          </button>
                         </div>
                       </div>
                     )}
@@ -4113,7 +4146,7 @@ const servicesHeaderWrapStyle = {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                         <div style={{ flex: 1 }}>
                           <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
-                            Booking #{booking.id} - {booking.service}
+                            {booking.service}
                           </h3>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginTop: 12 }}>
                             <div>
@@ -4135,7 +4168,7 @@ const servicesHeaderWrapStyle = {
                             <div>
                               <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Amount</div>
                               <div style={{ fontSize: 16, fontWeight: 700, color: '#0369a1' }}>
-                                ₱{booking.estimatedValue?.toLocaleString()}
+                                {formatCurrency(booking.estimatedValue || 0)}
                               </div>
                             </div>
                           </div>
@@ -4303,7 +4336,7 @@ const servicesHeaderWrapStyle = {
                   <div style={{ textAlign: 'center', marginBottom: 24 }}>
                     <div style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>Total Booking Amount</div>
                     <div style={{ fontSize: 36, fontWeight: 800, color: '#0c4a6e' }}>
-                      ₱{(selectedPaymentNotification.data?.amount || selectedPaymentNotification.data?.paymentDetails?.totalAmount || 0).toLocaleString()}
+                      {formatCurrency((selectedPaymentNotification.data?.amount || selectedPaymentNotification.data?.paymentDetails?.totalAmount || 0))}
                     </div>
                   </div>
                   
@@ -4344,7 +4377,7 @@ const servicesHeaderWrapStyle = {
                     >
                       <div style={{ fontSize: 14, color: '#64748b', marginBottom: 4 }}>Down Payment (50%)</div>
                       <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>
-                        ₱{((selectedPaymentNotification.data?.amount || 0) * 0.5).toLocaleString()}
+                        {formatCurrency(((selectedPaymentNotification.data?.amount || 0) * 0.5))}
                       </div>
                     </div>
                     
@@ -4366,7 +4399,7 @@ const servicesHeaderWrapStyle = {
                     >
                       <div style={{ fontSize: 14, color: '#64748b', marginBottom: 4 }}>Full Payment (100%)</div>
                       <div style={{ fontSize: 24, fontWeight: 800, color: '#0ea5e9' }}>
-                        ₱{(selectedPaymentNotification.data?.amount || 0).toLocaleString()}
+                        {formatCurrency((selectedPaymentNotification.data?.amount || 0))}
                       </div>
                     </div>
                   </div>
@@ -4525,7 +4558,7 @@ const servicesHeaderWrapStyle = {
                         Processing...
                       </>
                     ) : (
-                      <>Pay ₱{(selectedPaymentNotification.data?.amount || selectedPaymentNotification.data?.paymentDetails?.totalAmount || 0).toLocaleString()}</>
+                      <>Pay {formatCurrency((selectedPaymentNotification.data?.amount || selectedPaymentNotification.data?.paymentDetails?.totalAmount || 0))}</>
                     )}
                   </button>
                 </form>

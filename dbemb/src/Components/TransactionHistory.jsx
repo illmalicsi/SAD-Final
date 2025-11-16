@@ -45,6 +45,7 @@ const TransactionHistory = ({ onBackToHome }) => {
                 transaction_id: `payment-${p.payment_id}`,
                 amount: p.amount_paid || p.amount || 0,
                 invoice_id: p.invoice_id,
+                invoice_number: p.invoice_number || p.invoice_id,
                 transaction_type: 'payment',
                 status: 'completed',
                 created_at: p.processed_at || p.created_at || p.processed_at,
@@ -52,9 +53,9 @@ const TransactionHistory = ({ onBackToHome }) => {
                 source: 'payment'
               }));
               // Merge and dedupe by composite key (invoice + amount + created_at)
-              const existingKeys = new Set(txns.map(t => `${t.invoice_id}::${(t.amount||t.amount_paid||t.total||0)}::${t.created_at || t.processed_at || t.issued_at}`));
+              const existingKeys = new Set(txns.map(t => `${(t.invoice_number || t.invoice_id)}::${(t.amount||t.amount_paid||t.total||0)}::${t.created_at || t.processed_at || t.issued_at}`));
               for (const m of mapped) {
-                const key = `${m.invoice_id}::${m.amount}::${m.created_at}`;
+                const key = `${(m.invoice_number || m.invoice_id)}::${m.amount}::${m.created_at}`;
                 if (!existingKeys.has(key)) {
                   txns.push(m);
                   existingKeys.add(key);
@@ -96,6 +97,11 @@ const TransactionHistory = ({ onBackToHome }) => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const formatCurrency = (value) => {
+    const n = Number(value) || 0;
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   const getStatusBadge = (status) => {
@@ -189,6 +195,43 @@ const TransactionHistory = ({ onBackToHome }) => {
     }
   };
 
+  // Render method badge + optional text (avoid duplicate text when badge already shows same method)
+  const renderMethodDisplay = (tx) => {
+    const raw = (tx && (tx.payment_method || tx.method)) || inferMethod(tx) || 'other';
+    const rawNorm = raw.toString().toLowerCase().replace(/\s+/g, '');
+    const inferredNorm = inferMethod(tx).toString().toLowerCase().replace(/\s+/g, '');
+    return (
+      <>
+        {getMethodBadge(inferMethod(tx))}
+        {rawNorm !== inferredNorm && (
+          <span style={{ textTransform: 'capitalize' }}>{raw.toString()}</span>
+        )}
+      </>
+    );
+  };
+
+  // Format fallback invoice number as INV-YYYYMMDD-000NNN
+  const formatInvoiceNumber = (id, dateString) => {
+    try {
+      const n = parseInt(id, 10) || 0;
+      const d = dateString ? new Date(dateString) : new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const seq = String(n).padStart(6, '0');
+      return `INV-${yyyy}${mm}${dd}-${seq}`;
+    } catch (e) {
+      return id ? `INV-00000000-${String(id).padStart(6,'0')}` : '';
+    }
+  };
+
+  const getInvoiceDisplay = (tx) => {
+    if (!tx) return '';
+    if (tx.invoice_number) return tx.invoice_number;
+    if (tx.invoice_id) return formatInvoiceNumber(tx.invoice_id, tx.created_at || tx.processed_at || tx.issued_at);
+    return '';
+  };
+
   const handleViewReceipt = (tx) => {
     setSelectedTransaction(tx);
     setShowReceipt(true);
@@ -201,7 +244,7 @@ const TransactionHistory = ({ onBackToHome }) => {
   const filteredTransactions = transactions.filter(tx => {
     const idOrRef = (tx.transaction_id || tx.transaction_reference || tx.id || '').toString().toLowerCase();
     const matchesSearch = idOrRef.includes(searchTerm.toLowerCase()) ||
-                         (tx.invoice_id || '').toString().includes(searchTerm) ||
+               ((tx.invoice_number || tx.invoice_id) || '').toString().includes(searchTerm) ||
                          (tx.transaction_type || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (tx.user_name || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || (tx.status === filterStatus);
@@ -550,8 +593,8 @@ const TransactionHistory = ({ onBackToHome }) => {
                       <div style={{ fontWeight: '600', color: '#3b82f6', fontSize: '13px' }}>{tx.transaction_id || tx.transaction_reference || tx.id}</div>
                     </td>
                     <td style={styles.td}>{getMethodBadge(inferMethod(tx))}</td>
-                    <td style={styles.td}><div style={{ fontWeight: '700', color: '#059669', fontSize: '14px' }}>₱{parseFloat(tx.amount || tx.amount_paid || 0).toFixed(2)}</div></td>
-                    <td style={styles.td}><div>₱{parseFloat(tx.invoice_amount || 0).toFixed(2)}</div></td>
+                    <td style={styles.td}><div style={{ fontWeight: '700', color: '#059669', fontSize: '14px' }}>₱{formatCurrency(tx.amount || tx.amount_paid || 0)}</div></td>
+                    <td style={styles.td}><div>₱{formatCurrency(tx.invoice_amount || 0)}</div></td>
                     <td style={styles.td}><div style={{ fontWeight: '600' }}>{tx.status || tx.invoice_status || '-'}</div></td>
                     <td style={styles.td}><div style={{ fontSize: '11px', color: '#64748b' }}>{formatDate(tx.created_at || tx.issued_at || tx.processed_at)}</div></td>
                     <td style={styles.td}>
@@ -603,9 +646,7 @@ const TransactionHistory = ({ onBackToHome }) => {
                 <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1f2937', margin: '0 0 4px 0' }}>
                   Payment Receipt
                 </h2>
-                <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-                  Transaction #{selectedTransaction.transaction_id || selectedTransaction.transaction_reference || selectedTransaction.id}
-                </p>
+                {/* Transaction number intentionally removed to keep header clean */}
               </div>
             </div>
 
@@ -618,16 +659,18 @@ const TransactionHistory = ({ onBackToHome }) => {
                     <span style={{ fontWeight: '600', color: '#1f2937' }}>#{selectedTransaction.transaction_id || selectedTransaction.id}</span>
                   </div>
 
-                  {selectedTransaction.invoice_id && (
+                  {getInvoiceDisplay(selectedTransaction) && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '500' }}>Invoice ID:</span>
-                      <span style={{ fontWeight: '600', color: '#3b82f6' }}>#{selectedTransaction.invoice_id}</span>
+                      <span style={{ color: '#6b7280', fontWeight: '500' }}>Invoice #:</span>
+                      <span style={{ fontWeight: '600', color: '#3b82f6' }}>#{getInvoiceDisplay(selectedTransaction)}</span>
                     </div>
                   )}
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
-                    <span style={{ color: '#6b7280', fontWeight: '500' }}>Type:</span>
-                    <span style={{ fontWeight: '600', color: '#1f2937', textTransform: 'capitalize' }}>{selectedTransaction.transaction_type || 'payment'}</span>
+                    <span style={{ color: '#6b7280', fontWeight: '500' }}>Method:</span>
+                    <span style={{ fontWeight: '600', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {renderMethodDisplay(selectedTransaction)}
+                    </span>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
@@ -655,7 +698,7 @@ const TransactionHistory = ({ onBackToHome }) => {
                     Amount Paid
                   </div>
                     <div style={{ fontSize: '36px', fontWeight: '700', color: '#059669' }}>
-                    ₱{parseFloat(selectedTransaction.amount || selectedTransaction.amount_paid || 0).toFixed(2)}
+                    ₱{formatCurrency(selectedTransaction.amount || selectedTransaction.amount_paid || 0)}
                   </div>
                 </div>
               </div>

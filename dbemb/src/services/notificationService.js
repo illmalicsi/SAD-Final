@@ -3,6 +3,7 @@
 // from the backend API (expects /notifications endpoints). Otherwise falls back to localStorage.
 
 import mysqlService from './mysqlService';
+import { API_BASE_URL } from './apiConfig';
 
 const NOTIFICATION_STORAGE_KEY = 'userNotifications';
 const ADMIN_RECIPIENTS_KEY = 'adminRecipients';
@@ -327,17 +328,48 @@ class NotificationService {
   }
 
   // Notify about booking confirmation
-  static notifyBookingConfirmed(booking) {
+  static async notifyBookingConfirmed(booking) {
     console.log('📬 NotificationService: Creating booking confirmation for:', booking);
     console.log('💰 Invoice ID:', booking.invoice_id);
-    
-    // Prefer booking.estimated_value, then booking.estimatedValue, then fallback
+
+    // Try to get invoice info from backend when invoice_id is present
     let totalAmount = 0;
-    if (typeof booking.estimated_value === 'number' && booking.estimated_value > 0) {
-      totalAmount = booking.estimated_value;
-    } else if (typeof booking.estimatedValue === 'number' && booking.estimatedValue > 0) {
-      totalAmount = booking.estimatedValue;
-    } else {
+    let invoiceNumber = booking.invoice_number || booking.invoiceNumber || null;
+
+    // If the server already returned an authoritative invoice amount on the booking
+    // object, prefer that immediately (avoids network fetch and prevents fallback
+    // to legacy 5000 default when backend is unavailable).
+    if (typeof booking.invoice_amount === 'number' && booking.invoice_amount > 0) {
+      totalAmount = Number(booking.invoice_amount);
+      invoiceNumber = invoiceNumber || booking.invoice_number || booking.invoiceNumber || null;
+    }
+
+    if (booking.invoice_id && !totalAmount) {
+      try {
+        const resp = await fetch(`${API_BASE_URL}/billing/invoices/${booking.invoice_id}`, { credentials: 'include' });
+        if (resp.ok) {
+          const data = await resp.json();
+          const inv = data && (data.invoice || data) ? (data.invoice || data) : null;
+          if (inv) {
+            invoiceNumber = invoiceNumber || inv.invoice_number || null;
+            const invAmount = Number(inv.amount || inv.invoice_amount || inv.total || 0);
+            if (invAmount && invAmount > 0) {
+              totalAmount = invAmount;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch invoice for notification:', e);
+      }
+    }
+
+    // Prefer booking.estimated_value, then booking.estimatedValue, then fallback
+    if (!totalAmount) {
+      if (typeof booking.estimated_value === 'number' && booking.estimated_value > 0) {
+        totalAmount = booking.estimated_value;
+      } else if (typeof booking.estimatedValue === 'number' && booking.estimatedValue > 0) {
+        totalAmount = booking.estimatedValue;
+      } else {
       // Try to compute from package/instrument if possible
       if (booking.service && booking.notes) {
         // Band/Parade
@@ -387,10 +419,12 @@ class NotificationService {
           totalAmount = 5000;
         }
       }
-      // Fallback if still not found
-      if (!totalAmount) totalAmount = 5000;
+        // Fallback if still not found
+        if (!totalAmount) totalAmount = 5000;
+      }
     }
-  const downPayment = Math.round(totalAmount * 0.5); // 50% down payment
+
+    const downPayment = Math.round(totalAmount * 0.5); // 50% down payment
     
     // Format date safely - handle both date objects and strings
     let formattedDate = 'the scheduled date';
@@ -414,11 +448,13 @@ class NotificationService {
     return this.createNotification(booking.email, {
       type: 'success',
       title: 'Booking Confirmed!',
-      message: `Your booking for "${booking.service}" on ${formattedDate} has been confirmed. Please proceed with payment.`,
+      // Do not include invoice number in the user-facing message — only show amount
+      message: `Your booking for "${booking.service}" on ${formattedDate} has been confirmed.\n\nAmount due: ₱${Number(totalAmount).toLocaleString()}`,
       data: {
         bookingId: booking.booking_id || booking.id,
         amount: totalAmount,
         invoiceId: booking.invoice_id || null,
+        invoiceNumber: invoiceNumber || null,
         service: booking.service,
         date: booking.date,
         startTime: booking.startTime || booking.start_time,

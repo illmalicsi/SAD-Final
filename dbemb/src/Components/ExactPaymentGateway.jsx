@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { FaCreditCard, FaLock, FaCheckCircle, FaTimes, FaDollarSign, FaMobileAlt, FaUniversity, FaUserShield } from '../icons/fa';
 import AuthService from '../services/authService';
 import NotificationService from '../services/notificationService';
+import { formatCurrency } from '../utils/formatters';
 
 // ExactPaymentGateway: Minimal payment gateway that enforces paying the exact amount provided
 const ExactPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess }) => {
@@ -72,10 +73,14 @@ const ExactPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess 
     const user = AuthService.getUser();
     if (user && user.email) {
       try {
+        const recipientName = (user && (user.firstName || user.first_name || user.name))
+          ? `${user.firstName || user.first_name || user.name}${(user.lastName || user.last_name) ? ' ' + (user.lastName || user.last_name) : ''}`
+          : 'Customer';
+
         await NotificationService.createNotification(user.email, {
           type: 'success',
-          title: 'Payment Confirmed',
-          message: `Your payment of ₱${data.amount} has been successfully processed.`,
+          title: 'Payment Received',
+          message: `Dear ${recipientName},\n\nWe're delighted to confirm that your payment of ${formatCurrency(data.amount)} has been successfully received!`,
           data: { transactionId: data.transactionId, amount: data.amount, method: data.method, timestamp: data.timestamp, paid: true }
         });
       } catch (e) {}
@@ -136,7 +141,7 @@ const ExactPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess 
         <div style={styles.successModal}>
           <div style={styles.successIcon}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'checkmark 0.6s ease-out' }}><polyline points="20 6 9 17 4 12"></polyline></svg></div>
           <h2 style={styles.successTitle}>Payment Successful!</h2>
-          <p style={styles.successMessage}>Your payment of <span style={styles.amountHighlight}>₱{paymentAmount.toLocaleString()}</span> has been processed.</p>
+          <p style={styles.successMessage}>Your payment of <span style={styles.amountHighlight}>{formatCurrency(paymentAmount)}</span> has been processed.</p>
           <button onClick={handleCancel} style={styles.successButton}>Continue</button>
         </div>
       </div>
@@ -154,8 +159,8 @@ const ExactPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess 
         <div style={styles.amountSection}>
           <div style={styles.amountCard}>
             <div style={styles.amountLabel}>Total Amount</div>
-            <div style={styles.totalAmount}>₱{totalAmount.toLocaleString()}</div>
-            <div style={styles.paymentAmount}><div>Amount to Pay</div><div style={styles.fullPaymentAmount}>₱{paymentAmount.toLocaleString()}</div></div>
+            <div style={styles.totalAmount}>{formatCurrency(totalAmount)}</div>
+            <div style={styles.paymentAmount}><div>Amount to Pay</div><div style={styles.fullPaymentAmount}>{formatCurrency(paymentAmount)}</div></div>
           </div>
         </div>
 
@@ -166,13 +171,16 @@ const ExactPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess 
             <div style={styles.section}>
               <label style={styles.label}>Payment Method</label>
               <div style={styles.paymentMethodsGrid}>
-                {paymentMethods.map((method) => (
-                  <button key={method.id} type="button" onClick={() => setPaymentMode(method.id)} style={{ ...styles.paymentMethodButton, ...(paymentMode === method.id ? styles.paymentMethodButtonActive : {}) }}>
-                    <method.icon style={{ fontSize: 24, color: paymentMode === method.id ? '#fff' : method.color, marginBottom: 8 }} />
-                    <div style={styles.paymentMethodName}>{method.name}</div>
-                    <div style={styles.paymentMethodDescription}>{method.description}</div>
-                  </button>
-                ))}
+                {paymentMethods.map((method) => {
+                  const Icon = method.icon;
+                  return (
+                    <button key={method.id} type="button" onClick={() => setPaymentMode(method.id)} style={{ ...styles.paymentMethodButton, ...(paymentMode === method.id ? styles.paymentMethodButtonActive : {}) }}>
+                      <Icon style={{ fontSize: 24, color: paymentMode === method.id ? '#fff' : method.color, marginBottom: 8 }} />
+                      <div style={styles.paymentMethodName}>{method.name}</div>
+                      <div style={styles.paymentMethodDescription}>{method.description}</div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -188,7 +196,7 @@ const ExactPaymentGateway = ({ open, onClose, amount, bookingDetails, onSuccess 
               <div style={styles.simplePayment}><div style={styles.simplePaymentIcon}>{React.createElement(paymentMethods.find(m => m.id === paymentMode)?.icon, { style: { fontSize: 48, color: paymentMethods.find(m => m.id === paymentMode)?.color } })}</div><p style={styles.simplePaymentText}>{paymentMode === 'cash' ? 'Please prepare cash payment upon delivery or pickup.' : `You will be redirected to complete your ${paymentMethods.find(m => m.id === paymentMode)?.name} payment.`}</p></div>
             )}
 
-            <div style={styles.actionButtons}><button type="button" onClick={handleCancel} disabled={processing} style={styles.backButton}>Back</button><button type="submit" disabled={processing} style={{ ...styles.submitButton, ...(processing ? styles.submitButtonProcessing : {}) }}>{processing ? (<><div style={styles.spinner}></div>Processing...</>) : (`Pay ₱${paymentAmount.toLocaleString()}`)}</button></div>
+            <div style={styles.actionButtons}><button type="button" onClick={handleCancel} disabled={processing} style={styles.backButton}>Back</button><button type="submit" disabled={processing} style={{ ...styles.submitButton, ...(processing ? styles.submitButtonProcessing : {}) }}>{processing ? (<><div style={styles.spinner}></div>Processing...</>) : (`Pay ${formatCurrency(paymentAmount)}`)}</button></div>
           </div>
         </form>
 

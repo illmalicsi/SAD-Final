@@ -17,7 +17,11 @@ router.get('/', async (req, res) => {
       `SELECT b.*, 
               u.first_name, u.last_name,
               approver.first_name AS approver_first_name,
-              approver.last_name AS approver_last_name
+              approver.last_name AS approver_last_name,
+              (SELECT rr.requested_date FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_date,
+              (SELECT rr.requested_start FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_start,
+              (SELECT rr.requested_end FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_end,
+              (SELECT rr.status FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS reschedule_status
        FROM bookings b
        LEFT JOIN users u ON b.user_id = u.id
        LEFT JOIN users approver ON b.approved_by = approver.id
@@ -27,7 +31,11 @@ router.get('/', async (req, res) => {
     // Normalize date fields to YYYY-MM-DD strings to avoid timezone shifts on the client
     const formatted = (bookings || []).map(b => ({
       ...b,
-      date: b && b.date ? (b.date instanceof Date ? b.date.toISOString().split('T')[0] : String(b.date).split('T')[0]) : b.date
+      date: b && b.date ? (b.date instanceof Date ? b.date.toISOString().split('T')[0] : String(b.date).split('T')[0]) : b.date,
+      requestedDate: b && b.requested_date ? (b.requested_date instanceof Date ? b.requested_date.toISOString().split('T')[0] : String(b.requested_date).split('T')[0]) : null,
+      requestedStart: b && b.requested_start ? String(b.requested_start) : null,
+      requestedEnd: b && b.requested_end ? String(b.requested_end) : null,
+      rescheduleStatus: b && b.reschedule_status ? b.reschedule_status : null
     }));
 
     res.json({ success: true, bookings: formatted });
@@ -53,7 +61,11 @@ router.get('/user/:email', async (req, res) => {
     const [bookings] = await pool.query(
       `SELECT b.*, 
               approver.first_name AS approver_first_name,
-              approver.last_name AS approver_last_name
+              approver.last_name AS approver_last_name,
+              (SELECT rr.requested_date FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_date,
+              (SELECT rr.requested_start FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_start,
+              (SELECT rr.requested_end FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_end,
+              (SELECT rr.status FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS reschedule_status
        FROM bookings b
        LEFT JOIN users approver ON b.approved_by = approver.id
        WHERE b.email = ?
@@ -63,7 +75,11 @@ router.get('/user/:email', async (req, res) => {
 
     const formatted = (bookings || []).map(b => ({
       ...b,
-      date: b && b.date ? (b.date instanceof Date ? b.date.toISOString().split('T')[0] : String(b.date).split('T')[0]) : b.date
+      date: b && b.date ? (b.date instanceof Date ? b.date.toISOString().split('T')[0] : String(b.date).split('T')[0]) : b.date,
+      requestedDate: b && b.requested_date ? (b.requested_date instanceof Date ? b.requested_date.toISOString().split('T')[0] : String(b.requested_date).split('T')[0]) : null,
+      requestedStart: b && b.requested_start ? String(b.requested_start) : null,
+      requestedEnd: b && b.requested_end ? String(b.requested_end) : null,
+      rescheduleStatus: b && b.reschedule_status ? b.reschedule_status : null
     }));
 
     res.json({ success: true, bookings: formatted });
@@ -256,6 +272,203 @@ router.post('/', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to create booking',
+      error: error.message
+    });
+  }
+});
+
+// Customer submits a reschedule request for a booking
+router.post('/:id/reschedule-request', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newDate, newStart, newEnd, email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Missing email' });
+    }
+
+    // Insert reschedule request record
+    const [result] = await pool.query(
+      `INSERT INTO reschedule_requests (booking_id, user_id, user_email, requested_date, requested_start, requested_end, status, created_at)
+       VALUES (?, (SELECT id FROM users WHERE email = ? LIMIT 1), ?, ?, ?, ?, 'submitted', NOW())`,
+      [id, email, email, newDate || null, newStart || null, newEnd || null]
+    );
+
+    // Notify admins and the user
+    try {
+      // Attempt to read booking service/name and customer full name for clearer admin message
+      let serviceName = null;
+      let customerName = null;
+      try {
+        const [bkRows] = await pool.query('SELECT service, customer_name FROM bookings WHERE booking_id = ? LIMIT 1', [id]);
+        if (Array.isArray(bkRows) && bkRows.length > 0) {
+          serviceName = bkRows[0].service || null;
+          customerName = bkRows[0].customer_name || null;
+        }
+      } catch (bkErr) {
+        console.warn('Failed to fetch booking details for reschedule notification:', bkErr && bkErr.message);
+      }
+
+      await notifyAllAdmins(
+        'reschedule_request',
+        'Reschedule Request',
+        `Customer ${customerName || email} requests to reschedule booking ${serviceName ? '"' + serviceName + '"' : id} to ${newDate} ${newStart || ''}-${newEnd || ''}`,
+        { bookingId: id, requestedDate: newDate, requestedStart: newStart, requestedEnd: newEnd, service: serviceName }
+      );
+
+      await notifyUser(email, 'reschedule_request_submitted', 'Reschedule Request Submitted', 'We received your reschedule request. Our team will review it and contact you.', { bookingId: id, requestedDate: newDate, requestedStart: newStart, requestedEnd: newEnd });
+    } catch (notifErr) {
+      console.warn('Failed to send notifications for reschedule request:', notifErr && notifErr.message);
+    }
+
+    // Return the updated booking row (including latest reschedule fields) so
+    // the client can update UI without a full refresh.
+    try {
+      const [rows] = await pool.query(
+        `SELECT b.*, 
+                (SELECT rr.requested_date FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_date,
+                (SELECT rr.requested_start FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_start,
+                (SELECT rr.requested_end FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_end,
+                (SELECT rr.status FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS reschedule_status
+         FROM bookings b
+         WHERE b.booking_id = ? LIMIT 1`,
+        [id]
+      );
+
+      const updatedBooking = rows && rows[0] ? rows[0] : null;
+      return res.status(201).json({ success: true, message: 'Reschedule request saved', requestId: result.insertId, booking: updatedBooking });
+    } catch (e) {
+      console.warn('Failed to fetch updated booking after reschedule insert:', e && e.message);
+      return res.status(201).json({ success: true, message: 'Reschedule request saved', requestId: result.insertId });
+    }
+  } catch (error) {
+    console.error('Error saving reschedule request:', error);
+    res.status(500).json({ success: false, message: 'Failed to submit reschedule request', error: error.message });
+  }
+});
+
+// Admin approves or rejects reschedule request
+router.put('/:id/reschedule-status', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // 'approved' or 'rejected'
+    const approvedBy = req.user ? req.user.id : null;
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status. Must be "approved" or "rejected"'
+      });
+    }
+
+    console.log(`📝 ${status === 'approved' ? 'Approving' : 'Rejecting'} reschedule request for booking ${id} by user ${approvedBy}`);
+
+    // Get the latest reschedule request
+    const [rescheduleRequests] = await pool.query(
+      `SELECT * FROM reschedule_requests 
+       WHERE booking_id = ? 
+       ORDER BY created_at DESC 
+       LIMIT 1`,
+      [id]
+    );
+
+    if (rescheduleRequests.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No reschedule request found for this booking'
+      });
+    }
+
+    const rescheduleRequest = rescheduleRequests[0];
+
+    // Update the reschedule request status
+    await pool.query(
+      `UPDATE reschedule_requests 
+       SET status = ?, approved_by = ?, approved_at = NOW() 
+       WHERE request_id = ?`,
+      [status, approvedBy, rescheduleRequest.request_id]
+    );
+
+    // If approved, update the actual booking with the new schedule
+    if (status === 'approved') {
+      const updateFields = [];
+      const updateValues = [];
+
+      if (rescheduleRequest.requested_date) {
+        updateFields.push('date = ?');
+        updateValues.push(rescheduleRequest.requested_date);
+      }
+      if (rescheduleRequest.requested_start) {
+        updateFields.push('start_time = ?');
+        updateValues.push(rescheduleRequest.requested_start);
+      }
+      if (rescheduleRequest.requested_end) {
+        updateFields.push('end_time = ?');
+        updateValues.push(rescheduleRequest.requested_end);
+      }
+
+      updateFields.push('updated_at = NOW()');
+      updateValues.push(id);
+
+      if (updateFields.length > 1) { // More than just updated_at
+        await pool.query(
+          `UPDATE bookings 
+           SET ${updateFields.join(', ')}
+           WHERE booking_id = ?`,
+          updateValues
+        );
+        console.log('✅ Booking schedule updated with new date/time');
+      }
+    }
+
+    // Get updated booking with all related data
+    const [updatedBooking] = await pool.query(
+      `SELECT b.*, 
+              approver.first_name AS approver_first_name,
+              approver.last_name AS approver_last_name,
+              (SELECT rr.requested_date FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_date,
+              (SELECT rr.requested_start FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_start,
+              (SELECT rr.requested_end FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS requested_end,
+              (SELECT rr.status FROM reschedule_requests rr WHERE rr.booking_id = b.booking_id ORDER BY rr.created_at DESC LIMIT 1) AS reschedule_status
+       FROM bookings b
+       LEFT JOIN users approver ON b.approved_by = approver.id
+       WHERE b.booking_id = ?`,
+      [id]
+    );
+
+    // Notify customer
+    const customerEmail = updatedBooking[0].email;
+    const message = status === 'approved' 
+      ? `Your reschedule request has been approved! Your booking is now scheduled for ${rescheduleRequest.requested_date || 'the new date'} at ${rescheduleRequest.requested_start || 'the new time'}.`
+      : 'Your reschedule request has been reviewed. Please contact us for more information.';
+
+    try {
+      await notifyUser(
+        customerEmail,
+        `reschedule_${status}`,
+        status === 'approved' ? 'Reschedule Approved' : 'Reschedule Update',
+        message,
+        { 
+          bookingId: id, 
+          requestedDate: rescheduleRequest.requested_date,
+          requestedStart: rescheduleRequest.requested_start,
+          requestedEnd: rescheduleRequest.requested_end
+        }
+      );
+    } catch (notifErr) {
+      console.warn('⚠️ Failed to send customer notification:', notifErr.message);
+    }
+
+    res.json({
+      success: true,
+      message: `Reschedule request ${status} successfully`,
+      booking: updatedBooking[0]
+    });
+  } catch (error) {
+    console.error('❌ Error updating reschedule status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update reschedule request',
       error: error.message
     });
   }
@@ -486,7 +699,7 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
         
         if (userResult.length > 0) {
           const userId = userResult[0].id;
-          console.log(`💰 Creating invoice for user ${userId}, amount: ₱${amount}`);
+          console.log(`💰 Creating invoice for user ${userId}, amount: ₱${Number(amount).toLocaleString()}`);
           
           const invoice = await billingService.generateInvoice(userId, amount, description);
           
@@ -495,25 +708,16 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
           
           console.log(`✅ Invoice created and approved - ID: ${invoice.invoice_id}, Number: ${invoice.invoice_number}`);
           
-          // Send notification to customer
-          try {
-            await pool.query(
-              `INSERT INTO notifications (user_email, type, title, message, data, delivered_at, created_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
-              [
-                String(booking.email).toLowerCase().trim(),
-                'success',
-                'Booking Approved',
-                `Your booking for "${booking.service}" on ${booking.date} has been approved. Please proceed with payment.`,
-                JSON.stringify({ bookingId: id, service: booking.service, amount: amount, invoiceId: invoice.invoice_id })
-              ]
-            );
-            console.log('✅ Notification sent to', booking.email);
-          } catch (notifErr) {
-            console.warn('⚠️ Failed to send notification:', notifErr.message);
-          }
+          // Skip server-side "Booking Approved" notification to avoid duplicate
+          // notifications; the frontend emits the canonical "Booking Confirmed!" notification.
+          console.log('ℹ️ Skipping server-side Booking Approved notification to avoid duplication');
           
           // Add invoice info to response
           updatedBooking[0].invoice_id = invoice.invoice_id;
+          // Provide human-friendly invoice number and authoritative amount so frontend
+          // can render accurate payment details without relying on client fallbacks.
+          updatedBooking[0].invoice_number = invoice.invoice_number || null;
+          updatedBooking[0].invoice_amount = Number(invoice.amount || 0);
         } else {
           console.log(`⚠️ No user account found for email: ${booking.email}, skipping invoice creation`);
         }

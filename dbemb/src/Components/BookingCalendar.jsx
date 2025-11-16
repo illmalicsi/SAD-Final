@@ -25,6 +25,8 @@ const BookingCalendar = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [viewMode, setViewMode] = useState('timeline'); // 'calendar' | 'timeline'
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [hoveredBooking, setHoveredBooking] = useState(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -53,10 +55,14 @@ const BookingCalendar = () => {
       }
 
       const normalized = (list || []).map(b => {
-        const raw = b?.date || '';
-        const dateOnly = String(raw).split('T')[0];
+        // Prefer requested_* values when a reschedule request exists so the calendar
+        // reflects the requested/rescheduled date and time instead of the original.
+        const displayDate = b.requested_date || b.requestedDate || b.date || '';
+        const dateOnly = String(displayDate).split('T')[0];
+        const displayStart = b.requested_start || b.requestedStart || b.start_time || b.startTime || '';
+        const displayEnd = b.requested_end || b.requestedEnd || b.end_time || b.endTime || '';
         const customer_name = b.customer_name || [b.first_name, b.last_name].filter(Boolean).join(' ') || b.customerName || '';
-        return { ...b, date: dateOnly, customer_name };
+        return { ...b, date: dateOnly, start_time: displayStart, end_time: displayEnd, customer_name };
       });
 
       setBookings(normalized);
@@ -459,7 +465,7 @@ const BookingCalendar = () => {
           </div>
 
           {/* Calendar View */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px', position: 'relative' }}>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(7, 1fr)',
@@ -507,6 +513,9 @@ const BookingCalendar = () => {
                     {dayBookings.slice(0, 3).map((booking, i) => (
                       <div
                         key={i}
+                        onMouseEnter={(e) => { setHoveredBooking(booking); setTooltipPos({ x: e.clientX, y: e.clientY }); }}
+                        onMouseMove={(e) => { setTooltipPos({ x: e.clientX, y: e.clientY }); }}
+                        onMouseLeave={() => setHoveredBooking(null)}
                         style={{
                           fontSize: '11px',
                           padding: '2px 4px',
@@ -516,7 +525,8 @@ const BookingCalendar = () => {
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
-                          borderRadius: '3px'
+                          borderRadius: '3px',
+                          cursor: 'default'
                         }}
                       >
                         {booking.service}
@@ -530,7 +540,40 @@ const BookingCalendar = () => {
                   </div>
                 );
               })}
-            </div>
+                </div>
+            {/* Hover tooltip */}
+            {hoveredBooking && (
+              <div
+                style={{
+                  position: 'fixed',
+                  left: tooltipPos.x + 12,
+                  top: tooltipPos.y + 12,
+                  background: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                  boxShadow: '0 8px 24px rgba(16,24,40,0.12)',
+                  zIndex: 20000,
+                  minWidth: 240,
+                  maxWidth: 420,
+                  pointerEvents: 'none',
+                  fontSize: 13,
+                  color: '#111827'
+                }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>{hoveredBooking.service}</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6 }}>{hoveredBooking.customer_name}</div>
+                <div style={{ display: 'flex', gap: 8, fontSize: 12, color: '#6b7280', marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FaClock size={12} />{formatTime(hoveredBooking.start_time)} - {formatTime(hoveredBooking.end_time)}</div>
+                </div>
+                {hoveredBooking.location && (
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, color: '#6b7280' }}><FaMapMarkerAlt size={12} />{hoveredBooking.location}</div>
+                )}
+                {hoveredBooking.note && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: '#374151' }}>{hoveredBooking.note}</div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       ) : (

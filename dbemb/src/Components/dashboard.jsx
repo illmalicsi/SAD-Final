@@ -18,6 +18,7 @@ const ServiceManagement = React.lazy(() => import('./ServiceManagement'));
 const BookingCalendar = React.lazy(() => import('./BookingCalendar'));
 import Payment from './Payment';
 import NotificationService from '../services/notificationService';
+import { formatCurrency } from '../utils/formatters';
 import RequestQueue from '../services/requestQueue';
 
 const Dashboard = ({ user, onBackToHome, onLogout }) => {
@@ -1310,11 +1311,11 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
                           </div>
                           <div style={{ background: '#fff7ed', padding: '8px', borderRadius: 8, flex: 1 }}>
                             <div style={{ fontSize: 12, color: '#947a3b' }}>Fee / day</div>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: '#b45309' }}>{perDay != null ? `₱${Number(perDay).toLocaleString()}` : 'N/A'}</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#b45309' }}>{perDay != null ? formatCurrency(Number(perDay)) : 'N/A'}</div>
                           </div>
                           <div style={{ background: '#eef2ff', padding: '8px', borderRadius: 8, flex: 1 }}>
                             <div style={{ fontSize: 12, color: '#475569' }}>Total</div>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: '#3730a3' }}>{total != null ? `₱${Number(total).toLocaleString()}` : 'N/A'}</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#3730a3' }}>{total != null ? formatCurrency(Number(total)) : 'N/A'}</div>
                           </div>
                         </>
                       );
@@ -1411,11 +1412,11 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
                       </div>
                       <div style={{ background: '#fff7ed', padding: 12, borderRadius: 8, flex: 1 }}>
                         <div style={{ fontSize: 12, color: '#947a3b' }}>Fee / day</div>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: '#b45309' }}>{perDay != null ? `₱${Number(perDay).toFixed(2)}` : 'N/A'}</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: '#b45309' }}>{perDay != null ? formatCurrency(Number(perDay)) : 'N/A'}</div>
                       </div>
                       <div style={{ background: '#eef2ff', padding: 12, borderRadius: 8, flex: 1 }}>
                         <div style={{ fontSize: 12, color: '#475569' }}>Total</div>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: '#3730a3' }}>{total != null ? `₱${Number(total).toFixed(2)}` : 'N/A'}</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: '#3730a3' }}>{total != null ? formatCurrency(Number(total)) : 'N/A'}</div>
                       </div>
                     </>
                   );
@@ -1566,7 +1567,11 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
                   backgroundColor: colors.bg,
                   color: colors.color
                 }}>
-                  {getNotificationIcon(notification.type)}
+                  {(() => {
+                    const ic = getNotificationIcon(notification.type);
+                    const IconComp = ic && ic.Icon ? ic.Icon : null;
+                    return IconComp ? <IconComp size={18} color={ic.color} /> : null;
+                  })()}
                 </div>
                 <div style={{ ...styles.notificationContent, flex: 1 }}>
                   <div style={styles.notificationTitle}>{notification.title}</div>
@@ -1602,7 +1607,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
                             marginBottom: '4px',
                             paddingLeft: '8px'
                           }}>
-                            • {option.type}: <strong>₱{option.amount.toLocaleString()}</strong>
+                            • {option.type}: <strong>{formatCurrency(option.amount)}</strong>
                           </div>
                         ))}
                       </div>

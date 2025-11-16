@@ -3,6 +3,7 @@ import { FaCalendarAlt, FaClock, FaUser, FaUsers, FaEnvelope, FaPhone, FaMapMark
 import NotificationService from '../services/notificationService';
 import mysqlService from '../services/mysqlService';
 import StyledSelect from './StyledSelect';
+import { formatCurrency } from '../utils/formatters';
 
 // --- Data for Dynamic Form ---
 
@@ -282,21 +283,30 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
         const data = await response.json();
         console.log('API /api/bookings response:', data);
         if (data.success && Array.isArray(data.bookings)) {
-          return data.bookings.map(b => ({
-            id: b.booking_id,
-            customerName: b.customer_name,
-            email: b.email,
-            phone: b.phone,
-            service: b.service,
-            date: b.date ? b.date.split('T')[0] : b.date,
-            startTime: b.start_time,
-            endTime: b.end_time,
-            location: b.location,
-            estimatedValue: parseFloat(b.estimated_value || 0),
-            status: b.status,
-            notes: b.notes,
-            createdAt: b.created_at
-          }));
+          return data.bookings.map(b => {
+            // Prefer requested/reschedule values when present so calendar shows the requested date/time
+            const displayDate = b.requested_date || b.requestedDate || b.date || null;
+            const dateOnly = displayDate ? String(displayDate).split('T')[0] : displayDate;
+            const displayStart = b.requested_start || b.requestedStart || b.start_time || b.startTime || null;
+            const displayEnd = b.requested_end || b.requestedEnd || b.end_time || b.endTime || null;
+            return {
+              id: b.booking_id,
+              customerName: b.customer_name,
+              email: b.email,
+              phone: b.phone,
+              service: b.service,
+              date: dateOnly,
+              startTime: displayStart,
+              endTime: displayEnd,
+              location: b.location,
+              estimatedValue: parseFloat(b.estimated_value || 0),
+              status: b.status,
+              notes: b.notes,
+              createdAt: b.created_at,
+              // keep original server fields in case other UI needs them
+              _raw: b
+            };
+          });
         }
       }
     } catch (error) {
@@ -465,11 +475,19 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+        if (response.ok && data.success) {
+        // When server returns the created booking, prefer requested fields if present
+        const db = data.booking || {};
+        const displayDate = db.requested_date || db.requestedDate || db.date || null;
+        const dateOnly = displayDate ? String(displayDate).split('T')[0] : displayDate;
+        const displayStart = db.requested_start || db.requestedStart || db.start_time || db.startTime || null;
+        const displayEnd = db.requested_end || db.requestedEnd || db.end_time || db.endTime || null;
         const formattedBooking = {
-          ...data.booking,
-          id: data.booking.booking_id,
-          date: data.booking.date ? data.booking.date.split('T')[0] : data.booking.date,
+          ...db,
+          id: db.booking_id,
+          date: dateOnly,
+          startTime: displayStart,
+          endTime: displayEnd
         };
         setBookings(prev => [...prev, formattedBooking]);
         setShowSuccess(true);
@@ -544,7 +562,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
                 <option value="">Select a package...</option>
                 {bandPackages.filter(pkg => pkg.is_active).map((pkg) => (
                   <option key={pkg.package_key} value={pkg.package_key}>
-                    {pkg.package_name} - ₱{parseFloat(pkg.price).toLocaleString()}
+                    {pkg.package_name} - {formatCurrency(parseFloat(pkg.price))}
                   </option>
                 ))}
               </StyledSelect>
@@ -563,89 +581,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
             </div>
           </>
         );
-      case 'Instrument Rentals':
-        const selectedInst = availableInstruments.find(inst => String(inst.id) === String(selectedInstrument));
-        return (
-          <>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}><FaGuitar /> Instrument <span style={styles.required}>*</span></label>
-              <StyledSelect value={selectedInstrument} onChange={e => setSelectedInstrument(e.target.value)} style={styles.input} required>
-                <option value="">
-                  {loadingInstruments ? 'Loading instruments...' : availableInstruments.length === 0 ? 'No instruments available' : 'Select an instrument...'}
-                </option>
-                {!loadingInstruments && availableInstruments.map((inst) => (
-                  <option key={inst.id} value={inst.id}>{inst.name} - ₱{inst.pricePerDay.toLocaleString()}/day</option>
-                ))}
-              </StyledSelect>
-            </div>
-            {selectedInst && (
-              <div style={{ 
-                marginTop: 12, 
-                padding: 16, 
-                border: '1px solid #d1d5db', 
-                borderRadius: 8, 
-                background: '#f9fafb',
-                fontSize: 14
-              }}>
-                <div style={{ fontWeight: 700, color: '#0b62d6', marginBottom: 12, fontSize: 15 }}>
-                  Instrument Details
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 8, color: '#374151' }}>
-                  <div style={{ fontWeight: 600 }}>Brand:</div>
-                  <div>{selectedInst.brand || 'N/A'}</div>
-                  
-                  <div style={{ fontWeight: 600 }}>Category:</div>
-                  <div>{selectedInst.category?.charAt(0).toUpperCase() + selectedInst.category?.slice(1) || 'N/A'}</div>
-                  
-                  <div style={{ fontWeight: 600 }}>Subcategory:</div>
-                  <div>{selectedInst.subcategory || 'N/A'}</div>
-                  
-                  <div style={{ fontWeight: 600 }}>Condition:</div>
-                  <div>{selectedInst.condition || 'Good'}</div>
-                  
-                  <div style={{ fontWeight: 600 }}>Available Qty:</div>
-                  <div style={{ fontWeight: 700, color: selectedInst.quantity > 0 ? '#059669' : '#dc2626' }}>
-                    {selectedInst.quantity}
-                  </div>
-                  
-                  <div style={{ fontWeight: 600 }}>Price/Day:</div>
-                  <div style={{ fontWeight: 700, color: '#0b62d6' }}>₱{selectedInst.pricePerDay.toLocaleString()}</div>
-                </div>
-              </div>
-            )}
-            <div style={styles.inputGroup}>
-              <label style={styles.label}><FaInfoCircle /> Purpose <span style={styles.required}>*</span></label>
-              <input type="text" value={purpose} onChange={e => setPurpose(e.target.value)} style={styles.input} placeholder="e.g., Wedding performance, rehearsal, practice sessions" required />
-            </div>
-            <div style={styles.gridTwo}>
-                <div style={styles.inputGroup}>
-                    <label style={styles.label}><FaCalendarAlt /> Rental Start Date <span style={styles.required}>*</span></label>
-                    <input type="date" value={rentalStartDate} onChange={e => setRentalStartDate(e.target.value)} style={styles.input} min={minDate} required />
-                </div>
-                <div style={styles.inputGroup}>
-                    <label style={styles.label}><FaCalendarAlt /> Rental End Date <span style={styles.required}>*</span></label>
-                    <input type="date" value={rentalEndDate} onChange={e => setRentalEndDate(e.target.value)} style={styles.input} min={rentalStartDate || minDate} required />
-                </div>
-            </div>
-            {rentalDays > 0 && (
-                <div style={styles.priceInfo}>
-                    <FaInfoCircle />
-                    <span>Duration: <strong>{rentalDays} day{rentalDays > 1 && 's'}</strong></span>
-                </div>
-            )}
-            {/* Member-only borrow form fields */}
-            {user && user.role && user.role !== 'user' && (
-              <div style={{ marginTop: 12, padding: 12, border: '1px dashed #c7e6d8', borderRadius: 8, background: '#f8fdf9' }}>
-                <div style={{ fontWeight: 700, color: '#065f46', marginBottom: 8 }}>Member Borrow Request</div>
-                <div style={{ marginBottom: 8, color: '#065f46' }}>As a member, you can borrow select instruments. Please confirm the borrow details below.</div>
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>Borrowing Duration Notes (optional)</label>
-                  <input type="text" value={notes} onChange={e => setNotes(e.target.value)} style={styles.input} placeholder="Additional instructions for borrowing (e.g., pickup person, ID to present)" />
-                </div>
-              </div>
-            )}
-          </>
-        );
+        
       case 'Music Arrangement':
         return (
             <>
@@ -655,7 +591,7 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
                 </div>
                 <div style={styles.priceInfo}>
                     <FaInfoCircle />
-                    <span>Base price is ₱{musicArrangementBasePrice.toLocaleString()} per piece. Final price depends on complexity and instrumentation.</span>
+                    <span>Base price is {formatCurrency(musicArrangementBasePrice)} per piece. Final price depends on complexity and instrumentation.</span>
                 </div>
             </>
         );
@@ -1085,7 +1021,6 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
               <p style={styles.subtitle}>Schedule your music service with our professional team. Fill out the form below and we'll get back to you within 24 hours.</p>
             </div>
 
-            
             {/* left column: booking details + form (row 2, col 1) */}
             <div style={{ gridColumn: '1 / 2', gridRow: '2 / 3' }}>
               <div style={styles.formTitle}>
@@ -1108,28 +1043,55 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
                     required
                   >
                     <option value="">Choose your service</option>
-                    {services.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
+                    {services.filter(s => s !== 'Instrument Rentals').map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
                   </StyledSelect>
                 </div>
 
-                {/* Dynamically Rendered Fields */}
-                {service && renderServiceSpecificFields()}
-
-                {/* Common Fields */}
+                {/* Render fields. Band/Parade require a specific order requested by user. */}
                 {service && (
-                    <>
+                  <>
+                    {(service === 'Band Gigs' || service === 'Parade Events') ? (
+                      /* Order: package, full name, email, event date, event start, event end, phone, address, notes */
+                      <>
+                        <div style={styles.inputGroup}>
+                          <label style={styles.label}><FaUsers /> Package Options <span style={styles.required}>*</span></label>
+                          <StyledSelect value={bandPackage} onChange={e => setBandPackage(e.target.value)} style={styles.input} required>
+                            <option value="">Select a package...</option>
+                            {bandPackages.filter(pkg => pkg.is_active).map((pkg) => (
+                              <option key={pkg.package_key} value={pkg.package_key}>
+                                {pkg.package_name} - {formatCurrency(parseFloat(pkg.price))}
+                              </option>
+                            ))}
+                          </StyledSelect>
+                        </div>
+
                         <div style={styles.gridTwo}>
-                            <div style={styles.inputGroup}>
-                                <label style={styles.label}><FaUser /> Full Name <span style={styles.required}>*</span></label>
-                                <input type="text" value={name} onChange={e => setName(e.target.value)} style={styles.input} placeholder="e.g., Juan Dela Cruz" required readOnly={isUserLoggedIn} />
-                            </div>
-                            
-                            <div style={styles.inputGroup}>
-                              <label style={styles.label}><FaEnvelope /> Email Address <span style={styles.required}>*</span></label>
-                              <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={styles.input} placeholder="e.g., juan.delacruz@email.com" required readOnly={isUserLoggedIn} />
-                            </div>
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaUser /> Full Name <span style={styles.required}>*</span></label>
+                            <input type="text" value={name} onChange={e => setName(e.target.value)} style={styles.input} placeholder="e.g., Juan Dela Cruz" required readOnly={isUserLoggedIn} />
+                          </div>
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaEnvelope /> Email Address <span style={styles.required}>*</span></label>
+                            <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={styles.input} placeholder="e.g., juan.delacruz@email.com" required readOnly={isUserLoggedIn} />
+                          </div>
+                        </div>
+
+                        <div style={styles.inputGroup}>
+                          <label style={styles.label}><FaCalendarAlt /> Event Date <span style={styles.required}>*</span></label>
+                          <input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} style={styles.input} min={minDate} required />
+                        </div>
+
+                        <div style={styles.gridTwo}>
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaCalendarAlt /> Event Start Time <span style={styles.required}>*</span></label>
+                            <input type="time" value={eventStartTime} onChange={e => setEventStartTime(e.target.value)} style={styles.input} required />
+                          </div>
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaCalendarAlt /> Event End Time <span style={styles.required}>*</span></label>
+                            <input type="time" value={eventEndTime} onChange={e => setEventEndTime(e.target.value)} style={styles.input} required />
+                          </div>
                         </div>
 
                         <div style={styles.gridTwo}>
@@ -1144,138 +1106,124 @@ const Booking = ({ bookings: propBookings = [], setBookings: propSetBookings }) 
                         </div>
 
                         <div style={styles.inputGroup}>
-                            <label style={styles.label}><FaInfoCircle /> Notes / Special Requests</label>
-                            <textarea value={notes} onChange={e => setNotes(e.target.value)} style={styles.textarea} placeholder="e.g., specific song requests, setup details, etc." rows={4}></textarea>
+                          <label style={styles.label}><FaInfoCircle /> Notes / Special Requests</label>
+                          <textarea value={notes} onChange={e => setNotes(e.target.value)} style={styles.textarea} placeholder="e.g., specific song requests, setup details, etc." rows={4}></textarea>
                         </div>
 
                         {/* Price Display */}
                         {estimatedValue > 0 && (
-                            <div style={styles.priceDisplay}>
-                                <div style={styles.priceLabel}>Estimated Price</div>
-                                <div style={styles.priceValue}>₱{estimatedValue.toLocaleString()}</div>
-                            </div>
+                          <div style={styles.priceDisplay}>
+                            <div style={styles.priceLabel}>Estimated Price</div>
+                            <div style={styles.priceValue}>{formatCurrency(estimatedValue)}</div>
+                          </div>
                         )}
 
                         <button type="submit" disabled={!isFormValid || isSubmitting} style={styles.button}>
-                            {isSubmitting ? <><FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> Submitting...</> : <>Submit Booking Request</>}
+                          {isSubmitting ? <><FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> Submitting...</> : <>Submit Booking Request</>}
                         </button>
-                    </>
+                      </>
+                    ) : (
+                      /* Default order for other services */
+                      <>
+                        <div style={styles.gridTwo}>
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaUser /> Full Name <span style={styles.required}>*</span></label>
+                            <input type="text" value={name} onChange={e => setName(e.target.value)} style={styles.input} placeholder="e.g., Juan Dela Cruz" required readOnly={isUserLoggedIn} />
+                          </div>
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaEnvelope /> Email Address <span style={styles.required}>*</span></label>
+                            <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={styles.input} placeholder="e.g., juan.delacruz@email.com" required readOnly={isUserLoggedIn} />
+                          </div>
+                        </div>
+
+                        <div style={styles.gridTwo}>
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaPhone /> Phone Number <span style={styles.required}>*</span></label>
+                            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} style={styles.input} placeholder="e.g., 09171234567" required readOnly={isUserLoggedIn} />
+                          </div>
+                          <div style={styles.inputGroup}>
+                            <label style={styles.label}><FaMapMarkerAlt /> Address <span style={styles.required}>*</span></label>
+                            <input type="text" value={location} onChange={e => setLocation(e.target.value)} style={styles.input} placeholder="e.g., 123 Rizal St, Metro Manila" required />
+                          </div>
+                        </div>
+
+                        <div style={styles.inputGroup}>
+                          <label style={styles.label}><FaInfoCircle /> Notes / Special Requests</label>
+                          <textarea value={notes} onChange={e => setNotes(e.target.value)} style={styles.textarea} placeholder="e.g., specific song requests, setup details, etc." rows={4}></textarea>
+                        </div>
+
+                        {/* Service-specific fields (e.g., Music Arrangement) */}
+                        {renderServiceSpecificFields()}
+
+                        {/* Price Display */}
+                        {estimatedValue > 0 && (
+                          <div style={styles.priceDisplay}>
+                            <div style={styles.priceLabel}>Estimated Price</div>
+                            <div style={styles.priceValue}>{formatCurrency(estimatedValue)}</div>
+                          </div>
+                        )}
+
+                        <button type="submit" disabled={!isFormValid || isSubmitting} style={styles.button}>
+                          {isSubmitting ? <><FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> Submitting...</> : <>Submit Booking Request</>}
+                        </button>
+                      </>
+                    )}
+                  </>
                 )}
               </form>
             </div>
 
-            {/* right column: calendar placed in same card and aligned with Booking Details */}
-            <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3', alignSelf: 'start' }}>
+            {/* right column: calendar (row 2, col 2) */}
+            <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3' }}>
               <div className="calendar-container" style={styles.calendarContainer}>
-                 <div style={styles.calendarHeader}>
-                   <div style={styles.calendarTitle}>
-                     <FaCalendarAlt size={16} />
-                     Availability Calendar
-                   </div>
-                 </div>
-                 <div style={styles.calendarNav}>
-                   <button className="nav-button" style={styles.navButton} onClick={prevMonth}>
-                     <FaChevronLeft size={12} />
-                   </button>
-                   <div style={styles.monthYear}>
-                     {new Date(year, month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                   </div>
-                   <button className="nav-button" style={styles.navButton} onClick={nextMonth}>
-                     <FaChevronRight size={12} />
-                   </button>
-                 </div>
- 
-                 <div style={styles.calendarGrid}>
-                   {/* Day headers */}
-                   {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                     <div key={day} style={styles.dayHeader}>
-                       {day}
-                     </div>
-                   ))}
- 
-                   {/* Empty cells for days before the first day of the month */}
-                   {Array.from({ length: firstWeekday(year, month) }, (_, i) => (
-                     <div key={`empty-${i}`} style={styles.dayCell}></div>
-                   ))}
- 
-                   {/* Days of the month */}
-                   {Array.from({ length: daysInMonth(year, month) }, (_, i) => {
-                     const day = i + 1;
-                     const dateStr = ymd(year, month, day);
-                     const status = getDateStatus(dateStr);
-                     const isPast = dateStr < todayStr;
-                     
-                     let isSelected = false;
-                     if (service === 'Instrument Rentals') {
-                       isSelected = dateStr >= rentalStartDate && dateStr <= rentalEndDate && rentalStartDate && rentalEndDate;
-                     } else if (service === 'Band Gigs' || service === 'Parade Events') {
-                       isSelected = dateStr === eventDate;
-                     }
- 
-                     let dayStyle = { ...styles.dayCell };
- 
-                     if (isSelected) {
-                       dayStyle = { ...dayStyle, ...styles.daySelected };
-                     } else if (isPast) {
-                       dayStyle = { ...dayStyle, ...styles.dayPast };
-                     } else {
-                       switch (status) {
-                         case 'available':
-                           dayStyle = { ...dayStyle, ...styles.dayAvailable };
-                           break;
-                         case 'pending':
-                           dayStyle = { ...dayStyle, ...styles.dayPending };
-                           break;
-                         case 'approved':
-                           dayStyle = { ...dayStyle, ...styles.dayApproved };
-                           break;
-                         default:
-                           dayStyle = { ...dayStyle, ...styles.dayAvailable };
-                       }
-                     }
- 
-                     return (
-                       <div
-                         key={day}
-                         className={`calendar-day ${isPast ? 'day-past' : ''} ${status === 'approved' ? 'day-approved' : ''}`}
-                         style={dayStyle}
-                         onClick={() => handleDateClick(dateStr)}
-                         title={
-                           isPast
-                             ? 'Past date'
-                             : status === 'approved'
-                               ? 'Booked'
-                               : status === 'pending'
-                                 ? 'Pending booking'
-                                 : 'Available'
-                         }
-                       >
-                         {day}
-                       </div>
-                     );
-                   })}
-                 </div>
- 
-                 {/* Legend */}
-                 <div style={styles.legend}>
-                   <div style={styles.legendItem}>
-                     <div style={{ ...styles.legendDot, background: '#10b981' }}></div>
-                     Available
-                   </div>
-                   <div style={styles.legendItem}>
-                     <div style={{ ...styles.legendDot, background: '#f59e0b' }}></div>
-                     Pending
-                   </div>
-                   <div style={styles.legendItem}>
-                     <div style={{ ...styles.legendDot, background: '#ef4444' }}></div>
-                     Booked
-                   </div>
-                   <div style={styles.legendItem}>
-                     <div style={{ ...styles.legendDot, background: '#64748b' }}></div>
-                     Past Date
-                   </div>
-                 </div>
-               </div>
+                <div style={styles.calendarHeader}>
+                  <div style={styles.calendarTitle}><FaCalendarAlt size={16} /> Select Booking Dates</div>
+                </div>
+                <div style={styles.calendarNav}>
+                  <button className="nav-button" style={styles.navButton} onClick={prevMonth} type="button"><FaChevronLeft size={12} /></button>
+                  <div style={styles.monthYear}>{new Date(year, month).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</div>
+                  <button className="nav-button" style={styles.navButton} onClick={nextMonth} type="button"><FaChevronRight size={12} /></button>
+                </div>
+                <div style={styles.calendarGrid}>
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                    <div key={day} style={styles.dayHeader}>{day}</div>
+                  ))}
+                  {Array.from({ length: daysInMonth(year, month) }, (_, i) => {
+                    const day = i + 1;
+                    const dateStr = ymd(year, month, day);
+                    const status = getDateStatus(dateStr);
+                    const isPast = dateStr < todayStr;
+                    let isSelected = false;
+                    if (service === 'Instrument Rentals') {
+                      isSelected = dateStr >= rentalStartDate && dateStr <= rentalEndDate && rentalStartDate && rentalEndDate;
+                    } else if (service === 'Band Gigs' || service === 'Parade Events') {
+                      isSelected = dateStr === eventDate;
+                    }
+                    let dayStyle = { ...styles.dayCell };
+                    if (isSelected) dayStyle = { ...dayStyle, ...styles.daySelected };
+                    else if (isPast) dayStyle = { ...dayStyle, ...styles.dayPast };
+                    else {
+                      switch (status) {
+                        case 'available': dayStyle = { ...dayStyle, ...styles.dayAvailable }; break;
+                        case 'pending': dayStyle = { ...dayStyle, ...styles.dayPending }; break;
+                        case 'approved': dayStyle = { ...dayStyle, ...styles.dayApproved }; break;
+                        default: dayStyle = { ...dayStyle, ...styles.dayAvailable };
+                      }
+                    }
+                    return (
+                      <div key={day} className={`calendar-day ${isPast ? 'day-past' : ''} ${status === 'approved' ? 'day-approved' : ''}`} style={dayStyle} onClick={() => handleDateClick(dateStr)} title={isPast ? 'Past date' : status === 'approved' ? 'Booked' : status === 'pending' ? 'Pending booking' : 'Available'}>
+                        {day}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={styles.legend}>
+                  <div style={styles.legendItem}><div style={{ ...styles.legendDot, background: '#10b981' }}></div>Available</div>
+                  <div style={styles.legendItem}><div style={{ ...styles.legendDot, background: '#f59e0b' }}></div>Pending</div>
+                  <div style={styles.legendItem}><div style={{ ...styles.legendDot, background: '#ef4444' }}></div>Booked</div>
+                  <div style={styles.legendItem}><div style={{ ...styles.legendDot, background: '#64748b' }}></div>Past Date</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

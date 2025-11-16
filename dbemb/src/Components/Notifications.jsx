@@ -8,16 +8,31 @@ const Notifications = ({ user }) => {
   const [showOnlyUnread, setShowOnlyUnread] = useState(false);
 
   const loadNotifications = async () => {
-    if (user && user.email) {
-      try {
+    try {
+      // If the current user is an admin, show notifications addressed to admin recipients
+      const isAdmin = user && user.role && user.role !== 'user';
+      if (isAdmin) {
+        const all = await NotificationService.getAllNotifications();
+        const arr = Array.isArray(all) ? all : (all && all.notifications) ? all.notifications : [];
+        const adminRecipients = NotificationService.getAdminRecipients().map(e => (e || '').toLowerCase().trim());
+        const filtered = arr.filter(n => {
+          const target = (n.userEmail || '').toLowerCase().trim();
+          return target === (user.email || '').toLowerCase().trim() || adminRecipients.includes(target) || target === '';
+        });
+        setNotifications(filtered);
+        return;
+      }
+
+      if (user && user.email) {
         const resp = await NotificationService.getUserNotifications(user.email);
         const arr = Array.isArray(resp) ? resp : (resp && resp.notifications) ? resp.notifications : [];
         setNotifications(arr);
-      } catch (err) {
-        console.error('Notifications: Failed to load notifications:', err);
-        setNotifications([]);
+        return;
       }
-    } else {
+
+      setNotifications([]);
+    } catch (err) {
+      console.error('Notifications: Failed to load notifications:', err);
       setNotifications([]);
     }
   };
@@ -109,14 +124,27 @@ const Notifications = ({ user }) => {
     const origin = window.location && window.location.origin ? window.location.origin : '';
     const link = data.paymentLink || (data.exact ? `${origin}/pay-exact?invoiceId=${data.invoiceId || data.invoice_id || ''}${data.amount ? `&amount=${encodeURIComponent(data.amount)}` : ''}${data.forceFull ? '&forceFull=1' : ''}` : `${origin}/payment?invoiceId=${data.invoiceId || data.invoice_id || ''}${data.amount ? `&amount=${encodeURIComponent(data.amount)}` : ''}`);
 
+    // Determine whether this notification already represents a completed payment.
+    // If so, do not show the "Please proceed to payment" link.
+    const alreadyPaid = Boolean(
+      (data && (data.paid === true || data.paid === 'true' || data.paid === '1')) ||
+      (notification && typeof notification.title === 'string' && /payment (received|confirmed)/i.test(notification.title))
+    );
+
     return (
       <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.4 }}>
         {paragraphs.map((p, i) => (
           <p key={i} style={{ margin: i === paragraphs.length - 1 ? 0 : '0 0 8px 0' }}>{p}</p>
         ))}
-        {hasPayment && (
+        {data && data.receiptUrl ? (
+          <p style={{ marginTop: 8 }}>
+            <a href={data.receiptUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontWeight: 700 }}>
+              Download receipt
+            </a>
+          </p>
+        ) : (hasPayment && !alreadyPaid) ? (
           <p style={{ marginTop: 8 }}><a href={link} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontWeight: 700 }}>Please proceed to payment.</a></p>
-        )}
+        ) : null}
       </div>
     );
   };

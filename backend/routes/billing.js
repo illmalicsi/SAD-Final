@@ -359,6 +359,29 @@ router.get('/receipts/:receiptId', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/billing/receipts/:receiptId/generate - Regenerate PDF for a receipt (owner or admin)
+router.post('/receipts/:receiptId/generate', authenticateToken, async (req, res) => {
+  try {
+    const { receiptId } = req.params;
+    const receipt = await billingService.getReceiptById(receiptId);
+    if (!receipt) return res.status(404).json({ success: false, message: 'Receipt not found' });
+
+    const isAdmin = req.user.role === 'admin' || req.user.role_name === 'admin';
+    if (!isAdmin && receipt.user_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to generate this receipt' });
+    }
+
+    const pdfPath = await billingService.generateReceiptPdf(receiptId);
+    if (pdfPath) {
+      return res.json({ success: true, pdfPath });
+    }
+    return res.status(500).json({ success: false, message: 'Failed to generate receipt PDF (ensure pdfkit is installed on server)' });
+  } catch (err) {
+    console.error('❌ Error generating receipt PDF:', err);
+    res.status(500).json({ success: false, message: 'Failed to generate receipt PDF' });
+  }
+});
+
 // GET /api/billing/invoices - Get all invoices (admin)
 router.get('/invoices', authenticateToken, requireAdmin, async (req, res) => {
   try {

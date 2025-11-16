@@ -31,6 +31,7 @@ import {
 } from "../icons/fa";
 import NotificationService from '../services/notificationService';
 import AuthService from '../services/authService';
+import { formatCurrency } from '../utils/formatters';
 
 const CustomerManagement = ({ bookingsData = [] }) => {
   const [customers, setCustomers] = useState([]);
@@ -600,7 +601,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         NotificationService.createAdminNotification({
           type: 'info',
           title: 'Booking Rejected',
-          message: `Booking #${booking.id} for ${booking.customerName || booking.email} was rejected.`,
+          message: `Booking for ${booking.customerName || booking.email} was rejected.`,
           data: {
             bookingId: booking.id,
             customer: booking.customerName || booking.email,
@@ -617,7 +618,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
         }));
         
         setRefreshTrigger(prev => prev + 1);
-        showNotification(`Booking #${booking.id} rejected and customer notified.`, "info");
+        showNotification(`Booking rejected and customer notified.`, "info");
       } else {
         console.error('❌ Failed to reject:', data);
         throw new Error(data.message || 'Failed to reject booking');
@@ -635,7 +636,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       ['Name', 'Email', 'Phone', 'Status', 'Total Bookings', 'Last Booking', 'Total Revenue', 'Address'],
       ...filteredCustomers.map(c => [
         c.name, c.email, c.phone, c.status, c.totalBookings, 
-        formatDate(c.lastBooking), `₱${c.totalRevenue.toLocaleString()}`, c.address
+        formatDate(c.lastBooking), formatCurrency(c.totalRevenue || 0), c.address
       ])
     ].map(row => row.join(',')).join('\n');
     
@@ -683,9 +684,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
     });
   };
 
-  const formatCurrency = (amount) => {
-    return `₱${amount.toLocaleString()}`;
-  };
+  // use shared formatCurrency from utils
 
   const getSortIcon = (field) => {
     if (sortBy !== field) return <FaSort />;

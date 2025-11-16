@@ -6,6 +6,7 @@ import {
   FaCheckCircle, FaPhone, FaEnvelope
 } from '../icons/fa';
 import ConflictModal from './ConflictModal';
+import { formatCurrency } from '../utils/formatters';
 
 // Simple helper to PUT booking status with credentials included
 // Returns an object { ok, status, data }
@@ -102,7 +103,7 @@ const UpcomingSchedule = () => {
     animation: 'spin 1s linear infinite'
   };
 
-  const fetchUpcomingBookings = async () => {
+  const fetchUpcomingBookings = async (excludeIds = []) => {
     try {
       const response = await fetch('http://localhost:5000/api/bookings', {
         credentials: 'include'
@@ -111,14 +112,33 @@ const UpcomingSchedule = () => {
       const data = await response.json();
 
       if (data.success && Array.isArray(data.bookings)) {
-        // Filter for pending bookings and sort by date
+        // Filter for pending bookings and sort by date. Prefer any requested_* values
+        // when a reschedule request exists so admins see the requested date/time.
+        // Include bookings where status is 'pending' OR a reschedule request has been submitted.
         const pending = data.bookings
-          .map(b => ({
-            ...b,
-            id: b.booking_id,
-            dateObj: new Date(b.date)
-          }))
-          .filter(b => b.status === 'pending')
+          .map(b => {
+            const displayDate = b.requested_date || b.requestedDate || b.date;
+            const displayStart = b.requested_start || b.requestedStart || b.start_time || b.startTime || null;
+            const displayEnd = b.requested_end || b.requestedEnd || b.end_time || b.endTime || null;
+            const rescheduleStatus = b.reschedule_status || b.rescheduleStatus || null;
+            const rescheduleRequested = !!(b.requested_date || b.requestedDate) && (rescheduleStatus === 'submitted' || rescheduleStatus === null);
+            return {
+              ...b,
+              id: b.booking_id,
+              displayDate,
+              displayStart,
+              displayEnd,
+              rescheduleRequested,
+              rescheduleStatus,
+              dateObj: new Date(displayDate)
+            };
+          })
+          // Only include: new pending bookings, or reschedule requests that are actually pending review.
+          // Exclude bookings already approved (even if a reschedule row exists) so approved bookings don't reappear.
+          .filter(b => (
+            b.status === 'pending' ||
+            (b.rescheduleRequested && b.rescheduleStatus === 'submitted' && b.status !== 'approved')
+          ) && !excludeIds.some(id => id && (String(id) === String(b.booking_id) || String(id) === String(b.id))))
           .sort((a, b) => {
             // Sort by date first, then by start time
             const dateCompare = a.dateObj - b.dateObj;
@@ -164,13 +184,15 @@ const UpcomingSchedule = () => {
           const pending = list.map(b => ({ ...b, id: b.booking_id }));
           const found = pending.find(b => String(b.id) === String(targetId) || String(b.booking_id) === String(targetId));
           if (found) {
-            setUpcomingBookings(pending.filter(b => b.status === 'pending'));
-            setSelectedBooking(found);
-            setTimeout(() => {
-              const el = document.getElementById(`booking-${found.id}`);
-              if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 120);
-          }
+              // Refresh the main pending list using the same fetch logic, then open the selected booking.
+              // This ensures we apply the same filtering (so approved bookings with reschedule rows won't appear).
+              await fetchUpcomingBookings();
+              setSelectedBooking({ ...found, id: found.booking_id });
+              setTimeout(() => {
+                const el = document.getElementById(`booking-${found.booking_id}`);
+                if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 120);
+            }
         } catch (err) {
           console.warn('navigateHandler: failed to fetch bookings', err);
         }
@@ -212,7 +234,9 @@ const UpcomingSchedule = () => {
   const groupByDate = (bookings) => {
     const grouped = {};
     bookings.forEach(booking => {
-      const dateKey = booking.date.split('T')[0];
+      // Prefer displayDate (which may be the requested date for reschedules), fallback to original date
+      const raw = booking.displayDate || booking.date || '';
+      const dateKey = String(raw).split('T')[0];
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
@@ -245,12 +269,20 @@ const UpcomingSchedule = () => {
         setShowConflictModal(true);
       } else if (result.ok && result.data && result.data.success) {
         NotificationService.notifyBookingConfirmed(result.data.booking || booking);
+        // Immediately remove from local state
+        const bookingId = String(booking.id || booking.booking_id);
+        setUpcomingBookings(prev => prev.filter(b => {
+          const bid = String(b.id || b.booking_id);
+          return bid !== bookingId;
+        }));
         window.dispatchEvent(new CustomEvent('bookingsUpdated', { detail: { reload: true } }));
-        // Refresh list
-        fetchUpcomingBookings();
+        // Refresh list in background to sync with server, exclude removed id to avoid re-adding while server lags
+        fetchUpcomingBookings([bookingId]);
         // show small success modal (auto-dismiss)
         setSuccessMessage(`Booking for ${booking.customer_name} approved.`);
         setShowSuccessModal(true);
+        // Close any open booking detail modal
+        setSelectedBooking(null);
       } else {
         throw new Error((result.data && result.data.message) || 'Failed to approve booking');
       }
@@ -291,11 +323,20 @@ const UpcomingSchedule = () => {
       const result = await updateBookingStatus(booking.id, 'rejected');
       if (result.ok && result.data && result.data.success) {
         NotificationService.notifyBookingRejected(result.data.booking || booking);
+        // Immediately remove from local state
+        const bookingId = String(booking.id || booking.booking_id);
+        setUpcomingBookings(prev => prev.filter(b => {
+          const bid = String(b.id || b.booking_id);
+          return bid !== bookingId;
+        }));
         window.dispatchEvent(new CustomEvent('bookingsUpdated', { detail: { reload: true } }));
-        fetchUpcomingBookings();
+        // Refresh list in background to sync with server, exclude removed id to avoid re-adding while server lags
+        fetchUpcomingBookings([bookingId]);
         // Show centered auto-dismissing modal with booking type
         setCenterModalMessage(`Booking "${booking.service}" rejected`);
         setShowCenterModal(true);
+        // Close any open booking detail modal
+        setSelectedBooking(null);
       } else {
         throw new Error((result.data && result.data.message) || 'Failed to reject booking');
       }
@@ -503,7 +544,7 @@ const UpcomingSchedule = () => {
                               borderRadius: '6px',
                               border: '1px solid #e2e8f0'
                             }}>
-                              Booking #{booking.id}
+                              Booking
                             </span>
                             <div style={{
                               display: 'inline-flex',
@@ -533,7 +574,7 @@ const UpcomingSchedule = () => {
                             Estimated Value
                           </div>
                           <div style={{ fontSize: 30, fontWeight: 700, color: '#2563eb' }}>
-                            ₱{(booking.estimated_value || 5000).toLocaleString()}
+                            {formatCurrency(booking.estimated_value || 5000)}
                           </div>
                         </div>
                       </div>
@@ -667,7 +708,7 @@ const UpcomingSchedule = () => {
               <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }} onClick={() => setSelectedBooking(null)}>
                 <div style={{ background: 'white', borderRadius: 12, maxWidth: 760, width: '100%', maxHeight: '90vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
                   <div style={{ padding: 20, borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0 }}>Booking #{selectedBooking.id}</h3>
+                    <h3 style={{ margin: 0 }}>{selectedBooking.service}</h3>
                     <button onClick={() => setSelectedBooking(null)} style={{ background: 'transparent', border: 'none', fontSize: 20, cursor: 'pointer' }}>×</button>
                   </div>
                   <div style={{ padding: 20 }}>
