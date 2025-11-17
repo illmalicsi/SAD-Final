@@ -898,3 +898,18 @@ RETURNED rows=1 id=59
 POST {"userEmail":"illmalicsi@addu.edu.ph","type":"success","title":"Payment Received","hasData":true,"time":"2025-11-16T09:34:44.436Z"}
 INSERTED id=60 time=2025-11-16T09:34:44.444Z
 RETURNED rows=1 id=60
+POST {"userEmail":"illmalicsi@addu.edu.ph","type":"info","title":"Booking Request Received","hasData":true,"time":"2025-11-16T12:10:04.365Z"}
+POST {"userEmail":"admin@blueeagles.com","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-16T12:10:04.389Z"}
+POST {"userEmail":"admin@local","type":"warning","title":"New Booking Request","hasData":true,"time":"2025-11-16T12:10:04.401Z"}
+INSERTED id=3 time=2025-11-16T12:10:04.406Z
+INSERTED id=4 time=2025-11-16T12:10:04.410Z
+RETURNED rows=1 id=3
+RETURNED rows=1 id=4
+INSERTED id=5 time=2025-11-16T12:10:04.419Z
+RETURNED rows=1 id=5
+POST {"userEmail":"illmalicsi@addu.edu.ph","type":"success","title":"Booking Confirmed!","hasData":true,"time":"2025-11-16T12:35:07.112Z"}
+INSERTED id=6 time=2025-11-16T12:35:07.138Z
+RETURNED rows=1 id=6
+POST {"userEmail":"illmalicsi@addu.edu.ph","type":"success","title":"Payment Received","hasData":true,"time":"2025-11-16T12:35:26.719Z"}
+INSERTED id=7 time=2025-11-16T12:35:26.734Z
+RETURNED rows=1 id=7

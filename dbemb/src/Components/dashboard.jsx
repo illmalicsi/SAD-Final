@@ -5,7 +5,7 @@ import AuthService from '../services/authService';
 // Import components
 const UserManagement = React.lazy(() => import('./usermanagement'));
 const InstrumentItemsManager = React.lazy(() => import('./InstrumentItemsManager'));
-const MaintenanceManager = React.lazy(() => import('./MaintenanceManager'));
+// MaintenanceManager removed
 const CustomerManagement = React.lazy(() => import('./CustomerManagement'));
 const Invoice = React.lazy(() => import('./Invoice'));
 const TransactionHistory = React.lazy(() => import('./TransactionHistory'));
@@ -32,6 +32,10 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
   const [upcomingEventsCount, setUpcomingEventsCount] = useState(0);
   const [instrumentPriceMap, setInstrumentPriceMap] = useState({});
   const [viewRequest, setViewRequest] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState({ users: [], bookings: [], instruments: [] });
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimeoutRef = React.useRef(null);
 
   // Add loading spinner animation
   React.useEffect(() => {
@@ -188,6 +192,62 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
     }
   }, [user]);
 
+  // Perform a lightweight global search by fetching lists and filtering locally
+  async function performGlobalSearch(q) {
+    try {
+      const term = String(q).toLowerCase();
+      // Fetch small sets in parallel
+      const base = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+      const [usersResp, bookingsResp, instrResp] = await Promise.all([
+        fetch(base + '/api/users'),
+        fetch(base + '/api/bookings'),
+        fetch(base + '/api/instruments')
+      ]);
+
+      const usersJson = usersResp.ok ? await usersResp.json() : null;
+      const bookingsJson = bookingsResp.ok ? await bookingsResp.json() : null;
+      const instrJson = instrResp.ok ? await instrResp.json() : null;
+
+      const usersList = Array.isArray(usersJson?.users) ? usersJson.users : (Array.isArray(usersJson) ? usersJson : []);
+      const bookingsList = Array.isArray(bookingsJson?.bookings) ? bookingsJson.bookings : (Array.isArray(bookingsJson) ? bookingsJson : []);
+      const instrList = Array.isArray(instrJson?.instruments) ? instrJson.instruments : (Array.isArray(instrJson) ? instrJson : []);
+
+      const usersMatches = usersList.filter(u => {
+        const hay = `${u.first_name||u.name||''} ${u.last_name||''} ${u.email||''} ${u.phone||''}`.toLowerCase();
+        return hay.indexOf(term) !== -1;
+      }).slice(0,6);
+
+      const bookingsMatches = bookingsList.filter(b => {
+        const hay = `${b.customer_name||b.name||''} ${b.email||''} ${b.service||''} ${b.location||''} ${b.date||''}`.toLowerCase();
+        return hay.indexOf(term) !== -1;
+      }).slice(0,6);
+
+      const instrMatches = instrList.filter(i => {
+        const hay = `${i.name||i.title||''} ${i.description||''} ${i.category||''}`.toLowerCase();
+        return hay.indexOf(term) !== -1;
+      }).slice(0,6);
+
+      setSearchResults({ users: usersMatches, bookings: bookingsMatches, instruments: instrMatches });
+    } catch (e) {
+      console.warn('Global search failed', e && e.message);
+      setSearchResults({ users: [], bookings: [], instruments: [] });
+    } finally {
+      setIsSearching(false);
+    }
+  }
+
+  function handleSearchSelect(type, payload) {
+    // Dispatch a global event so specific pages can react (and navigate to the view)
+    window.dispatchEvent(new CustomEvent('globalSearch:selected', { detail: { type, payload } }));
+    // Navigate to an appropriate view
+    if (type === 'user') setCurrentView('user-management');
+    if (type === 'booking') setCurrentView('upcoming-schedule');
+    if (type === 'instrument') setCurrentView('instrument-items');
+    // clear search
+    setSearchTerm('');
+    setSearchResults({ users: [], bookings: [], instruments: [] });
+  }
+
   // Load user notifications
   React.useEffect(() => {
     const loadNotifications = async () => {
@@ -320,16 +380,9 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       title: 'Finance',
       items: [
         // Removed My Invoices from sidebar
-  { id: 'invoice', icon: <FaClipboardList size={14} color="currentColor" />, text: 'Create Invoice', view: 'invoice', adminOnly: true },
+  { id: 'invoice', icon: <FaClipboardList size={14} color="currentColor" />, text: 'Invoice', view: 'invoice', adminOnly: true },
   { id: 'payment', icon: <FaDollarSign size={14} color="currentColor" />, text: 'Process Payments', view: 'payment', adminOnly: true },
   { id: 'transactions', icon: <FaHistory size={14} color="currentColor" />, text: 'Transactions', view: 'transactions', adminOnly: false }
-      ]
-    },
-    {
-      title: 'Account',
-      items: [
-  { id: 'profile', icon: <FaUser size={14} color="currentColor" />, text: 'Profile', view: 'my-profile', adminOnly: false },
-  { id: 'help', icon: <FaQuestionCircle size={14} color="currentColor" />, text: 'Help & Support', view: 'help-support', adminOnly: false }
       ]
     }
   ];
@@ -612,6 +665,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       border: '1px solid #e2e8f0',
       borderRadius: '10px',
       width: '280px',
+      position: 'relative',
       transition: 'all 0.2s ease'
     },
     searchInput: {
@@ -630,6 +684,26 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
       border: '1px solid #e2e8f0',
       borderRadius: '10px',
       color: '#64748b',
+    searchDropdown: {
+      position: 'absolute',
+      top: 'calc(100% + 8px)',
+      left: 0,
+      width: 'min(520px, 80vw)',
+      maxHeight: 320,
+      overflowY: 'auto',
+      background: '#fff',
+      border: '1px solid #e2e8f0',
+      borderRadius: 8,
+      boxShadow: '0 8px 24px rgba(2,6,23,0.08)',
+      zIndex: 1200,
+      padding: 8
+    },
+    searchGroup: {
+      marginBottom: 6
+    },
+    searchGroupTitle: { fontSize: 12, color: '#64748b', marginBottom: 6, fontWeight: 700 },
+    searchRow: { padding: '8px 10px', borderRadius: 6, cursor: 'pointer', display: 'flex', flexDirection: 'column' },
+    searchMeta: { fontSize: 12, color: '#94a3b8' },
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
@@ -1772,20 +1846,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
           </Suspense>
         );
 
-      case 'maintenance':
-        return (
-          <Suspense fallback={
-            <div style={styles.loadingContainer}>
-              <div style={styles.loadingSpinner}></div>
-              <div>Loading Maintenance...</div>
-            </div>
-          }>
-            <MaintenanceManager
-              user={user}
-              onBackToHome={() => setCurrentView('main')}
-            />
-          </Suspense>
-        );
+      // maintenance view removed
 
         case 'inventory-report':
           return (
@@ -2345,14 +2406,7 @@ const Dashboard = ({ user, onBackToHome, onLogout }) => {
             <div style={styles.breadcrumbs}>{getBreadcrumbs()}</div>
           </div>
           <div style={styles.headerRight}>
-            <div style={styles.searchBar}>
-              <FaSearch size={16} color="#94a3b8" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                style={styles.searchInput}
-              />
-            </div>
+          
             <button 
               style={styles.headerButton}
               onClick={() => setCurrentView('notifications')}

@@ -33,9 +33,7 @@ router.get('/', authenticateToken, async (req, res) => {
         u_rental.last_name as current_renter_last_name,
         u_borrow.email as current_borrower_email,
         u_borrow.first_name as current_borrower_first_name,
-        u_borrow.last_name as current_borrower_last_name,
-        (SELECT COUNT(*) FROM maintenance_history mh WHERE mh.instrument_item_id = ii.item_id) as maintenance_count,
-        (SELECT MAX(completed_date) FROM maintenance_history mh WHERE mh.instrument_item_id = ii.item_id) as last_maintenance
+        u_borrow.last_name as current_borrower_last_name
       FROM instrument_items ii
       JOIN instruments i ON ii.instrument_id = i.instrument_id
       LEFT JOIN locations l ON ii.location_id = l.location_id
@@ -121,52 +119,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
 
     let maintenanceHistory = [];
-    let assessments = [];
 
-    // Try to get maintenance history (table might not exist)
-    try {
-      const [maintenanceRows] = await pool.query(`
-        SELECT 
-          mh.*,
-          u.first_name,
-          u.last_name,
-          u.email
-        FROM maintenance_history mh
-        LEFT JOIN users u ON mh.performed_by = u.id
-        WHERE mh.instrument_item_id = ?
-        ORDER BY mh.completed_date DESC, mh.scheduled_date DESC
-        LIMIT 20
-      `, [id]);
-      maintenanceHistory = maintenanceRows;
-    } catch (err) {
-      console.log('Maintenance history table not available:', err.message);
-    }
-
-    // Try to get condition assessments (table might not exist)
-    try {
-      const [assessmentRows] = await pool.query(`
-        SELECT 
-          ca.*,
-          u.first_name,
-          u.last_name,
-          u.email
-        FROM condition_assessments ca
-        LEFT JOIN users u ON ca.assessed_by = u.id
-        WHERE ca.instrument_item_id = ?
-        ORDER BY ca.created_at DESC
-        LIMIT 10
-      `, [id]);
-      assessments = assessmentRows;
-    } catch (err) {
-      console.log('Condition assessments table not available:', err.message);
-    }
 
     res.json({
       success: true,
       item: {
         ...rows[0],
-        maintenanceHistory,
-        conditionAssessments: assessments
+        maintenanceHistory
       }
     });
   } catch (error) {

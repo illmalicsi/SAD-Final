@@ -11,7 +11,7 @@ const billingRoutes = require('./routes/billing');
 const rolesRoutes = require('./routes/roles');
 const instrumentsRoutes = require('./routes/instruments');
 const instrumentItemsRoutes = require('./routes/instrumentItems');
-const maintenanceRoutes = require('./routes/maintenance');
+// maintenanceRoutes removed per request
 const membershipRoutes = require('./routes/membership');
 const bookingsRoutes = require('./routes/bookings');
 const servicesRoutes = require('./routes/services');
@@ -51,8 +51,7 @@ app.use('/api/payments/stripe', stripeRoutes);
 app.use('/api/instruments', instrumentsRoutes);
 // Individual instrument items with serial numbers
 app.use('/api/instrument-items', instrumentItemsRoutes);
-// Maintenance history and scheduling
-app.use('/api/maintenance', maintenanceRoutes);
+// Maintenance routes removed
 // Locations - simple listing of known locations
 app.use('/api/locations', locationsRoutes);
 // Membership approval routes

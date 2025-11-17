@@ -32,6 +32,7 @@ import {
 import NotificationService from '../services/notificationService';
 import AuthService from '../services/authService';
 import { formatCurrency } from '../utils/formatters';
+import StyledSelect from './StyledSelect';
 
 const CustomerManagement = ({ bookingsData = [] }) => {
   const [customers, setCustomers] = useState([]);
@@ -48,6 +49,10 @@ const CustomerManagement = ({ bookingsData = [] }) => {
   const [viewMode, setViewMode] = useState("cards");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [customerStatusOverrides, setCustomerStatusOverrides] = useState(new Map());
+  const [showFiltersPanel, setShowFiltersPanel] = useState(false);
+  const [filterFromDate, setFilterFromDate] = useState('');
+  const [filterToDate, setFilterToDate] = useState('');
+  const [filterMinRevenue, setFilterMinRevenue] = useState('');
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [conflictDetails, setConflictDetails] = useState([]);
   // No board tabs; single unified dataset
@@ -312,6 +317,30 @@ const CustomerManagement = ({ bookingsData = [] }) => {
       );
     }
 
+    // Date range filter (based on customer's lastBooking)
+    if (filterFromDate) {
+      const from = new Date(filterFromDate);
+      filtered = filtered.filter(c => {
+        const lb = c.lastBooking ? new Date(c.lastBooking) : null;
+        return lb && lb >= from;
+      });
+    }
+    if (filterToDate) {
+      const to = new Date(filterToDate);
+      // include entire day for 'to' by setting time to end of day
+      to.setHours(23,59,59,999);
+      filtered = filtered.filter(c => {
+        const lb = c.lastBooking ? new Date(c.lastBooking) : null;
+        return lb && lb <= to;
+      });
+    }
+
+    // Minimum revenue filter
+    if (filterMinRevenue && Number(filterMinRevenue) > 0) {
+      const min = Number(filterMinRevenue);
+      filtered = filtered.filter(c => Number(c.totalRevenue || 0) >= min);
+    }
+
     filtered.sort((a, b) => {
       let aVal, bVal;
       
@@ -352,7 +381,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
     });
     
     setFilteredCustomers(filtered);
-  }, [customers, searchTerm, statusFilter, serviceFilter, sortBy, sortOrder]);
+  }, [customers, searchTerm, statusFilter, serviceFilter, sortBy, sortOrder, filterFromDate, filterToDate, filterMinRevenue]);
 
   const stats = useMemo(
     () => {
@@ -1118,7 +1147,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
               />
             </div>
 
-            <select
+            <StyledSelect
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               style={{ ...styles.select, minWidth: 160 }}
@@ -1129,9 +1158,9 @@ const CustomerManagement = ({ bookingsData = [] }) => {
               <option value="cancelled">Cancelled</option>
               <option value="rejected">Rejected</option>
               <option value="archived">Archived</option>
-            </select>
+            </StyledSelect>
 
-            <select
+            <StyledSelect
               value={serviceFilter}
               onChange={(e) => setServiceFilter(e.target.value)}
               style={{ ...styles.select, minWidth: 160 }}
@@ -1140,7 +1169,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
               {services.map(service => (
                 <option key={service} value={service}>{service}</option>
               ))}
-            </select>
+            </StyledSelect>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -1165,7 +1194,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
               </button>
             </div>
 
-            <select
+            <StyledSelect
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               style={{ ...styles.select, minWidth: 160 }}
@@ -1176,7 +1205,7 @@ const CustomerManagement = ({ bookingsData = [] }) => {
               <option value="totalRevenue">Revenue</option>
               <option value="joinDate">Join Date</option>
               <option value="status">Status</option>
-            </select>
+            </StyledSelect>
 
             <button
               style={styles.button}
@@ -1192,9 +1221,37 @@ const CustomerManagement = ({ bookingsData = [] }) => {
             >
               <FaDownload size={14} /> Export
             </button>
+            <button
+              style={{ ...styles.button, display: "flex", alignItems: "center", gap: 8 }}
+              onClick={() => setShowFiltersPanel(prev => !prev)}
+              title="Filters"
+            >
+              <FaFilter size={14} /> Filters
+            </button>
           </div>
         </div>
       </div>
+      {/* Filters panel */}
+      {showFiltersPanel && (
+        <div style={{ padding: 12, marginTop: 10, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ fontSize: 12, color: '#64748b' }}>From</label>
+            <input type="date" value={filterFromDate} onChange={e => setFilterFromDate(e.target.value)} style={{ padding: '8px', borderRadius: 8, border: '1px solid #cbd5e1' }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ fontSize: 12, color: '#64748b' }}>To</label>
+            <input type="date" value={filterToDate} onChange={e => setFilterToDate(e.target.value)} style={{ padding: '8px', borderRadius: 8, border: '1px solid #cbd5e1' }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label style={{ fontSize: 12, color: '#64748b' }}>Min Revenue</label>
+            <input type="number" min={0} step={100} value={filterMinRevenue} onChange={e => setFilterMinRevenue(e.target.value)} placeholder="0" style={{ padding: '8px', borderRadius: 8, border: '1px solid #cbd5e1', minWidth: 120 }} />
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+            <button style={styles.button} onClick={() => { setShowFiltersPanel(false); }}>Apply</button>
+            <button style={styles.button} onClick={() => { setFilterFromDate(''); setFilterToDate(''); setFilterMinRevenue(''); }}>Clear</button>
+          </div>
+        </div>
+      )}
       {/* --- END REPLACED AREA --- */}
 
       {/* Customer Display: cards OR table depending on viewMode */}

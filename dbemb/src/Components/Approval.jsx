@@ -194,143 +194,10 @@ const Approval = ({ onBackToHome }) => {
     return () => { mounted = false; };
   }, []);
 
-  // Attempt to sync/normalize local rent request ids to server-generated request_id
-  useEffect(() => {
-    // Expose a reusable sync function that converts local-only rent requests into server rows.
-    let cancelled = false;
-    const performSync = async () => {
-      try {
-        if (!AuthService.isAuthenticated()) return { synced: 0 };
-        const storageKey = 'rentRequests';
-        const local = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        if (!Array.isArray(local) || !local.length) return { synced: 0 };
-
-        let syncedCount = 0;
-        for (const l of local) {
-          if (cancelled) break;
-          const isLocalOnly = l.localOnly === true || (typeof l.id === 'number' && l.id > 1000000000000) || (typeof l.id === 'string' && l.id.startsWith('local-'));
-          if (!isLocalOnly) continue;
-
-          const payload = {
-            instrumentId: l.instrumentId || null,
-            instrumentName: l.instrument || l.instrumentName || '',
-            instrumentType: l.instrumentType || l.instrument_type || '',
-            quantity: Number(l.quantity) || 1,
-            startDate: l.startDate || l.start_date || null,
-            endDate: l.endDate || l.end_date || null,
-            purpose: l.purpose || l.notes || null,
-            notes: l.notes || null,
-            rentalFee: l.rentalFee || l.rental_fee || l.instrumentPricePerDay || null
-          };
-
-          try {
-            const resp = await AuthService.post('/instruments/rent-requests', payload);
-            if (resp && resp.success === true && resp.requestId) {
-              const updated = JSON.parse(localStorage.getItem(storageKey) || '[]').map(r => (r.id === l.id ? { ...r, id: resp.requestId, request_id: resp.requestId, localOnly: false } : r));
-              localStorage.setItem(storageKey, JSON.stringify(updated));
-              setRentRequests(Array.isArray(updated) ? updated : []);
-              syncedCount++;
-              continue;
-            }
-          } catch (err) {
-            // Fallback: try to match against server list by heuristics
-            try {
-              const serverList = await AuthService.get('/instruments/rent-requests');
-              if (serverList && serverList.success && Array.isArray(serverList.requests)) {
-                const match = serverList.requests.find(s => {
-                  const sName = s.instrument_name || s.instrumentName || s.instrument || '';
-                  const lName = l.instrument || l.instrumentName || '';
-                  const sEmail = s.userEmail || s.email || s.user_email || '';
-                  const lEmail = l.userEmail || l.email || l.userEmail || '';
-                  const nameMatch = lName && sName && String(sName).trim() === String(lName).trim();
-                  const emailMatch = lEmail && sEmail && String(sEmail).trim() === String(lEmail).trim();
-                  return (nameMatch && emailMatch) || nameMatch || emailMatch;
-                });
-                if (match) {
-                  const realId = match.request_id || match.requestId || match.id;
-                  if (realId) {
-                    const updated = JSON.parse(localStorage.getItem(storageKey) || '[]').map(r => (r.id === l.id ? { ...r, id: realId, request_id: realId, localOnly: false } : r));
-                    localStorage.setItem(storageKey, JSON.stringify(updated));
-                    setRentRequests(Array.isArray(updated) ? updated : []);
-                    syncedCount++;
-                    continue;
-                  }
-                }
-              }
-            } catch (e) {
-              console.error('Fallback rent request match failed', e);
-            }
-          }
-        }
-        if (syncedCount > 0) window.dispatchEvent(new Event('rentRequestsUpdated'));
-        return { synced: syncedCount };
-      } catch (e) {
-        console.error('Failed to sync local rent requests:', e);
-        return { synced: 0, error: e };
-      }
-    };
-
-    // Run once on mount
-    (async () => {
-      await performSync();
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
-
-  // Expose the sync method for manual triggering via a UI button
-  const syncLocalRentRequests = async () => {
-    try {
-      if (!AuthService.isAuthenticated()) {
-        NotificationService.createNotification('admin@local', { type: 'error', title: 'Sync failed', message: 'You must be logged in to sync local requests.' });
-        return;
-      }
-      const storageKey = 'rentRequests';
-      const local = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      if (!Array.isArray(local) || !local.length) {
-        NotificationService.createNotification('admin@local', { type: 'info', title: 'Sync', message: 'No local rent requests to sync.' });
-        return;
-      }
-
-      let syncedCount = 0;
-      for (const l of local) {
-        const isLocalOnly = l.localOnly === true || (typeof l.id === 'number' && l.id > 1000000000000) || (typeof l.id === 'string' && l.id.startsWith('local-'));
-        if (!isLocalOnly) continue;
-        const payload = {
-          instrumentId: l.instrumentId || null,
-          instrumentName: l.instrument || l.instrumentName || '',
-          instrumentType: l.instrumentType || l.instrument_type || '',
-          quantity: Number(l.quantity) || 1,
-          startDate: l.startDate || l.start_date || null,
-          endDate: l.endDate || l.end_date || null,
-          purpose: l.purpose || l.notes || null,
-          notes: l.notes || null,
-          rentalFee: l.rentalFee || l.rental_fee || l.instrumentPricePerDay || null
-        };
-        try {
-          const resp = await AuthService.post('/instruments/rent-requests', payload);
-          if (resp && resp.success === true && resp.requestId) {
-            const updated = JSON.parse(localStorage.getItem(storageKey) || '[]').map(r => (r.id === l.id ? { ...r, id: resp.requestId, request_id: resp.requestId, localOnly: false } : r));
-            localStorage.setItem(storageKey, JSON.stringify(updated));
-            setRentRequests(Array.isArray(updated) ? updated : []);
-            syncedCount++;
-            continue;
-          }
-        } catch (err) {
-          // ignore and continue
-        }
-      }
-      if (syncedCount > 0) {
-        window.dispatchEvent(new Event('rentRequestsUpdated'));
-        NotificationService.createNotification('admin@local', { type: 'success', title: 'Sync complete', message: `Synced ${syncedCount} local rent request(s) to server.` });
-      } else {
-        NotificationService.createNotification('admin@local', { type: 'info', title: 'Sync', message: 'No local rent requests were synced.' });
-      }
-    } catch (e) {
-      console.error('Manual sync failed', e);
-      NotificationService.createNotification('admin@local', { type: 'error', title: 'Sync failed', message: 'Unexpected error during sync.' });
-    }
-  };
+  // NOTE: Removed automatic/manual local->server sync logic for rent requests.
+  // The component will prefer server-side data when authenticated and fall back
+  // to localStorage for offline/unauthenticated usage, but will not attempt to
+  // automatically create server rows from local placeholders.
 
   const handleInstrumentRequestAction = async (requestOrId, action, type) => {
     // requestOrId may be either a scalar id (number|string) or the full request object
@@ -397,23 +264,8 @@ const Approval = ({ onBackToHome }) => {
       // Ensure we have a usable server id before calling the backend.
       if (!effectiveId || (typeof effectiveId === 'string' && String(effectiveId).startsWith('local-'))) {
         console.error('No valid server id resolved for request:', requestId, 'resolved->', effectiveId);
-        // Try an automatic background sync attempt for authenticated users before giving up
-        if (AuthService.isAuthenticated()) {
-          try {
-            // attempt a single sync of local rent requests
-            await syncLocalRentRequests();
-            // try to re-resolve from localStorage after sync
-            const storageKey = 'rentRequests';
-            const localAfter = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            const mapped = localAfter.find(r => r.request_id === effectiveId || r.requestId === effectiveId || r.id === effectiveId || (requestObj && r.id === requestObj.id));
-            const possibleId = mapped && (mapped.request_id || mapped.requestId || mapped.id);
-            if (possibleId) {
-              effectiveId = possibleId;
-            }
-          } catch (e) {
-            // ignore sync errors
-          }
-        }
+        // Note: automatic/manual syncing of local placeholders has been removed.
+        // Resolution will rely on earlier heuristics and server-side data only.
 
         if (!effectiveId || (typeof effectiveId === 'string' && String(effectiveId).startsWith('local-'))) {
           alert('Unable to resolve server request id for this item. Try syncing local requests first or refresh the list.');
@@ -1390,7 +1242,7 @@ const Approval = ({ onBackToHome }) => {
         </button>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <button onClick={syncLocalRentRequests} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#ffffff', cursor: 'pointer', fontWeight: 700 }}>Sync local requests</button>
+          {/* Manual sync removed */}
         </div>
       </div>
 

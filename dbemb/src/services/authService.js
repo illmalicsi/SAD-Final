@@ -1,5 +1,6 @@
-// API base URL - adjust according to your backend port
-const API_BASE_URL = 'http://localhost:5000/api';
+// API base URL - prefer environment override `REACT_APP_API_BASE_URL`
+// Example: set to 'http://localhost:5000/api/eetctc' to use that path
+const API_BASE_URL = (process.env.REACT_APP_API_BASE_URL && process.env.REACT_APP_API_BASE_URL.trim()) || 'http://localhost:5000/api';
 
 class AuthService {
   // Login user
@@ -186,7 +187,7 @@ class AuthService {
     try {
       const response = await fetch(url, opts);
       console.log(`📥 Response status from ${url}:`, response.status);
-      
+
       // Check if user is blocked or unauthorized
       if (response.status === 403 || response.status === 401) {
         console.log('⚠️ Received 403/401, checking if user is blocked...');
@@ -213,6 +214,19 @@ class AuthService {
         throw new Error('Session expired. Please login again.');
       }
       
+      // For other non-OK responses, surface a helpful error with server message (so callers can catch)
+      if (!response.ok) {
+        let errData = null;
+        try {
+          errData = await response.json();
+        } catch (e) {
+          // ignore parse errors
+        }
+        const errMsg = (errData && (errData.message || errData.error || errData.msg)) || `Request failed with status ${response.status}`;
+        console.error(`HTTP error ${response.status} from ${url}:`, errData || errMsg);
+        throw new Error(errMsg);
+      }
+
       console.log('✅ Request successful');
       return response;
     } catch (fetchErr) {

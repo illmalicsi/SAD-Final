@@ -52,11 +52,14 @@ const InstrumentBorrowing = () => {
   // Load user data
   useEffect(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem('davaoBlueEaglesUser') || 'null');
+      const stored = AuthService.getUser();
       if (stored) {
         setUser(stored);
-        if (stored.firstName || stored.email) {
-          setName(stored.firstName ? `${stored.firstName} ${stored.lastName || ''}`.trim() : (stored.email || ''));
+        const first = stored.firstName || stored.first_name || stored.name || stored.customerName || '';
+        const last = stored.lastName || stored.last_name || '';
+        const computedName = first ? `${first} ${last}`.trim() : (stored.name || stored.customerName || '');
+        if (computedName || stored.email) {
+          setName(computedName || (stored.email || ''));
           setEmail(stored.email || '');
         }
       }

@@ -832,3 +832,5 @@ async function generateReceiptPdf(receiptId) {
 }
 
 module.exports.generateReceiptPdf = generateReceiptPdf;
+// Export financial report function so routes can call it
+module.exports.getFinancialReport = getFinancialReport;

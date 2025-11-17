@@ -268,12 +268,13 @@ const Payment = ({ onBackToHome }) => {
   const getStatusBadge = (status) => {
     const styles = {
       base: {
-        padding: '6px 12px',
-        borderRadius: '20px',
+        padding: '4px 10px',
+        borderRadius: '12px',
         fontSize: '12px',
         fontWeight: '600',
         textTransform: 'uppercase',
-        letterSpacing: '0.5px'
+        letterSpacing: '0.5px',
+        display: 'inline-block'
       },
       approved: {
         backgroundColor: '#d1fae5',
@@ -703,10 +704,10 @@ const Payment = ({ onBackToHome }) => {
                           display: 'inline-block',
                           padding: '4px 10px',
                           borderRadius: '12px',
-                          fontSize: '10px',
+                          fontSize: '12px',
                           fontWeight: '600',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.3px',
+                          letterSpacing: '0.5px',
                           backgroundColor: inv.payment_status === 'paid' ? '#d1fae5' : inv.payment_status === 'partial' ? '#fef3c7' : '#fef2f2',
                           color: inv.payment_status === 'paid' ? '#065f46' : inv.payment_status === 'partial' ? '#92400e' : '#b91c1c',
                           border: `1px solid ${inv.payment_status === 'paid' ? '#34d399' : inv.payment_status === 'partial' ? '#fcd34d' : '#fecaca'}`,

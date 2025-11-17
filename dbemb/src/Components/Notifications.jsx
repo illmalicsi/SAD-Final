@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BsBell, BsX, BsTrash, BsCheckAll, BsInfoCircle, BsCheckCircle, BsExclamationTriangle } from 'react-icons/bs';
+import { BsBell, BsX, BsTrash, BsCheckAll, BsInfoCircle, BsCheckCircle, BsExclamationTriangle, BsReceipt, BsPersonPlus } from 'react-icons/bs';
 import NotificationService from '../services/notificationService';
 
 const Notifications = ({ user }) => {
@@ -55,6 +55,7 @@ const Notifications = ({ user }) => {
   }, [open]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
+  const isAdmin = user && user.role && user.role !== 'user';
 
   const timeAgo = (inputDate) => {
     if (!inputDate) return 'Recently';
@@ -149,12 +150,60 @@ const Notifications = ({ user }) => {
     );
   };
 
+  const renderAdminNotification = (notification) => {
+    const data = notification.data || {};
+    const amount = data.amount_formatted || (data.amount ? `₱${Number(data.amount).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })}` : null);
+    const invoiceRef = data.invoiceNumber || data.invoice_number || data.invoiceId || data.invoice_id || null;
+    const receiptUrl = data.receiptUrl || data.receipt_url || null;
+    const customer = data.userName || data.name || data.customer || data.customerName || null;
+
+    const invoiceLink = invoiceRef ? (data.invoiceId || data.invoice_id ? `/invoices?invoiceId=${data.invoiceId || data.invoice_id}` : `/invoices?invoiceNumber=${encodeURIComponent(invoiceRef)}`) : null;
+
+    return (
+      <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.4 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          {amount && (
+            <div style={{ background: '#ecfdf5', color: '#065f46', padding: '4px 8px', borderRadius: 8, fontWeight: 700, fontSize: 13 }}>
+              {amount}
+            </div>
+          )}
+          {invoiceRef && (
+            <a href={invoiceLink} style={{ color: '#0ea5e9', fontWeight: 700 }} onClick={(e) => { e.preventDefault(); window.location.href = invoiceLink; }}>{invoiceRef}</a>
+          )}
+          {customer && (
+            <div style={{ fontSize: 13, color: '#6b7280' }}>{customer}</div>
+          )}
+        </div>
+
+        <div style={{ marginTop: 8 }}>{renderNotificationMessage(notification)}</div>
+
+        <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
+          {receiptUrl && (
+            <a href={receiptUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 10px', borderRadius: 8, background: '#ffffff', border: '1px solid #e6edf3', color: '#2563eb', fontWeight: 700 }}>Download Receipt</a>
+          )}
+          {invoiceLink && (
+            <button onClick={() => { window.location.href = invoiceLink; }} style={{ padding: '8px 10px', borderRadius: 8, background: '#2563eb', border: 'none', color: '#fff', fontWeight: 700 }}>Open Invoice</button>
+          )}
+          <button onClick={async () => { await NotificationService.markAsRead(notification.id); await loadNotifications(); }} style={{ padding: '8px 10px', borderRadius: 8, background: '#ffffff', border: '1px solid #e6edf3', color: '#065f46', fontWeight: 700 }}>Mark Read</button>
+        </div>
+      </div>
+    );
+  };
+
   const getNotificationIcon = (type) => {
-    switch (type) {
+    // Map known notification types to clearer icons for admin affordance
+    switch ((type || '').toString().toLowerCase()) {
       case 'success':
+      case 'payment_received':
         return <BsCheckCircle style={{ color: '#10b981' }} />;
       case 'warning':
+      case 'booking_request':
+      case 'rental_request':
         return <BsExclamationTriangle style={{ color: '#f59e0b' }} />;
+      case 'receipt_ready':
+        return <BsReceipt style={{ color: '#2563eb' }} />;
+      case 'new_customer':
+        return <BsPersonPlus style={{ color: '#7c3aed' }} />;
       default:
         return <BsInfoCircle style={{ color: '#3b82f6' }} />;
     }
@@ -285,7 +334,9 @@ const Notifications = ({ user }) => {
                       <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</div>
                       <div style={{ fontSize: 12, color: '#9ca3af', flexShrink: 0 }}>{timeAgo(n.createdAt)}</div>
                     </div>
-                    <div style={{ marginTop: 6, fontSize: 13, color: '#374151', lineHeight: 1.4, overflow: 'hidden' }}>{renderNotificationMessage(n)}</div>
+                    <div style={{ marginTop: 6, fontSize: 13, color: '#374151', lineHeight: 1.4, overflow: 'hidden' }}>
+                      {isAdmin ? renderAdminNotification(n) : renderNotificationMessage(n)}
+                    </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
                     {!n.read && (

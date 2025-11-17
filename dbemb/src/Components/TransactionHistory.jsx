@@ -107,12 +107,13 @@ const TransactionHistory = ({ onBackToHome }) => {
   const getStatusBadge = (status) => {
     const styles = {
       base: {
-        padding: '6px 12px',
-        borderRadius: '20px',
+        padding: '4px 10px',
+        borderRadius: '12px',
         fontSize: '12px',
         fontWeight: '600',
         textTransform: 'uppercase',
-        letterSpacing: '0.5px'
+        letterSpacing: '0.5px',
+        display: 'inline-block'
       },
       completed: {
         backgroundColor: '#d1fae5',
@@ -148,11 +149,11 @@ const TransactionHistory = ({ onBackToHome }) => {
 
     switch(m) {
       case 'gcash': return <span title={`Method: GCash`} aria-label={`GCash`} style={textStyle('#7c3aed')}>GCash</span>;
-      case 'credit': return <span title={`Method: Credit/Card`} aria-label={`Credit`} style={textStyle('#0ea5e9')}>Credit</span>;
-      case 'debit': return <span title={`Method: Debit/Card`} aria-label={`Debit`} style={textStyle('#06b6d4')}>Debit</span>;
+      case 'credit': return <span title={`Method: Credit/Card`} aria-label={`Credit`} style={textStyle('#0369a1')}>Credit</span>;
+      case 'debit': return <span title={`Method: Debit/Card`} aria-label={`Debit`} style={textStyle('#0ea5e9')}>Debit</span>;
       case 'cash': return <span title={`Method: Cash`} aria-label={`Cash`} style={textStyle('#f97316')}>Cash</span>;
       case 'banktransfer': return <span title={`Method: Bank Transfer`} aria-label={`Bank Transfer`} style={textStyle('#64748b')}>Bank Transfer</span>;
-      case 'online': return <span title={`Method: Online`} aria-label={`Online`} style={textStyle('#6b7280')}>Online</span>;
+      case 'online': return <span title={`Method: Online`} aria-label={`Online`} style={textStyle('#2563eb')}>Online</span>;
       default:
         const disp = method ? getDisplay(String(method)) : 'Other';
         return <span title={`Method: ${disp}`} aria-label={disp} style={textStyle('#6b7280')}>{disp}</span>;
@@ -507,7 +508,7 @@ const TransactionHistory = ({ onBackToHome }) => {
           <div style={styles.summaryLabel}>Total Transactions</div>
         </div>
         <div style={styles.summaryCard}>
-          <div style={styles.summaryValue}>₱{totalAmount.toFixed(2)}</div>
+          <div style={styles.summaryValue}>₱{formatCurrency(totalAmount)}</div>
           <div style={styles.summaryLabel}>Total Amount</div>
         </div>
         <div style={styles.summaryCard}>
@@ -592,10 +593,10 @@ const TransactionHistory = ({ onBackToHome }) => {
                     <td style={styles.td}>
                       <div style={{ fontWeight: '600', color: '#3b82f6', fontSize: '13px' }}>{tx.transaction_id || tx.transaction_reference || tx.id}</div>
                     </td>
-                    <td style={styles.td}>{getMethodBadge(inferMethod(tx))}</td>
+                    <td style={styles.td}>{renderMethodDisplay(tx)}</td>
                     <td style={styles.td}><div style={{ fontWeight: '700', color: '#059669', fontSize: '14px' }}>₱{formatCurrency(tx.amount || tx.amount_paid || 0)}</div></td>
                     <td style={styles.td}><div>₱{formatCurrency(tx.invoice_amount || 0)}</div></td>
-                    <td style={styles.td}><div style={{ fontWeight: '600' }}>{tx.status || tx.invoice_status || '-'}</div></td>
+                    <td style={styles.td}>{getStatusBadge(tx.status || tx.invoice_status || '-')}</td>
                     <td style={styles.td}><div style={{ fontSize: '11px', color: '#64748b' }}>{formatDate(tx.created_at || tx.issued_at || tx.processed_at)}</div></td>
                     <td style={styles.td}>
                       <button onClick={() => handleViewReceipt(tx)} style={{ padding: '6px 12px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>

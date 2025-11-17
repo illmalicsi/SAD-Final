@@ -18,13 +18,14 @@ const StyledSelect = React.forwardRef(({ children, style, iconStyle, containerSt
     WebkitAppearance: 'none',
     MozAppearance: 'none',
     paddingRight: '44px', // reserve space for chevron icon
-    width: '100%', // default to fill container column width
+    // Do not force 100% width so callers can control size via style.width/minWidth
+    width: 'auto',
     boxSizing: 'border-box'
   };
 
   const containerBase = {
     position: 'relative',
-    width: '100%',
+    width: 'auto',
     display: 'inline-block'
   };
 

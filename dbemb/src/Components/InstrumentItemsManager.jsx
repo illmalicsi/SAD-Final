@@ -1027,9 +1027,9 @@ const InstrumentItemsManager = ({ user, onBackToHome }) => {
                             {/* Balanced widths that sum to 100% */}
                             <th style={{ ...styles.th, width: '15%' }}>Serial</th>
                             <th style={{ ...styles.th, width: '35%' }}>Instrument</th>
-                            <th style={{ ...styles.th, width: '20%' }}>Location</th>
-                            <th style={{ ...styles.th, width: '10%' }}>Acquired</th>
-                            <th style={{ ...styles.th, width: '10%', textAlign: 'center' }}>Status</th>
+                            <th style={{ ...styles.th, width: '25%' }}>Location</th>
+                            <th style={{ ...styles.th, width: '15%' }}>Acquired</th>
+                            <th style={{ ...styles.th, width: '15%', textAlign: 'center' }}>Status</th>
                             <th style={{ ...styles.th, width: '10%', textAlign: 'center' }}>Actions</th>
                           </tr>
                         </thead>
